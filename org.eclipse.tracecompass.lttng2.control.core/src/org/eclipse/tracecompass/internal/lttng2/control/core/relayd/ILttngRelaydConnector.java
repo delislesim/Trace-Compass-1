@@ -51,13 +51,13 @@ public interface ILttngRelaydConnector extends AutoCloseable {
     /**
      * Attach the trace viewer to a Session
      *
-     * @param lttngViewerSession
-     *            viewer session
+     * @param sessionId
+     *            viewer session id
      * @return An AttachSessionResponse
      * @throws IOException
      *             timeout and such
      */
-    AttachSessionResponse attachToSession(SessionResponse lttngViewerSession) throws IOException;
+    AttachSessionResponse attachToSession(long sessionId) throws IOException;
 
     /**
      * Get the metadata from the relayd

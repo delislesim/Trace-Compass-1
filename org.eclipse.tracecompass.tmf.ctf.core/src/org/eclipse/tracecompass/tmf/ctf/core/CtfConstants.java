@@ -61,4 +61,11 @@ public interface CtfConstants {
      * @since 3.1
      */
     QualifiedName LIVE_SESSION_NAME = new QualifiedName("org.eclipse.linuxtools.tmf.ctf.core", "live.session.name"); //$NON-NLS-1$//$NON-NLS-2$;
+
+    /**
+     * The live session id persistent property.
+     *
+     * @since 3.2
+     */
+    QualifiedName LIVE_SESSION_ID = new QualifiedName("org.eclipse.linuxtools.tmf.ctf.core", "live.session.id"); //$NON-NLS-1$//$NON-NLS-2$;
 }

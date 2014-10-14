@@ -703,7 +703,7 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
             Activator.log(status);
         }
 
-        TmfTraceManager.refreshSupplementaryFiles(this);
+//        TmfTraceManager.refreshSupplementaryFiles(this);
 
         if (signal.getTrace() == this) {
             /* Additionally, the signal is directly for this trace. */

@@ -15,7 +15,10 @@ package org.eclipse.tracecompass.internal.lttng2.control.ui.relayd;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,8 +41,10 @@ import org.eclipse.tracecompass.internal.lttng2.control.core.relayd.lttngviewerC
 import org.eclipse.tracecompass.internal.lttng2.control.ui.Activator;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.ctf.core.CtfTmfTimestamp;
 import org.eclipse.tracecompass.tmf.ctf.core.CtfTmfTrace;
+
 
 /**
  * Consumer of the relay d.
@@ -53,16 +58,40 @@ public final class LttngRelaydConsumer {
     private static final int SIGNAL_THROTTLE_NANOSEC = 10_000_000;
     private static final String ENCODING_UTF_8 = "UTF-8"; //$NON-NLS-1$
 
-    private Job fConsumerJob;
-    private CtfTmfTrace fCtfTmfTrace;
-    private CTFTrace fCtfTrace;
-    private long fTimestampEnd;
-    private AttachSessionResponse fSession;
+    private Map<Long, AttachSessionResponse> fAttachedSessions = new HashMap<>();
+    private Map<Long, TraceSession> fTraceSessions = new HashMap<>();
     private Socket fConnection;
     private ILttngRelaydConnector fRelayd;
-    private String fTracePath;
-    private long fLastSignal = 0;
     private final LttngRelaydConnectionInfo fConnectionInfo;
+    private LiveSessionJob fJob;
+
+    public static class TraceSessionInfo {
+        String fSessionName;
+        long fSessionId;
+        //String fPath;
+
+        public String getSessionName() {
+            return fSessionName;
+        }
+        public long getSessionId() {
+            return fSessionId;
+        }
+    }
+
+    public static class TraceSession {
+        public TraceSession(CtfTmfTrace tmfTrace, CTFTrace trace, AttachSessionResponse session) {
+            super();
+            fTmfTrace = tmfTrace;
+            fTrace = trace;
+            fSession = session;
+        }
+        CtfTmfTrace fTmfTrace;
+        CTFTrace fTrace;
+        AttachSessionResponse fSession;
+
+        long fTimestampEnd = 0;
+        long fLastSignal = 0;
+    }
 
     /**
      * Start a lttng consumer.
@@ -78,7 +107,6 @@ public final class LttngRelaydConsumer {
      */
     LttngRelaydConsumer(final LttngRelaydConnectionInfo connectionInfo) {
         fConnectionInfo = connectionInfo;
-        fTimestampEnd = 0;
     }
 
     /**
@@ -108,38 +136,79 @@ public final class LttngRelaydConsumer {
 
         try {
             Matcher matcher = PROTOCOL_HOST_PATTERN.matcher(fConnectionInfo.getHost());
-            String host = null;
-            if (matcher.matches()) {
-                host = matcher.group(2);
+            if (matcher.matches()){
+                String host = matcher.group(2);
+                fConnection = new Socket(host, fConnectionInfo.getPort());
+                fRelayd = LttngRelaydConnectorFactory.getNewConnector(fConnection);
             }
+        } catch (IOException e) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_ErrorConnecting + (e.getMessage() != null ? e.getMessage() : ""))); //$NON-NLS-1$
+        }
+    }
 
-            if (host == null || host.isEmpty()) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_ErrorConnecting));
-            }
+    class LiveSessionJob extends Job {
 
-            fConnection = new Socket(host, fConnectionInfo.getPort());
-            fRelayd = LttngRelaydConnectorFactory.getNewConnector(fConnection);
-            List<SessionResponse> sessions = fRelayd.getSessions();
-            SessionResponse selectedSession = null;
-            for (SessionResponse session : sessions) {
-                String asessionName = nullTerminatedByteArrayToString(session.getSessionName().getBytes());
+        public LiveSessionJob(String name) {
+            super(name);
+        }
 
-                if (asessionName.equals(fConnectionInfo.getSessionName())) {
-                    selectedSession = session;
-                    break;
+        @Override
+        protected IStatus run(final IProgressMonitor monitor) {
+            try {
+                while (!monitor.isCanceled()) {
+                    for (Long key : fTraceSessions.keySet()) {
+                        TraceSession traceSession = fTraceSessions.get(key);
+                        CtfTmfTrace tmfTrace = traceSession.fTmfTrace;
+//                        System.out.println("Updating session " + key + " " + tmfTrace.getResource().getName());
+                        CTFTrace ctfTrace = tmfTrace.getCTFTrace();
+                        if (ctfTrace == null) {
+                            continue;
+                        }
+                        List<StreamResponse> attachedStreams = traceSession.fSession.getStreamList();
+                        for (StreamResponse stream : attachedStreams) {
+                            if (stream.getMetadataFlag() != 1) {
+                                IndexResponse indexReply = fRelayd.getNextIndex(stream);
+                                if (indexReply.getStatus() == NextIndexReturnCode.VIEWER_INDEX_OK) {
+                                    long nanoTimeStamp = ctfTrace.timestampCyclesToNanos(indexReply.getTimestampEnd());
+                                    if (nanoTimeStamp > traceSession.fTimestampEnd) {
+                                        CtfTmfTimestamp endTime = new CtfTmfTimestamp(nanoTimeStamp);
+                                        TmfTimeRange range = new TmfTimeRange(tmfTrace.getStartTime(), endTime);
+
+                                        long currentTime = System.nanoTime();
+                                        if (currentTime - traceSession.fLastSignal > SIGNAL_THROTTLE_NANOSEC) {
+                                            TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(LttngRelaydConsumer.this, tmfTrace, range);
+                                            tmfTrace.broadcastAsync(signal);
+                                            traceSession.fLastSignal = currentTime;
+                                        }
+                                        traceSession.fTimestampEnd = nanoTimeStamp;
+                                    }
+                                } else if (indexReply.getStatus() == NextIndexReturnCode.VIEWER_INDEX_HUP) {
+                                    // The trace is now complete because the trace session was destroyed
+                                    tmfTrace.setComplete(true);
+                                    TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(LttngRelaydConsumer.this, tmfTrace, new TmfTimeRange(tmfTrace.getStartTime(), new CtfTmfTimestamp(traceSession.fTimestampEnd)));
+                                    tmfTrace.broadcastAsync(signal);
+                                    return Status.OK_STATUS;
+                                }
+                            }
+                        }
+                    }
                 }
+            } catch (IOException e) {
+                Activator.getDefault().logError("Error during live trace reading", e); //$NON-NLS-1$
+                return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_ErrorLiveReading + (e.getMessage() != null ? e.getMessage() : "")); //$NON-NLS-1$
             }
 
-            if (selectedSession == null) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_SessionNotFound));
-            }
+            return Status.OK_STATUS;
+        }
+    }
 
-            CreateSessionResponse createSession = fRelayd.createSession();
-            if (createSession.getStatus() != CreateSessionReturnCode.LTTNG_VIEWER_CREATE_SESSION_OK) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_CreateViewerSessionError + createSession.getStatus().toString()));
-            }
+    public void attach(long sessionId) throws CoreException {
+        if (fAttachedSessions.get(sessionId) != null) {
+            return;
+        }
 
-            AttachSessionResponse attachedSession = fRelayd.attachToSession(selectedSession);
+        try {
+            AttachSessionResponse attachedSession = fRelayd.attachToSession(sessionId);
             if (attachedSession.getStatus() != AttachReturnCode.VIEWER_ATTACH_OK) {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_AttachSessionError + attachedSession.getStatus().toString()));
             }
@@ -149,17 +218,30 @@ public final class LttngRelaydConsumer {
                 throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_NoMetadata));
             }
 
-            List<StreamResponse> attachedStreams = attachedSession.getStreamList();
-            if (attachedStreams.isEmpty()) {
-                throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_NoStreams));
-            }
-
-            fTracePath = nullTerminatedByteArrayToString(attachedStreams.get(0).getPathName().getBytes());
-
-            fSession = attachedSession;
+            fAttachedSessions.put(sessionId, attachedSession);
         } catch (IOException e) {
-            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_ErrorConnecting + (e.getMessage() != null ? e.getMessage() : ""))); //$NON-NLS-1$
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error attaching to session" + (e.getMessage() != null ? e.getMessage() : "")));
         }
+    }
+
+    public String getTracePath(long sessionId) throws CoreException {
+        final AttachSessionResponse attachedSession = fAttachedSessions.get(sessionId);
+        if (attachedSession == null) {
+            return "";
+        }
+
+        List<StreamResponse> attachedStreams = attachedSession.getStreamList();
+        if (attachedStreams.isEmpty()) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_NoStreams));
+        }
+
+        String tracePath = "";
+        try {
+            tracePath = nullTerminatedByteArrayToString(attachedStreams.get(0).getPathName().getBytes());
+        } catch (IOException e) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error getting session path" + (e.getMessage() != null ? e.getMessage() : "")));
+        }
+        return tracePath;
     }
 
     /**
@@ -167,58 +249,28 @@ public final class LttngRelaydConsumer {
      *
      * @param trace
      *            the trace
+     * @param sessionId
      */
-    public void run(final CtfTmfTrace trace) {
-        if (fSession == null) {
+    public void run(final CtfTmfTrace trace, long sessionId) {
+        final AttachSessionResponse session = fAttachedSessions.get(sessionId);
+        if (session == null || fTraceSessions.get(trace) != null) {
             return;
         }
 
-        fCtfTmfTrace = trace;
-        fCtfTrace = trace.getCTFTrace();
-        fConsumerJob = new Job("RelayD consumer") { //$NON-NLS-1$
+        fJob = new LiveSessionJob("RelayD consumer"); //$NON-NLS-1$
+        fTraceSessions.put(sessionId, new TraceSession(trace, trace.getCTFTrace(), session));
+        fJob.setSystem(true);
+        fJob.schedule();
+    }
 
-            @Override
-            protected IStatus run(final IProgressMonitor monitor) {
-                try {
-                    while (!monitor.isCanceled()) {
-                        List<StreamResponse> attachedStreams = fSession.getStreamList();
-                        for (StreamResponse stream : attachedStreams) {
-                            if (stream.getMetadataFlag() != 1) {
-                                IndexResponse indexReply = fRelayd.getNextIndex(stream);
-                                if (indexReply.getStatus() == NextIndexReturnCode.VIEWER_INDEX_OK) {
-                                    long nanoTimeStamp = fCtfTrace.timestampCyclesToNanos(indexReply.getTimestampEnd());
-                                    if (nanoTimeStamp > fTimestampEnd) {
-                                        CtfTmfTimestamp endTime = new CtfTmfTimestamp(nanoTimeStamp);
-                                        TmfTimeRange range = new TmfTimeRange(fCtfTmfTrace.getStartTime(), endTime);
-
-                                        long currentTime = System.nanoTime();
-                                        if (currentTime - fLastSignal > SIGNAL_THROTTLE_NANOSEC) {
-                                            TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(LttngRelaydConsumer.this, fCtfTmfTrace, range);
-                                            fCtfTmfTrace.broadcastAsync(signal);
-                                            fLastSignal = currentTime;
-                                        }
-                                        fTimestampEnd = nanoTimeStamp;
-                                    }
-                                } else if (indexReply.getStatus() == NextIndexReturnCode.VIEWER_INDEX_HUP) {
-                                    // The trace is now complete because the trace session was destroyed
-                                    fCtfTmfTrace.setComplete(true);
-                                    TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(LttngRelaydConsumer.this, fCtfTmfTrace, new TmfTimeRange(fCtfTmfTrace.getStartTime(), new CtfTmfTimestamp(fTimestampEnd)));
-                                    fCtfTmfTrace.broadcastAsync(signal);
-                                    return Status.OK_STATUS;
-                                }
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    Activator.getDefault().logError("Error during live trace reading", e); //$NON-NLS-1$
-                    return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_ErrorLiveReading + (e.getMessage() != null ? e.getMessage() : "")); //$NON-NLS-1$
-                }
-
-                return Status.OK_STATUS;
-            }
-        };
-        fConsumerJob.setSystem(true);
-        fConsumerJob.schedule();
+    /**
+     * Dispose the consumer and it's resources (sockets, etc).
+     */
+    public void dispose(ITmfTrace trace) {
+        fTraceSessions.remove(trace);
+        if (fTraceSessions.isEmpty()) {
+            dispose();
+        }
     }
 
     /**
@@ -226,9 +278,11 @@ public final class LttngRelaydConsumer {
      */
     public void dispose() {
         try {
-            if (fConsumerJob != null) {
-                fConsumerJob.cancel();
-                fConsumerJob.join();
+            fAttachedSessions.clear();
+            fTraceSessions.clear();
+            if (fJob != null) {
+                fJob.cancel();
+                fJob.join();
             }
             if (fConnection != null) {
                 fConnection.close();
@@ -236,6 +290,7 @@ public final class LttngRelaydConsumer {
             if (fRelayd != null) {
                 fRelayd.close();
             }
+
         } catch (IOException e) {
             // Ignore
         } catch (InterruptedException e) {
@@ -243,15 +298,31 @@ public final class LttngRelaydConsumer {
         }
     }
 
-    /**
-     * Once the consumer is connected to the relayd session, it knows the trace
-     * path. This can be useful to know exactly where the trace is so that it
-     * can be imported into the workspace and it can be opened.
-     *
-     * @return the trace path
-     */
-    public String getTracePath() {
-        return fTracePath;
+    public Iterable<TraceSessionInfo> getTraceSessionInfos() throws CoreException {
+        List<TraceSessionInfo> traceSessionsInfos = new ArrayList<>();
+        try {
+            List<SessionResponse> sessions = fRelayd.getSessions();
+            for (SessionResponse session : sessions) {
+                String asessionName = nullTerminatedByteArrayToString(session.getSessionName().getBytes());
+
+                if (asessionName.equals(fConnectionInfo.getSessionName())) {
+                    TraceSessionInfo traceSessionInfo = new TraceSessionInfo();
+                    traceSessionInfo.fSessionId = session.getId();
+                    traceSessionInfo.fSessionName = asessionName;
+
+                    CreateSessionResponse createSession = fRelayd.createSession();
+                    if (createSession.getStatus() != CreateSessionReturnCode.LTTNG_VIEWER_CREATE_SESSION_OK) {
+                        throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_CreateViewerSessionError + createSession.getStatus().toString()));
+                    }
+                    traceSessionsInfos.add(traceSessionInfo);
+                }
+            }
+
+        } catch (IOException e) {
+            throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.LttngRelaydConsumer_ErrorConnecting + (e.getMessage() != null ? e.getMessage() : ""))); //$NON-NLS-1$
+        }
+
+        return traceSessionsInfos;
     }
 
     private static String nullTerminatedByteArrayToString(final byte[] byteArray) throws UnsupportedEncodingException {

@@ -101,17 +101,26 @@ public final class LttngRelaydConnectionManager {
     public void traceOpened(final TmfTraceOpenedSignal signal) {
 
         try {
-            LttngRelaydConnectionInfo entry = getEntry(signal.getTrace());
+            ITmfTrace trace = signal.getTrace();
+            LttngRelaydConnectionInfo entry = getEntry(trace);
             if (entry != null) {
                 LttngRelaydConsumer consumer = getConsumer(entry);
                 consumer.connect();
-                consumer.run((CtfTmfTrace) signal.getTrace());
+                long sessionId = getSessionId(trace);
+                consumer.attach(sessionId);
+                consumer.run((CtfTmfTrace) signal.getTrace(), sessionId);
             }
         } catch (CoreException e) {
             Activator.getDefault().logError(Messages.LttngRelaydConnectionManager_ConnectionError, e);
             ErrorDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), null, Messages.LttngRelaydConnectionManager_ConnectionError, new Status(IStatus.WARNING,
                     Activator.PLUGIN_ID, e.getLocalizedMessage(), e));
         }
+    }
+
+    private static long getSessionId(ITmfTrace trace) throws CoreException {
+        IResource resource = trace.getResource();
+        long sessionId = Long.parseLong(resource.getPersistentProperty(CtfConstants.LIVE_SESSION_ID));
+        return sessionId;
     }
 
     /**
@@ -128,7 +137,7 @@ public final class LttngRelaydConnectionManager {
             if (entry != null) {
                 LttngRelaydConsumer comsumer = getConsumer(entry);
                 if (comsumer != null) {
-                    comsumer.dispose();
+                    comsumer.dispose(signal.getTrace());
                 }
                 fConnections.remove(entry);
             }

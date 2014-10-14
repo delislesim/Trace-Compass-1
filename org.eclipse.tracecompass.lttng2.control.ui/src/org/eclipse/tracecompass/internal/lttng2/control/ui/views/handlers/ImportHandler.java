@@ -51,6 +51,7 @@ import org.eclipse.tracecompass.internal.lttng2.control.ui.Activator;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.relayd.LttngRelaydConnectionInfo;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.relayd.LttngRelaydConnectionManager;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.relayd.LttngRelaydConsumer;
+import org.eclipse.tracecompass.internal.lttng2.control.ui.relayd.LttngRelaydConsumer.TraceSessionInfo;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.views.ControlView;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.views.dialogs.IImportDialog;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.views.dialogs.ImportFileInfo;
@@ -73,6 +74,7 @@ import org.eclipse.tracecompass.tmf.ui.project.model.TraceUtils;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+
 
 /**
  * <p>
@@ -331,7 +333,20 @@ public class ImportHandler extends BaseControlViewHandler {
                     } catch (CoreException e) {
                         return new Status(IStatus.ERROR, Activator.PLUGIN_ID, org.eclipse.tracecompass.internal.lttng2.control.ui.relayd.Messages.LttngRelaydConnectionManager_ConnectionError, e);
                     }
-                    initializeTraceResource(connectionInfo, lttngRelaydConsumer.getTracePath(), project);
+                    Iterable<TraceSessionInfo> sessionInfo = lttngRelaydConsumer.getTraceSessionInfos();
+                    for (TraceSessionInfo tracePath : sessionInfo) {
+                        lttngRelaydConsumer.attach(tracePath.getSessionId());
+                        TmfTraceElement traceElement = initializeTraceResource(connectionInfo, lttngRelaydConsumer.getTracePath(tracePath.getSessionId()), project, tracePath.getSessionId());
+                        if (traceElement != null) {
+                            final TmfTraceElement finalTrace = traceElement;
+                            Display.getDefault().syncExec(new Runnable() {
+                                @Override
+                                public void run() {
+                                    TmfOpenTraceHelper.openTraceFromElement(finalTrace);
+                                }
+                            });
+                        }
+                    }
                     return Status.OK_STATUS;
                 } catch (CoreException | TmfTraceImportException e) {
                     return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.ImportHandler_LiveTraceInitError, e);
@@ -344,10 +359,12 @@ public class ImportHandler extends BaseControlViewHandler {
     }
 
 
-    private static void initializeTraceResource(final LttngRelaydConnectionInfo connectionInfo, final String tracePath, final IProject project) throws CoreException, TmfTraceImportException {
-        IFolder folder = project.getFolder(TmfTracesFolder.TRACES_FOLDER_NAME);
-        IFolder traceFolder = folder.getFolder(connectionInfo.getSessionName());
+    private static TmfTraceElement initializeTraceResource(final LttngRelaydConnectionInfo connectionInfo, final String tracePath, final IProject project, final long sessionId) throws CoreException, TmfTraceImportException {
         Path location = new Path(tracePath);
+        IFolder folder = project.getFolder(TmfTracesFolder.TRACES_FOLDER_NAME);
+        //IFolder traceFolder = folder.getFolder(connectionInfo.getSessionName());
+        String resourceName = location.lastSegment();
+        IFolder traceFolder = folder.getFolder(resourceName);
         IStatus result = ResourcesPlugin.getWorkspace().validateLinkLocation(folder, location);
         if (result.isOK()) {
             traceFolder.createLink(location, IResource.REPLACE, new NullProgressMonitor());
@@ -364,7 +381,7 @@ public class ImportHandler extends BaseControlViewHandler {
         final List<TmfTraceElement> traces = tracesFolder.getTraces();
         TmfTraceElement found = null;
         for (TmfTraceElement candidate : traces) {
-            if (candidate.getName().equals(connectionInfo.getSessionName())) {
+            if (candidate.getName().equals(resourceName)) {
                 found = candidate;
             }
         }
@@ -377,14 +394,7 @@ public class ImportHandler extends BaseControlViewHandler {
         traceFolder.setPersistentProperty(CtfConstants.LIVE_HOST, connectionInfo.getHost());
         traceFolder.setPersistentProperty(CtfConstants.LIVE_PORT, Integer.toString(connectionInfo.getPort()));
         traceFolder.setPersistentProperty(CtfConstants.LIVE_SESSION_NAME, connectionInfo.getSessionName());
-
-        final TmfTraceElement finalTrace = found;
-        Display.getDefault().syncExec(new Runnable() {
-
-            @Override
-            public void run() {
-                TmfOpenTraceHelper.openTraceFromElement(finalTrace);
-            }
-        });
+        traceFolder.setPersistentProperty(CtfConstants.LIVE_SESSION_ID, Long.toString(sessionId));
+        return found;
     }
 }

@@ -35,7 +35,7 @@ public class LttngRelaydConnector_Unsupported implements ILttngRelaydConnector {
     }
 
     @Override
-    public AttachSessionResponse attachToSession(SessionResponse lttngViewerSession) {
+    public AttachSessionResponse attachToSession(long lttngViewerSessionId) {
         throw new UnsupportedOperationException();
     }
 

@@ -97,7 +97,7 @@ public class LttngRelayd24Test {
             assertNotNull(lttngViewerSession);
             CreateSessionResponse createSession = relayD.createSession();
             assertEquals(createSession.getStatus(), CreateSessionReturnCode.LTTNG_VIEWER_CREATE_SESSION_OK);
-            AttachSessionResponse attachedSession = relayD.attachToSession(lttngViewerSession);
+            AttachSessionResponse attachedSession = relayD.attachToSession(lttngViewerSession.getId());
 
             String metaData = relayD.getMetadata(attachedSession);
             assertNotNull(metaData);

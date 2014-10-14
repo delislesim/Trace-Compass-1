@@ -96,14 +96,14 @@ public class LttngRelaydConnector_2_4 implements ILttngRelaydConnector {
     }
 
     @Override
-    public AttachSessionResponse attachToSession(SessionResponse lttngViewerSession) throws IOException {
+    public AttachSessionResponse attachToSession(long lttngViewerSessionId) throws IOException {
         ViewerCommand listSessionsCmd = new ViewerCommand(Command.VIEWER_ATTACH_SESSION, 0,0);
         fOutNet.write(listSessionsCmd.serialize());
         /*
          * only flush if you read after
          */
 
-        AttachSessionRequest attachRequest = new AttachSessionRequest(lttngViewerSession.getId(), SeekCommand.VIEWER_SEEK_BEGINNING);
+        AttachSessionRequest attachRequest = new AttachSessionRequest(lttngViewerSessionId, SeekCommand.VIEWER_SEEK_BEGINNING);
         fOutNet.write(attachRequest.serialize());
         fOutNet.flush();
 
