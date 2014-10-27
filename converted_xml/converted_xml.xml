@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<tmfxml>
+    <stateProvider id="kernel.statemachine.state.provider" version="0">
+        <head>
+            <traceType id="org.eclipse.tracecompass.tmf.core.development"/>
+            <label value="kernel statemachine state provider"/>
+        </head>
+        <definedValue name="CPU_USERMODE" value="0"/>
+        <definedValue name="CPU_SYSCALL" value="1"/>
+        <definedValue name="CPU_IDLE" value="2"/>
+        <definedValue name="CPU_IRQ" value="3"/>
+        <definedValue name="SOFT_IRQ" value="4"/>
+        <definedValue name="CPU_SOFTIRQ" value="5"/>
+        <definedValue name="ALL_STATE" value="6"/>
+        <eventHandler eventName="sys_*, compat_sys_*">
+            <stateChange>
+                <stateAttribute type="constant" value="Threads"/>
+                <stateAttribute type="query" value="thread">
+                    <stateAttribute type="constant" value="CPUs"/>
+                    <stateAttribute type="eventField" value="cpu"/>
+                    <stateAttribute type="constant" value="Current_thread"/>
+                </stateAttribute>
+                <stateAttribute type="constant" value="System_call"/>
+                <stateValue type="eventName" value=""/>
+            </stateChange>
+            <stateChange>
+                <stateAttribute type="constant" value="CPUs"/>
+                <stateAttribute type="eventField" value="cpu"/>
+                <stateAttribute type="constant" value="Status"/>
+                <stateValue type="int" value="CPU_SYSCALL"/>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="exit_syscall">
+            <stateChange>
+                <stateAttribute type="constant" value="CPUs"/>
+                <stateAttribute type="eventField" value="cpu"/>
+                <stateAttribute type="constant" value="Status"/>
+                <stateValue type="int" value="CPU_USERMODE"/>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="irq_handler_exit">
+            <stateChange>
+                <stateAttribute type="constant" value="Ressources"/>
+                <stateAttribute type="constant" value="IRQs"/>
+                <stateAttribute type="eventField" value="irq"/>
+                <stateValue type="null" value=""/>
+            </stateChange>
+            <stateChange>
+                <if>
+                    <or>
+                        <condition>
+                            <stateAttribute type="constant" value="CPUs"/>
+                            <stateAttribute type="eventField" value="cpu"/>
+                            <stateAttribute type="constant" value="Current_thread"/>
+                            <stateValue type="null" value=""/>
+                        </condition>
+                        <condition>
+                            <stateAttribute type="constant" value="CPUs"/>
+                            <stateAttribute type="eventField" value="cpu"/>
+                            <stateAttribute type="constant" value="Current_thread"/>
+                            <stateValue type="long" value="0"/>
+                        </condition>
+                    </or>
+                </if>
+                <then>
+                    <stateAttribute type="constant" value="CPUs"/>
+                    <stateAttribute type="eventField" value="cpu"/>
+                    <stateAttribute type="constant" value="Status"/>
+                    <stateValue type="int" value="CPU_IDLE"/>
+                </then>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="softirq_exit">
+            <stateChange>
+                <stateAttribute type="constant" value="Ressources"/>
+                <stateAttribute type="constant" value="Soft_IRQs"/>
+                <stateAttribute type="eventField" value="vec"/>
+                <stateValue type="null" value=""/>
+            </stateChange>
+            <stateChange>
+                <if>
+                    <or>
+                        <condition>
+                            <stateAttribute type="constant" value="CPUs"/>
+                            <stateAttribute type="eventField" value="cpu"/>
+                            <stateAttribute type="constant" value="Current_thread"/>
+                            <stateValue type="null" value=""/>
+                        </condition>
+                        <condition>
+                            <stateAttribute type="constant" value="CPUs"/>
+                            <stateAttribute type="eventField" value="cpu"/>
+                            <stateAttribute type="constant" value="Current_thread"/>
+                            <stateValue type="long" value="0"/>
+                        </condition>
+                    </or>
+                </if>
+                <then>
+                    <stateAttribute type="constant" value="CPUs"/>
+                    <stateAttribute type="eventField" value="cpu"/>
+                    <stateAttribute type="constant" value="Status"/>
+                    <stateValue type="int" value="CPU_IDLE"/>
+                </then>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="sched_switch">
+            <stateChange>
+                <stateAttribute type="constant" value="CPUs"/>
+                <stateAttribute type="eventField" value="cpu"/>
+                <stateAttribute type="constant" value="Current_thread"/>
+                <stateValue type="eventField" value="next_tid"/>
+            </stateChange>
+            <stateChange>
+                <stateAttribute type="constant" value="CPUs"/>
+                <stateAttribute type="eventField" value="cpu"/>
+                <stateAttribute type="constant" value="Current_thread"/>
+                <stateValue type="eventField" value="next_tid"/>
+            </stateChange>
+            <stateChange>
+                <if>
+                    <not>
+                        <condition>
+                            <field name="next_tid"/>
+                            <stateValue type="long" value="0"/>
+                        </condition>
+                    </not>
+                </if>
+                <then>
+                    <if>
+                        <condition>
+                            <stateAttribute type="constant" value="Threads"/>
+                            <stateAttribute type="eventField" value="next_tid"/>
+                            <stateAttribute type="constant" value="System_call"/>
+                            <stateValue type="null" value=""/>
+                        </condition>
+                    </if>
+                    <then>
+                        <stateAttribute type="constant" value="CPUs"/>
+                        <stateAttribute type="eventField" value="cpu"/>
+                        <stateAttribute type="constant" value="Status"/>
+                        <stateValue type="int" value="CPU_USERMODE"/>
+                    </then>
+                    <else>
+                        <stateAttribute type="constant" value="CPUs"/>
+                        <stateAttribute type="eventField" value="cpu"/>
+                        <stateAttribute type="constant" value="Status"/>
+                        <stateValue type="int" value="CPU_SYSCALL"/>
+                    </else>
+                </then>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="softirq_entry">
+            <stateChange>
+                <stateAttribute type="constant" value="Ressources"/>
+                <stateAttribute type="constant" value="Soft_IRQs"/>
+                <stateAttribute type="eventField" value="vec"/>
+                <stateValue type="eventField" value="cpu"/>
+            </stateChange>
+            <stateChange>
+                <stateAttribute type="constant" value="CPUs"/>
+                <stateAttribute type="eventField" value="cpu"/>
+                <stateAttribute type="constant" value="Status"/>
+                <stateValue type="int" value="CPU_SOFTIRQ"/>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="softirq_raise">
+            <stateChange>
+                <stateAttribute type="constant" value="Ressources"/>
+                <stateAttribute type="constant" value="Soft_IRQs"/>
+                <stateAttribute type="eventField" value="vec"/>
+                <stateValue type="int" value="SOFT_IRQ"/>
+            </stateChange>
+        </eventHandler>
+        <eventHandler eventName="irq_handler_entry">
+            <stateChange>
+                <stateAttribute type="constant" value="CPUs"/>
+                <stateAttribute type="eventField" value="cpu"/>
+                <stateAttribute type="constant" value="Status"/>
+                <stateValue type="int" value="CPU_IRQ"/>
+            </stateChange>
+            <stateChange>
+                <stateAttribute type="constant" value="Ressources"/>
+                <stateAttribute type="constant" value="IRQs"/>
+                <stateAttribute type="eventField" value="irq"/>
+                <stateValue type="eventField" value="cpu"/>
+            </stateChange>
+        </eventHandler>
+    </stateProvider>
+</tmfxml>

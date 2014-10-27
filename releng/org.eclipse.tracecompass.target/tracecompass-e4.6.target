@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="tracecompass-e4.6" sequenceNumber="19">
+<?pde version="3.8"?><target name="tracecompass-e4.6" sequenceNumber="20">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.cdt.gnu.dsf.feature.group" version="0.0.0"/>
@@ -65,6 +65,32 @@
 <unit id="org.eclipse.wst.xml.core" version="0.0.0"/>
 <unit id="org.eclipse.wst.xml.ui" version="0.0.0"/>
 <repository location="http://download.eclipse.org/webtools/downloads/drops/R3.8.0/R-3.8.0-20160608130753/repository/"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.graphiti" version="0.0.0"/>
+<unit id="org.eclipse.graphiti.examples.common" version="0.0.0"/>
+<unit id="org.eclipse.graphiti.examples.tutorial" version="0.0.0"/>
+<unit id="org.eclipse.graphiti.mm" version="0.0.0"/>
+<unit id="org.eclipse.graphiti.pattern" version="0.0.0"/>
+<unit id="org.eclipse.graphiti.ui" version="0.0.0"/>
+<repository location="http://download.eclipse.org/graphiti/updates/maintenance"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.emf.edit.ui" version="0.0.0"/>
+<unit id="org.eclipse.emf.ecore.edit" version="0.0.0"/>
+<repository location="http://download.eclipse.org/modeling/emf/emf/updates/2.10.x"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.emf.transaction" version="0.0.0"/>
+<repository location="http://download.eclipse.org/modeling/emf/transaction/updates/releases"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.emf.validation" version="0.0.0"/>
+<repository location="http://download.eclipse.org/modeling/emf/validation/updates/releases"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.gef" version="0.0.0"/>
+<repository location="http://download.eclipse.org/tools/gef/updates/releases"/>
 </location>
 </locations>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
