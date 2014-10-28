@@ -32,17 +32,13 @@ import org.eclipse.swtbot.swt.finder.utils.SWTBotPreferences;
 import org.eclipse.swtbot.swt.finder.waits.Conditions;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotButton;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotShell;
-import org.eclipse.swtbot.swt.finder.widgets.SWTBotText;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotToolbarButton;
-import org.eclipse.swtbot.swt.finder.widgets.SWTBotTree;
-import org.eclipse.swtbot.swt.finder.widgets.SWTBotTreeItem;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSelectionRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
 import org.eclipse.tracecompass.tmf.ctf.core.event.CtfTmfEvent;
 import org.eclipse.tracecompass.tmf.ctf.core.tests.shared.CtfTmfTestTrace;
 import org.eclipse.tracecompass.tmf.ctf.core.trace.CtfTmfTrace;
 import org.eclipse.tracecompass.tmf.ui.editors.TmfEventsEditor;
-import org.eclipse.tracecompass.tmf.ui.swtbot.tests.shared.ConditionHelpers;
 import org.eclipse.tracecompass.tmf.ui.swtbot.tests.shared.SWTBotUtils;
 import org.eclipse.tracecompass.tmf.ui.views.histogram.HistogramView;
 import org.eclipse.tracecompass.tmf.ui.views.statistics.TmfStatisticsView;
@@ -110,35 +106,7 @@ public abstract class AbstractImportAndReadSmokeTest {
      * Creates a tracing projects
      */
     protected void createProject() {
-        SWTBotUtils.focusMainWindow(fBot.shells());
-        fBot.menu("File").menu("New").menu("Project...").click();
-
-        fBot.shell("New Project").setFocus();
-        SWTBotTree tree = fBot.tree();
-        assertNotNull(tree);
-        final String tracingKey = "Tracing";
-        fBot.waitUntil(ConditionHelpers.IsTreeNodeAvailable(tracingKey, tree));
-        final SWTBotTreeItem tracingNode = tree.expandNode(tracingKey);
-
-        tracingNode.select();
-        final String projectKey = "Tracing Project";
-        fBot.waitUntil(ConditionHelpers.IsTreeChildNodeAvailable(projectKey, tracingNode));
-        final SWTBotTreeItem tracingProject = tracingNode.getNode(projectKey);
-        assertNotNull(tracingProject);
-
-        tracingProject.select();
-        tracingProject.click();
-
-        SWTBotButton nextButton = fBot.button("Next >");
-        fBot.waitUntil(Conditions.widgetIsEnabled(nextButton));
-        nextButton.click();
-        fBot.shell("Tracing Project").setFocus();
-
-        final SWTBotText text = fBot.text();
-        text.setText(getProjectName());
-
-        fBot.button("Finish").click();
-        SWTBotUtils.waitForJobs();
+        SWTBotUtils.createProjectFromUI(getProjectName(), fBot);
     }
 
     /**

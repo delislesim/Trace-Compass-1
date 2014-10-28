@@ -47,6 +47,7 @@ import org.eclipse.swtbot.swt.finder.widgets.SWTBotCheckBox;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotMenu;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotShell;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTable;
+import org.eclipse.swtbot.swt.finder.widgets.SWTBotText;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTree;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTreeItem;
 import org.eclipse.tracecompass.tmf.ui.editors.TmfEventsEditor;
@@ -117,6 +118,46 @@ public final class SWTBotUtils {
             }
         });
 
+        SWTBotUtils.waitForJobs();
+    }
+
+    /**
+     * Create a tracing project using the UI
+     *
+     * @param projectName
+     *            the name of the tracing project
+     * @param bot
+     *            the workbench bot
+     */
+    public static void createProjectFromUI(final String projectName, SWTWorkbenchBot bot) {
+        SWTBotUtils.focusMainWindow(bot.shells());
+        bot.menu("File").menu("New").menu("Project...").click();
+
+        bot.shell("New Project").setFocus();
+        SWTBotTree tree = bot.tree();
+        assertNotNull(tree);
+        final String tracingKey = "Tracing";
+        bot.waitUntil(ConditionHelpers.IsTreeNodeAvailable(tracingKey, tree));
+        final SWTBotTreeItem tracingNode = tree.expandNode(tracingKey);
+
+        tracingNode.select();
+        final String projectKey = "Tracing Project";
+        bot.waitUntil(ConditionHelpers.IsTreeChildNodeAvailable(projectKey, tracingNode));
+        final SWTBotTreeItem tracingProject = tracingNode.getNode(projectKey);
+        assertNotNull(tracingProject);
+
+        tracingProject.select();
+        tracingProject.click();
+
+        SWTBotButton nextButton = bot.button("Next >");
+        bot.waitUntil(Conditions.widgetIsEnabled(nextButton));
+        nextButton.click();
+        bot.shell("Tracing Project").setFocus();
+
+        final SWTBotText text = bot.text();
+        text.setText(projectName);
+
+        bot.button("Finish").click();
         SWTBotUtils.waitForJobs();
     }
 
@@ -205,6 +246,20 @@ public final class SWTBotUtils {
                 bot.waitUntil(ConditionHelpers.ViewIsClosed(view));
             }
         }
+    }
+
+    /**
+     * Close a view with an id
+     *
+     * @param viewId
+     *            the view id, like "org.eclipse.linuxtools.tmf.ui.views.histogram"
+     * @param bot
+     *            the workbench bot
+     */
+    public static void closeViewById(String viewId, SWTWorkbenchBot bot) {
+        final SWTBotView view = bot.viewById(viewId);
+        view.close();
+        bot.waitUntil(ConditionHelpers.ViewIsClosed(view));
     }
 
     /**
