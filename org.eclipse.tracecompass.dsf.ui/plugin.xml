@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.cdt.visualizer.ui.visualizer">
+      <visualizer
+            class="org.eclipse.tracecompass.internal.dsf.ui.visualizer.TraceMulticoreVisualizer"
+            id="org.eclipse.tracecompass.dsf.ui.visualizer">
+      </visualizer>
+   </extension>
+
+</plugin>

@@ -129,6 +129,7 @@
     <module>org.eclipse.tracecompass.ctf.core.tests</module>
     <module>org.eclipse.tracecompass.ctf.parser</module>
     <module>org.eclipse.tracecompass.ctf.parser.tests</module>
+    <module>org.eclipse.tracecompass.dsf.core</module>
 
     <module>org.eclipse.tracecompass.pcap.core</module>
     <module>org.eclipse.tracecompass.pcap.core.tests</module>
