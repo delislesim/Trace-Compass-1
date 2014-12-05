@@ -29,10 +29,16 @@ import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceCorePlugin;
+import org.eclipse.tracecompass.lttng2.kernel.core.analysis.cpuusage.LttngKernelCpuUsageAnalysis;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 import org.osgi.framework.BundleContext;
 
 /** */
 public class TraceHardwareAndOSService extends AbstractDsfService implements IGDBHardwareAndOS2, ICachingService {
+
+    final private ITmfTrace fTrace;
+    final private LttngKernelCpuUsageAnalysis fCPUModule;
 
 	@Immutable
 	private static class GDBCPUDMC extends AbstractDMContext
@@ -146,9 +152,19 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
     /**
      * @param session The DSF session for this service.
+     * @param trace The trace associated to this service
      */
-    public TraceHardwareAndOSService(DsfSession session) {
+    public TraceHardwareAndOSService(DsfSession session, ITmfTrace trace) {
     	super(session);
+    	fTrace = trace;
+
+    	//initialize cpu data source
+        fCPUModule = TmfTraceUtils.getAnalysisModuleOfClass(fTrace, LttngKernelCpuUsageAnalysis.class, LttngKernelCpuUsageAnalysis.ID);
+        if (fCPUModule == null) {
+            return;
+        }
+        fCPUModule.schedule();
+        fCPUModule.waitForInitialization();
     }
 
     /**

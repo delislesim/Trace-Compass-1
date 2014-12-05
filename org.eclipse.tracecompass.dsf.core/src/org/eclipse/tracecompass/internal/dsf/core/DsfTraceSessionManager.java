@@ -35,12 +35,12 @@ public class DsfTraceSessionManager {
      * Create a DSF session f
      * @return The DSF session created.
      */
-    public static DsfSession startDsfSession() {
+    public static DsfSession startDsfSession(ITmfTrace trace) {
         final DefaultDsfExecutor dsfExecutor = new DefaultDsfExecutor(TRACE_DEBUG_MODEL_ID);
         dsfExecutor.prestartCoreThread();
         DsfSession session = DsfSession.startSession(dsfExecutor, TRACE_DEBUG_MODEL_ID);
 
-        startServices(session);
+        startServices(session, trace);
 
         return session;
     }
@@ -58,14 +58,14 @@ public class DsfTraceSessionManager {
         return null;
     }
 
-    private static void startServices(final DsfSession session) {
+    private static void startServices(final DsfSession session, final ITmfTrace trace) {
         Query<Object> query = new Query<Object>() {
             @Override
             protected void execute(final DataRequestMonitor<Object> rm) {
                 new TraceCommandControlService(session).initialize(new ImmediateRequestMonitor(rm) {
                     @Override
                     protected void handleSuccess() {
-                        new TraceHardwareAndOSService(session).initialize(new ImmediateRequestMonitor(rm));
+                        new TraceHardwareAndOSService(session, trace).initialize(new ImmediateRequestMonitor(rm));
                     }
                 });
             }

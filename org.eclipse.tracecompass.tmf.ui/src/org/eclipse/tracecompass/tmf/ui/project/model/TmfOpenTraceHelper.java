@@ -369,7 +369,7 @@ public class TmfOpenTraceHelper {
                 final String editorId = (traceEditorId != null) ? traceEditorId : TmfEventsEditor.ID;
                 final IEditorInput editorInput = new TmfEditorInput(file, trace);
 
-                DsfTraceSessionManager.startDsfSession();
+                DsfTraceSessionManager.startDsfSession(trace);
 
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
