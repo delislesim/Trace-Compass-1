@@ -121,6 +121,7 @@ import org.eclipse.tracecompass.tmf.core.event.lookup.ITmfSourceLookup;
 import org.eclipse.tracecompass.tmf.core.filter.ITmfFilter;
 import org.eclipse.tracecompass.tmf.core.filter.model.ITmfFilterTreeNode;
 import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterAndNode;
+import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterMatchesFieldNode;
 import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterMatchesNode;
 import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterNode;
 import org.eclipse.tracecompass.tmf.core.request.ITmfEventRequest.ExecutionType;
@@ -868,13 +869,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                     context.addVariable(ExportToTextCommandHandler.TMF_EVENT_TABLE_COLUMNS_ID, exportColumns);
 
                     handlerService.executeCommandInContext(cmd, null, context);
-                } catch (ExecutionException e) {
-                    displayException(e);
-                } catch (NotDefinedException e) {
-                    displayException(e);
-                } catch (NotEnabledException e) {
-                    displayException(e);
-                } catch (NotHandledException e) {
+                } catch (ExecutionException | NotDefinedException | NotEnabledException | NotHandledException e) {
                     displayException(e);
                 }
             }
@@ -1137,9 +1132,15 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
      */
     protected void setItemData(final TableItem item, final ITmfEvent event, final long rank) {
         String[] itemStrings = getItemStrings(fColumns, event);
+
+        // Get the actual ITmfEvent from the CachedEvent
+        ITmfEvent tmfEvent = event;
+        if (event instanceof CachedEvent) {
+            tmfEvent = ((CachedEvent) event).event;
+        }
         item.setText(itemStrings);
-        item.setData(event);
-        item.setData(Key.TIMESTAMP, new TmfTimestamp(event.getTimestamp()));
+        item.setData(tmfEvent);
+        item.setData(Key.TIMESTAMP, new TmfTimestamp(tmfEvent.getTimestamp()));
         item.setData(Key.RANK, rank);
 
         final Collection<Long> markerIds = fBookmarksMap.get(rank);
@@ -1166,14 +1167,14 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         boolean searchNoMatch = false;
         final ITmfFilter searchFilter = (ITmfFilter) fTable.getData(Key.SEARCH_OBJ);
         if (searchFilter != null) {
-            if (searchFilter.matches(event)) {
+            if (searchFilter.matches(tmfEvent)) {
                 searchMatch = true;
             } else {
                 searchNoMatch = true;
             }
         }
 
-        final ColorSetting colorSetting = ColorSettingsManager.getColorSetting(event);
+        final ColorSetting colorSetting = ColorSettingsManager.getColorSetting(tmfEvent);
         if (searchNoMatch) {
             item.setForeground(colorSetting.getDimmedForegroundColor());
             item.setBackground(colorSetting.getDimmedBackgroundColor());
@@ -1383,7 +1384,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                             tableEditor.getEditor().dispose();
                             return false;
                         }
-                        final TmfFilterMatchesNode filter = new TmfFilterMatchesNode(null);
+                        final TmfFilterMatchesFieldNode filter = new TmfFilterMatchesFieldNode(null);
                         String fieldId = (String) column.getData(Key.FIELD_ID);
                         if (fieldId == null) {
                             fieldId = column.getText();
