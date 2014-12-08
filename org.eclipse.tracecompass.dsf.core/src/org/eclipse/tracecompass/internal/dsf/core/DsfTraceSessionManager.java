@@ -12,16 +12,15 @@
 
 package org.eclipse.tracecompass.internal.dsf.core;
 
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-
-import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.DefaultDsfExecutor;
 import org.eclipse.cdt.dsf.concurrent.ImmediateRequestMonitor;
-import org.eclipse.cdt.dsf.concurrent.Query;
 import org.eclipse.cdt.dsf.service.DsfSession;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.tracecompass.internal.dsf.core.service.TraceCommandControlService;
 import org.eclipse.tracecompass.internal.dsf.core.service.TraceHardwareAndOSService;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 
 /** */
@@ -30,6 +29,28 @@ public class DsfTraceSessionManager {
     /** */
     public final static String TRACE_DEBUG_MODEL_ID = "org.eclipse.tracecompass.dsf"; //$NON-NLS-1$
 
+
+    /**
+     * 
+     */
+    public DsfTraceSessionManager() {
+        TmfSignalManager.register(this);
+    }
+
+    /**
+     * 
+     */
+    public void dispose() {
+        TmfSignalManager.deregister(this);
+    }
+
+    /**
+     * @param signal - 
+     */
+    @TmfSignalHandler
+    public void traceOpened(TmfTraceOpenedSignal signal) {
+        startDsfSession(signal.getTrace());
+    }
 
     /**
      * Create a DSF session f
@@ -59,25 +80,24 @@ public class DsfTraceSessionManager {
     }
 
     private static void startServices(final DsfSession session, final ITmfTrace trace) {
-        Query<Object> query = new Query<Object>() {
+         Runnable task = new Runnable() {
+
             @Override
-            protected void execute(final DataRequestMonitor<Object> rm) {
-                new TraceCommandControlService(session).initialize(new ImmediateRequestMonitor(rm) {
+            public void run() {
+                new TraceCommandControlService(session).initialize(new ImmediateRequestMonitor(null) {
                     @Override
                     protected void handleSuccess() {
-                        new TraceHardwareAndOSService(session, trace).initialize(new ImmediateRequestMonitor(rm));
+                        try {
+                            new TraceHardwareAndOSService(session, trace).initialize(new ImmediateRequestMonitor(null));
+                        } catch (CoreException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
                     }
                 });
             }
         };
 
-        session.getExecutor().execute(query);
-        try {
-            query.get();
-        } catch (InterruptedException e1) {
-        } catch (ExecutionException e1) {
-        } catch (CancellationException e1) {
-        } finally {
-        }
+        session.getExecutor().execute(task);
     }
 }

@@ -17,3 +17,4 @@ Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: org.eclipse.tracecompass.internal.dsf.core;x-friends:="org.eclipse.tracecompass.tmf.ui",
  org.eclipse.tracecompass.internal.dsf.core.service;x-internal:=true
+Import-Package: org.eclipse.jdt.annotation
