@@ -14,7 +14,9 @@ package org.eclipse.tracecompass.internal.dsf.ui.visualizer;
 import org.eclipse.cdt.dsf.gdb.multicorevisualizer.internal.ui.view.Messages;
 import org.eclipse.cdt.dsf.gdb.multicorevisualizer.internal.ui.view.MulticoreVisualizer;
 import org.eclipse.cdt.dsf.service.DsfSession;
+import org.eclipse.cdt.visualizer.ui.canvas.GraphicCanvas;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
@@ -44,6 +46,13 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     @Override
     public void dispose() {
         super.dispose();
+    }
+
+    @Override
+    public GraphicCanvas createCanvas(Composite parent) {
+        m_canvas = new TraceMulticoreVisualizerCanvas(parent);
+        m_canvas.addSelectionChangedListener(this);
+        return m_canvas;
     }
 
     @Override
