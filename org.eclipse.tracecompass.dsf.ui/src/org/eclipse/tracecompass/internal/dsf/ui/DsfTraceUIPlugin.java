@@ -11,6 +11,7 @@
 package org.eclipse.tracecompass.internal.dsf.ui;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -26,6 +27,7 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
 
     private static BundleContext fgBundleContext;
 
+    private DsfTraceSessionManager traceManager;
 
 	/**
 	 * The constructor
@@ -42,6 +44,7 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
         fgBundleContext = context;
 		super.start(context);
+        traceManager = new DsfTraceSessionManager();
 	}
 
 	/*
@@ -53,6 +56,7 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
 		plugin = null;
         fgBundleContext = null;
 		super.stop(context);
+        traceManager.dispose();
 	}
 
 	/**

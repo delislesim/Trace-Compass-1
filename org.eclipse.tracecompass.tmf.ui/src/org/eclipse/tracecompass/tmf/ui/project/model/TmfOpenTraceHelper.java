@@ -32,7 +32,6 @@ import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.project.model.TmfImportHelper;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
@@ -368,8 +367,6 @@ public class TmfOpenTraceHelper {
                 String traceEditorId = traceElement.getEditorId();
                 final String editorId = (traceEditorId != null) ? traceEditorId : TmfEventsEditor.ID;
                 final IEditorInput editorInput = new TmfEditorInput(file, trace);
-
-                DsfTraceSessionManager.startDsfSession();
 
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
