@@ -38,6 +38,11 @@ import org.eclipse.tracecompass.lttng2.kernel.core.analysis.cpuusage.LttngKernel
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.exceptions.AttributeNotFoundException;
 import org.eclipse.tracecompass.statesystem.core.exceptions.TimeRangeException;
+import org.eclipse.tracecompass.tmf.core.signal.TmfRangeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTimeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 import org.osgi.framework.BundleContext;
@@ -49,6 +54,8 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
     final private LttngKernelCpuUsageAnalysis fCPUModule;
     final private ITmfStateSystem fStateSys;
     final private Map<ICPUDMContext, ICoreDMContext[]> fMapCPUToCores = new HashMap<>();
+    private long fStartTime;
+    private long fEndTime;
 
     @Immutable
     private static class GDBCPUDMC extends AbstractDMContext
@@ -203,6 +210,11 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
      */
     public TraceHardwareAndOSService(@NonNull DsfSession session, @NonNull ITmfTrace trace) throws CoreException {
         super(session);
+
+        // Use VIP to make sure the time selection is first updated in this
+        // service i.e. before the UI queries for the load
+        TmfSignalManager.registerVIP(this);
+
         fTrace = trace;
 
         // initialize cpu data source
@@ -219,6 +231,9 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
             // Notify of incorrect initialization
             throw new CoreException(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Unable to resolve the State System from trace: " + trace, null)); //$NON-NLS-1$
         }
+
+        fStartTime = fStateSys.getStartTime();
+        fEndTime = fStateSys.getCurrentEndTime();
     }
 
     /**
@@ -257,8 +272,42 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
     @Override
     public void shutdown(RequestMonitor requestMonitor) {
+        TmfSignalManager.deregister(this);
         unregister();
         super.shutdown(requestMonitor);
+    }
+
+    /**
+     * Resolve the time interval to use for the calculation of load
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void timeSelected(TmfTimeSynchSignal signal) {
+        // Broadcasted in nano seconds
+        long beginTime = signal.getBeginTime().getValue();
+        long endTime = signal.getEndTime().getValue();
+        fEndTime = signal.getEndTime().getValue();
+        if (beginTime == endTime) {
+            // calculate load period over previous 1/2000 of the trace's time range
+            long delta = (fStateSys.getCurrentEndTime() - fStateSys.getStartTime()) / 2000;
+            fStartTime = fEndTime - delta;
+        }
+
+        assert fEndTime > fStartTime;
+        System.out.println("Current end time: " + fStateSys.getCurrentEndTime());
+        System.out.println("Time Selected: " + fStartTime + "->" + fEndTime + ": " + (fEndTime - fStartTime));
+    }
+
+    /**
+     * @param signal
+     */
+    @TmfSignalHandler
+    public void timeRangeSelected(TmfRangeSynchSignal signal) {
+        // Broadcasted in nano seconds
+        TmfTimeRange timeRange = signal.getCurrentRange();
+        fStartTime = timeRange.getStartTime().getValue();
+        fEndTime = timeRange.getStartTime().getValue();
+        System.out.println("Time Range selected: " + fStartTime + "->" + fEndTime);
     }
 
     /**
@@ -422,10 +471,9 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
     }
 
     private ILoadInfo getCoreLoadInfo(ICoreDMContext coreDmc) {
-        // TODO: Need to extend the API to provide the load of the current
-        // selected time, this may
-        long startTime = fStateSys.getStartTime();
-        long endTime = fStateSys.getCurrentEndTime();
+        long startTime = fStartTime;
+        long endTime = fEndTime;
+
         double duration = endTime - startTime;
 
         // validate time ranges and prevent division by zero

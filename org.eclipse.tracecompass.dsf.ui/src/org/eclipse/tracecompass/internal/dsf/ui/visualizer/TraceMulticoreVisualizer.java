@@ -16,12 +16,23 @@ import org.eclipse.cdt.dsf.gdb.multicorevisualizer.internal.ui.view.MulticoreVis
 import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
+import org.eclipse.tracecompass.tmf.core.signal.TmfRangeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTimeSynchSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 
 /** */
 @SuppressWarnings("restriction")
 public class TraceMulticoreVisualizer extends MulticoreVisualizer {
+
+    /**
+     *
+     */
+    public TraceMulticoreVisualizer() {
+        TmfSignalManager.register(this);
+    }
 
     /** Returns non-localized unique name for this visualizer. */
     @Override
@@ -44,6 +55,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     @Override
     public void dispose() {
         super.dispose();
+        TmfSignalManager.deregister(this);
     }
 
     @Override
@@ -80,4 +92,38 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
 
         return result;
     }
+
+    /**
+     * Enable Meters and request the cpu load from the service
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void timeSelected(TmfTimeSynchSignal signal) {
+        setLoadMetersEnabled(true);
+        updateLoads();
+    }
+
+    /**
+     * Enable Meters and request the cpu load from the service
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void timeRangeSelected(TmfRangeSynchSignal signal) {
+        setLoadMetersEnabled(true);
+        updateLoads();
+    }
+
+    @Override
+    public void setLoadMetersEnabled(boolean enabled) {
+        if (m_loadMetersEnabled == enabled) {
+            return;
+        }
+        m_loadMetersEnabled = enabled;
+        // save load meter enablement in model
+        fDataModel.setLoadMetersEnabled(m_loadMetersEnabled);
+        disposeLoadMeterTimer();
+        // No polling timers for Tracing
+        // initializeLoadMeterTimer();
+    }
+
 }
