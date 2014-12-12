@@ -320,7 +320,6 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
     @Override
     public void getCPUs(final IHardwareTargetDMContext dmc, final DataRequestMonitor<ICPUDMContext[]> rm) {
-        // Assuming one CPU per trace for the time being
         if (fMapCPUToCores.keySet().size() > 0) {
             // CPU's already resolved for the associated trace
             ICPUDMContext[] cpus = fMapCPUToCores.keySet().toArray(new ICPUDMContext[fMapCPUToCores.size()]);
@@ -328,15 +327,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
             return;
         }
 
-        // Need to resolve the associated CPU's
-        // TODO: Trace compass does not seem to divide core and cpu today,
-        // For now lets go with one CPU per HW target, and use the Trace compass
-        // CPU's as cores
-        ICPUDMContext cpuDmc = createCPUContext(dmc, "1"); //$NON-NLS-1$
-
-        ICPUDMContext[] cpuDmcs = new ICPUDMContext[] { cpuDmc };
-        System.out.println("returning " + cpuDmcs.length + " CPU");
-        rm.done(cpuDmcs);
+        rm.done(resolveCPUContexts(dmc));
     }
 
     @Override
@@ -358,9 +349,8 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
             return;
         }
 
-        // Not available, so get the cores from the trace state system and cache
-        // them
-        rm.done(resolveCoreContexts(cpuDmc));
+        // Not available but cpu context is not null, not expected but we can assume there are no core context on this trace
+        rm.done(new ICoreDMContext[0]);
     }
 
     @Override
@@ -382,29 +372,41 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
         return cpuDmc;
     }
 
-    private ICoreDMContext[] resolveCoreContexts(ICPUDMContext cpuDmc) {
-        // For now treat a Trace CPU as Core
+    /**
+     * Need to resolve the associated CPU's anc Cores
+     *
+     * TODO: Trace compass does not seem to
+     * divide core and cpu today, For now lets go with one CORE per CPU,
+     * and use the Trace compass CPU's as cores
+     *
+     * @param dmc
+     * @return
+     */
+    private ICPUDMContext[] resolveCPUContexts(IHardwareTargetDMContext dmc) {
+        // For now treat a TRACE-CPU as Core and associate it with a local CPU context
         try {
-            int cpusNode = fStateSys.getQuarkAbsolute(Attributes.CPUS);
-            List<Integer> cpuNodes = fStateSys.getSubAttributes(cpusNode, false);
+            int coreSSNode = fStateSys.getQuarkAbsolute(Attributes.CPUS);
+            List<Integer> coreNodes = fStateSys.getSubAttributes(coreSSNode, false);
 
-            ICoreDMContext[] coreDmcs = new ICoreDMContext[cpuNodes.size()];
+            // Represent it as one core per CPU
+            ICPUDMContext[] cpuDmcs = new ICPUDMContext[coreNodes.size()];
             int i = 0;
-            for (Integer coreNode : cpuNodes) {
-                String cpuName = fStateSys.getAttributeName(coreNode);
-                coreDmcs[i] = createCoreContext(cpuDmc, coreNode, cpuName);
+            for (Integer coreNode : coreNodes) {
+                String coreName = fStateSys.getAttributeName(coreNode);
+                ICPUDMContext cpuDmc = cpuDmcs[i] = createCPUContext(dmc, String.valueOf(i));
+                ICoreDMContext[] coreDmcs = new ICoreDMContext[]{createCoreContext(cpuDmcs[i], coreNode, coreName)};
+                fMapCPUToCores.put(cpuDmc, coreDmcs);
+                System.out.println("resolved core #" + coreName);
                 i++;
-                System.out.println("resolved core #" + cpuName);
             }
 
-            fMapCPUToCores.put(cpuDmc, coreDmcs);
-            // Normal scenario, returning contexts for each core
-            System.out.println("resolved " + cpuNodes.size() + " Cores"); //$NON-NLS-1$ //$NON-NLS-2$
+            // Normal scenario, returning contexts for each CPU
+            System.out.println("resolved " + cpuDmcs.length + " CPUs"); //$NON-NLS-1$ //$NON-NLS-2$
 
-            return coreDmcs;
+            return cpuDmcs;
         } catch (AttributeNotFoundException e) {
             // No core attributes found
-            return new ICoreDMContext[0];
+            return new ICPUDMContext[0];
         }
     }
 
@@ -510,9 +512,6 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
         // Resolve the context for the cores
         ICoreDMContext[] coreDmcs = fMapCPUToCores.get(cpuDmc);
-        if (coreDmcs == null) {
-            coreDmcs = resolveCoreContexts(cpuDmc);
-        }
 
         if (coreDmcs != null && coreDmcs.length > 0) {
             for (ICoreDMContext core : coreDmcs) {
