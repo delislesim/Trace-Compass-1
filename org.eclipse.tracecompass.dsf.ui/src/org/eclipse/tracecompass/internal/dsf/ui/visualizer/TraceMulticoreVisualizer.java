@@ -22,6 +22,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfRangeSynchSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 
@@ -120,6 +121,14 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     public void timeRangeSelected(TmfRangeSynchSignal signal) {
         setLoadMetersEnabled(true);
         updateLoads();
+    }
+
+    /**
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void timeTraceSelected(TmfTraceSelectedSignal signal) {
+        setLoadMetersEnabled(false);
     }
 
     @Override

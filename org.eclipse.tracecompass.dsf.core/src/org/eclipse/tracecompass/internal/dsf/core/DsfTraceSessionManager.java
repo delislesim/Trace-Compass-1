@@ -12,6 +12,9 @@
 
 package org.eclipse.tracecompass.internal.dsf.core;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.cdt.dsf.concurrent.DefaultDsfExecutor;
 import org.eclipse.cdt.dsf.concurrent.ImmediateRequestMonitor;
 import org.eclipse.cdt.dsf.service.DsfSession;
@@ -28,24 +31,24 @@ public class DsfTraceSessionManager {
 
     /** */
     public final static String TRACE_DEBUG_MODEL_ID = "org.eclipse.tracecompass.dsf"; //$NON-NLS-1$
-
+    private final static Map<ITmfTrace, DsfSession> fTraceToSessionMap = new HashMap<>();
 
     /**
-     * 
+     *
      */
     public DsfTraceSessionManager() {
         TmfSignalManager.register(this);
     }
 
     /**
-     * 
+     *
      */
     public void dispose() {
         TmfSignalManager.deregister(this);
     }
 
     /**
-     * @param signal - 
+     * @param signal -
      */
     @TmfSignalHandler
     public void traceOpened(TmfTraceOpenedSignal signal) {
@@ -62,6 +65,7 @@ public class DsfTraceSessionManager {
         DsfSession session = DsfSession.startSession(dsfExecutor, TRACE_DEBUG_MODEL_ID);
 
         startServices(session, trace);
+        fTraceToSessionMap.put(trace, session);
 
         return session;
     }
@@ -71,12 +75,7 @@ public class DsfTraceSessionManager {
      * @return a
      */
     public static DsfSession getSessionId(ITmfTrace trace) {
-        //TODO
-        DsfSession[] sessions = DsfSession.getActiveSessions();
-        if (sessions != null && sessions.length > 0) {
-            return sessions[0];
-        }
-        return null;
+        return fTraceToSessionMap.get(trace);
     }
 
     private static void startServices(final DsfSession session, final ITmfTrace trace) {
