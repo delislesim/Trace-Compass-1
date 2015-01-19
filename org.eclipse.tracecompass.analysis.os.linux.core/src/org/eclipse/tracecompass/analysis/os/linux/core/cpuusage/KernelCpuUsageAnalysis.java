@@ -268,11 +268,11 @@ public class KernelCpuUsageAnalysis extends TmfStateSystemAnalysisModule {
             List<Integer> cpuNodes = cpuSs.getSubAttributes(cpusNode, false);
 
             if (!validNodes(dCpuNode, cpuNodes)) {
-                Activator.getDefault().logError("Error getting CPU usage, at least one of the requested cpu's is invalid", null); //$NON-NLS-1$
+                Activator.getDefault().logError("Error getting CPU usage, at least one of the requested cpu's is invalid"); //$NON-NLS-1$
                 return map;
             }
 
-            ITmfStateSystem kernelSs = TmfStateSystemAnalysisModule.getStateSystem(trace, LttngKernelAnalysis.ID);
+            ITmfStateSystem kernelSs = TmfStateSystemAnalysisModule.getStateSystem(trace, KernelAnalysis.ID);
             if (kernelSs == null) {
                 return map;
             }

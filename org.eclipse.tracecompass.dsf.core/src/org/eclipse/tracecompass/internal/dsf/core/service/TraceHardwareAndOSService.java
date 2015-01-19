@@ -32,9 +32,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.tracecompass.analysis.os.linux.core.cpuusage.KernelCpuUsageAnalysis;
+import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.Attributes;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceCorePlugin;
-import org.eclipse.tracecompass.internal.lttng2.kernel.core.Attributes;
-import org.eclipse.tracecompass.lttng2.kernel.core.analysis.cpuusage.LttngKernelCpuUsageAnalysis;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.exceptions.AttributeNotFoundException;
 import org.eclipse.tracecompass.statesystem.core.exceptions.TimeRangeException;
@@ -51,7 +51,7 @@ import org.osgi.framework.BundleContext;
 public class TraceHardwareAndOSService extends AbstractDsfService implements IGDBHardwareAndOS2, ICachingService {
 
     final private ITmfTrace fTrace;
-    final private LttngKernelCpuUsageAnalysis fCPUModule;
+    final private KernelCpuUsageAnalysis fCPUModule;
     final private ITmfStateSystem fStateSys;
     final private Map<ICPUDMContext, ICoreDMContext[]> fMapCPUToCores = new HashMap<>();
     private long fStartTime;
@@ -218,7 +218,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
         fTrace = trace;
 
         // initialize cpu data source
-        fCPUModule = TmfTraceUtils.getAnalysisModuleOfClass(fTrace, LttngKernelCpuUsageAnalysis.class, LttngKernelCpuUsageAnalysis.ID);
+        fCPUModule = TmfTraceUtils.getAnalysisModuleOfClass(fTrace, KernelCpuUsageAnalysis.class, KernelCpuUsageAnalysis.ID);
         if (fCPUModule == null) {
             // Notify of incorrect initialization
             throw new CoreException(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Unable to resolve Cpu Usage Analysis module from trace: " + trace, null)); //$NON-NLS-1$
