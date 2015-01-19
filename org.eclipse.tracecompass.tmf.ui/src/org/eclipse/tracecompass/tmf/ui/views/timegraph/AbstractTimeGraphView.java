@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2014 Ericsson, École Polytechnique de Montréal
+ * Copyright (c) 2012, 2015 Ericsson, École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -17,7 +17,6 @@
 package org.eclipse.tracecompass.tmf.ui.views.timegraph;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -1128,9 +1127,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
      * @since 3.0
      */
     protected @NonNull Iterable<ITmfTrace> getTracesToBuild(@NonNull ITmfTrace trace) {
-        @SuppressWarnings("null")
-        @NonNull List<ITmfTrace> list = Arrays.asList(TmfTraceManager.getTraceSet(trace));
-        return list;
+        return TmfTraceManager.getTraceSet(trace);
     }
 
     /**

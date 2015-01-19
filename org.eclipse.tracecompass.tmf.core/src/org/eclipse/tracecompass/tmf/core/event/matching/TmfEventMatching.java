@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 École Polytechnique de Montréal
+ * Copyright (c) 2013, 2015 École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -12,7 +12,6 @@
 
 package org.eclipse.tracecompass.tmf.core.event.matching;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -103,7 +102,7 @@ public abstract class TmfEventMatching implements ITmfEventMatching {
     protected Collection<ITmfTrace> getIndividualTraces() {
         Set<ITmfTrace> traces = new HashSet<>();
         for (ITmfTrace trace : fTraces) {
-            traces.addAll(Arrays.asList(TmfTraceManager.getTraceSet(trace)));
+            traces.addAll(TmfTraceManager.getTraceSet(trace));
         }
         return traces;
     }

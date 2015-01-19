@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2012 Ericsson
+ * Copyright (c) 2010, 2014 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -19,6 +19,7 @@ import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSettingsManager;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeEvent;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeGraphEntry;
+import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.TimeEvent;
 
 /**
  * Event in the time chart view
@@ -83,6 +84,20 @@ public class TimeChartEvent implements ITimeEvent {
     @Override
     public long getDuration() {
         return fDuration;
+    }
+
+    @Override
+    public ITimeEvent splitBefore(long splitTime) {
+        return (splitTime > fTime ?
+                new TimeEvent(getEntry(), fTime, Math.min(fDuration, splitTime - fTime)) :
+                null);
+    }
+
+    @Override
+    public ITimeEvent splitAfter(long splitTime) {
+        return (splitTime < fTime + fDuration ?
+                new TimeEvent(getEntry(), Math.max(fTime, splitTime), fDuration - Math.max(0, splitTime - fTime)) :
+                null);
     }
 
     /**

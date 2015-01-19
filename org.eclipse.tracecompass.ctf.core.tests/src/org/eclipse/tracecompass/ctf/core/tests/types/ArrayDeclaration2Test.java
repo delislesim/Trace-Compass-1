@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Ericsson
+ * Copyright (c) 2013, 2014 Ericsson
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -50,7 +50,7 @@ public class ArrayDeclaration2Test {
      */
     @Before
     public void setUp() {
-        fixture = new ArrayDeclaration(1, new StringDeclaration());
+        fixture = new ArrayDeclaration(1, StringDeclaration.getStringDeclaration(Encoding.UTF8));
     }
 
     /**
@@ -59,7 +59,7 @@ public class ArrayDeclaration2Test {
     @Test
     public void testArrayDeclaration() {
         int length = 1;
-        IDeclaration elemType = new StringDeclaration();
+        IDeclaration elemType = StringDeclaration.getStringDeclaration(Encoding.UTF8);
         ArrayDeclaration result = new ArrayDeclaration(length, elemType);
 
         assertNotNull(result);
@@ -147,7 +147,7 @@ public class ArrayDeclaration2Test {
     @Test
     public void hashcodeTest() {
         assertEquals(2016, fixture.hashCode());
-        assertEquals(new ArrayDeclaration(1, new StringDeclaration()).hashCode(), fixture.hashCode());
+        assertEquals(new ArrayDeclaration(1, StringDeclaration.getStringDeclaration(Encoding.UTF8)).hashCode(), fixture.hashCode());
     }
 
     /**
@@ -157,7 +157,7 @@ public class ArrayDeclaration2Test {
     public void equalsTest() {
         ArrayDeclaration a = new ArrayDeclaration(1, IntegerDeclaration.INT_32B_DECL);
         ArrayDeclaration b = new ArrayDeclaration(2, IntegerDeclaration.INT_32B_DECL);
-        ArrayDeclaration c = new ArrayDeclaration(1, new StringDeclaration());
+        ArrayDeclaration c = new ArrayDeclaration(1, StringDeclaration.getStringDeclaration(Encoding.UTF8));
         ArrayDeclaration d = new ArrayDeclaration(1, IntegerDeclaration.INT_32B_DECL);
         assertNotEquals(a, null);
         assertNotEquals(a, new Object());

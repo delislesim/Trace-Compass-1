@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Ericsson
+ * Copyright (c) 2013, 2014 Ericsson
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.ctf.core.event.io.BitBuffer;
 import org.eclipse.tracecompass.ctf.core.event.types.AbstractArrayDefinition;
+import org.eclipse.tracecompass.ctf.core.event.types.Encoding;
 import org.eclipse.tracecompass.ctf.core.event.types.EnumDeclaration;
 import org.eclipse.tracecompass.ctf.core.event.types.EnumDefinition;
 import org.eclipse.tracecompass.ctf.core.event.types.IDefinition;
@@ -72,7 +73,7 @@ public class StructDefinitionTest {
         StructDeclaration sDec = new StructDeclaration(12);
         IntegerDeclaration id = IntegerDeclaration.INT_32B_DECL;
         IntegerDeclaration lenDec = IntegerDeclaration.UINT_8_DECL;
-        StringDeclaration sd = new StringDeclaration();
+        StringDeclaration sd = StringDeclaration.getStringDeclaration(Encoding.UTF8);
         EnumDeclaration ed = new EnumDeclaration(id);
         SequenceDeclaration seqDec = new SequenceDeclaration(LENGTH_SEQ, id);
         VariantDeclaration varDec = new VariantDeclaration();

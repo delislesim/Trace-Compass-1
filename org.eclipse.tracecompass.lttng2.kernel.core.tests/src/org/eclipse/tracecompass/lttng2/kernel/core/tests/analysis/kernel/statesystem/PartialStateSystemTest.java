@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 Ericsson
+ * Copyright (c) 2013, 2015 Ericsson
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
  * accompanies this distribution, and is available at
@@ -12,6 +12,7 @@
 
 package org.eclipse.tracecompass.lttng2.kernel.core.tests.analysis.kernel.statesystem;
 
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -20,8 +21,8 @@ import java.io.File;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelStateProvider;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.trace.layout.LttngEventLayout;
-import org.eclipse.tracecompass.lttng2.kernel.core.analysis.kernel.LttngKernelStateProvider;
 import org.eclipse.tracecompass.statesystem.core.exceptions.TimeRangeException;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfAnalysisException;
 import org.eclipse.tracecompass.tmf.core.statesystem.ITmfStateProvider;
@@ -178,7 +179,7 @@ public class PartialStateSystemTest extends StateSystemTest {
 
         @Override
         protected ITmfStateProvider createStateProvider() {
-            return new LttngKernelStateProvider(getTrace(), LttngEventLayout.getInstance());
+            return new KernelStateProvider(checkNotNull(getTrace()), LttngEventLayout.getInstance());
         }
 
         @Override

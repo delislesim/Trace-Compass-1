@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2012, 2013 Ericsson
+ * Copyright (c) 2012, 2014 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -128,7 +128,7 @@ public interface ISessionInfo extends ITraceInfo {
      *
      * @return the live delay or -1 if the default value should be used
      */
-    public int getLiveDelay();
+    public long getLiveDelay();
 
     /**
      * Set the live delay which is the delay in micro seconds before the data is
@@ -137,7 +137,7 @@ public interface ISessionInfo extends ITraceInfo {
      * @param liveDelay
      *            the live delay
      */
-    public void setLiveDelay(int liveDelay);
+    public void setLiveDelay(long liveDelay);
 
     /**
      * Get the network URL in case control and data is configured together

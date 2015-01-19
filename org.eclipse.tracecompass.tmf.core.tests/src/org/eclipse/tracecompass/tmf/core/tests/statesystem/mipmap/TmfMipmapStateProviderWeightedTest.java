@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 Ericsson
+ * Copyright (c) 2013, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -53,13 +53,15 @@ public class TmfMipmapStateProviderWeightedTest {
         /* setup for INTEGER test */
         TmfMipmapStateProviderStub mmpi = new TmfMipmapStateProviderStub(RESOLUTION, Type.INTEGER);
         IStateHistoryBackend bei = new InMemoryBackend(0);
-        ssqi = StateSystemFactory.newStateSystem(SSID, bei);
-        mmpi.assignTargetStateSystem(ssqi);
+        ITmfStateSystemBuilder ssbi = StateSystemFactory.newStateSystem(SSID, bei);
+        mmpi.assignTargetStateSystem(ssbi);
+        ssqi = ssbi;
         /* setup for DOUBLE test */
         TmfMipmapStateProviderStub mmpd = new TmfMipmapStateProviderStub(RESOLUTION, Type.DOUBLE);
         IStateHistoryBackend bed = new InMemoryBackend(0);
-        ssqd = StateSystemFactory.newStateSystem(SSID, bed);
-        mmpd.assignTargetStateSystem(ssqd);
+        ITmfStateSystemBuilder ssbd = StateSystemFactory.newStateSystem(SSID, bed);
+        mmpd.assignTargetStateSystem(ssbd);
+        ssqd = ssbd;
         /*
          * Every 10,000 ns chunk contains the following states:
          *

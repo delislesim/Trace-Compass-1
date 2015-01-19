@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2013 Ericsson
+ * Copyright (c) 2009, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -17,6 +17,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.tracecompass.internal.tmf.core.TmfCoreTracer;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
+import org.eclipse.tracecompass.tmf.core.filter.ITmfFilter;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 
 /**
@@ -101,6 +102,8 @@ public abstract class TmfEventRequest implements ITmfEventRequest {
     private boolean fRequestFailed;
     private boolean fRequestCanceled;
 
+    private ITmfFilter fEventFilter;
+
     // ------------------------------------------------------------------------
     // Constructors
     // ------------------------------------------------------------------------
@@ -154,7 +157,9 @@ public abstract class TmfEventRequest implements ITmfEventRequest {
             int nbRequested,
             ExecutionType priority) {
 
-        fRequestId = fRequestNumber++;
+        synchronized (TmfEventRequest.class) {
+            fRequestId = fRequestNumber++;
+        }
         fDataType = dataType;
         fIndex = index;
         fNbRequested = nbRequested;
@@ -179,13 +184,6 @@ public abstract class TmfEventRequest implements ITmfEventRequest {
                     + " DataType=" + getDataType().getSimpleName();
             TmfCoreTracer.traceRequest(fRequestId, message);
         }
-    }
-
-    /**
-     * Resets the request counter (used for testing)
-     */
-    public static void reset() {
-        fRequestNumber = 0;
     }
 
     // ------------------------------------------------------------------------
@@ -248,6 +246,16 @@ public abstract class TmfEventRequest implements ITmfEventRequest {
     @Override
     public TmfTimeRange getRange() {
         return fRange;
+    }
+
+    @Override
+    public ITmfFilter getProviderFilter() {
+        return fEventFilter;
+    }
+
+    @Override
+    public void setProviderFilter(ITmfFilter provider) {
+        fEventFilter = provider;
     }
 
     // ------------------------------------------------------------------------
@@ -392,24 +400,6 @@ public abstract class TmfEventRequest implements ITmfEventRequest {
     // ------------------------------------------------------------------------
     // Object
     // ------------------------------------------------------------------------
-
-    @Override
-    // All requests have a unique id
-    public int hashCode() {
-        return getRequestId();
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other instanceof TmfEventRequest) {
-            TmfEventRequest request = (TmfEventRequest) other;
-            return request.fDataType == fDataType
-                    && request.fIndex == fIndex
-                    && request.fNbRequested == fNbRequested
-                    && request.fRange.equals(fRange);
-        }
-        return false;
-    }
 
     @Override
     public String toString() {

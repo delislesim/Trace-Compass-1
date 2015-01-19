@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ecole Polytechnique de Montreal
+ * Copyright (c) 2014, 2015 Ecole Polytechnique de Montreal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -239,7 +239,7 @@ public abstract class TmfXmlStateAttribute implements ITmfXmlStateAttribute {
                             event.getTrace(), TmfCpuAspect.class);
                     for (TmfCpuAspect aspect : cpuAspects) {
                         Integer cpu = aspect.resolve(event);
-                        if (!cpu.equals(TmfCpuAspect.CPU_UNAVAILABLE)) {
+                        if (cpu != null) {
                             quark = getQuarkRelativeAndAdd(startQuark, cpu.toString());
                             break;
                         }

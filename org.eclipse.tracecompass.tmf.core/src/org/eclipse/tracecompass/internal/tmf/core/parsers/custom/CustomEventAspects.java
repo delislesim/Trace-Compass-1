@@ -13,6 +13,8 @@
 
 package org.eclipse.tracecompass.internal.tmf.core.parsers.custom;
 
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
+
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -77,11 +79,6 @@ public class CustomEventAspects {
             }
             return EMPTY_STRING;
         }
-
-        @Override
-        public String getFilterId() {
-            return fName;
-        }
     }
 
     /**
@@ -101,8 +98,6 @@ public class CustomEventAspects {
                 builder.add(new CustomEventFieldAspect(name, i));
             }
         }
-        @SuppressWarnings("null")
-        @NonNull Iterable<ITmfEventAspect> ret = builder.build();
-        return ret;
+        return checkNotNull(builder.build());
     }
 }

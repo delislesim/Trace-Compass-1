@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 Ericsson
+ * Copyright (c) 2013, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -12,6 +12,8 @@
  *******************************************************************************/
 
 package org.eclipse.tracecompass.internal.tmf.ui.project.wizards.tracepkg.importexport;
+
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -332,8 +334,8 @@ public class TracePackageImportOperation extends AbstractTracePackageOperation i
     private IStatus importTraceFiles(TracePackageFilesElement traceFilesElement, TracePackageTraceElement traceElement, IProgressMonitor monitor) {
         List<Pair<String, String>> fileNameAndLabelPairs = new ArrayList<>();
 
-        String sourceName = traceFilesElement.getFileName();
-        String destinationName = traceElement.getImportName();
+        String sourceName = checkNotNull(traceFilesElement.getFileName());
+        String destinationName = checkNotNull(traceElement.getImportName());
 
         fileNameAndLabelPairs.add(new Pair<>(sourceName, destinationName));
 
@@ -392,8 +394,10 @@ public class TracePackageImportOperation extends AbstractTracePackageOperation i
     private IStatus importSupplFiles(TracePackageSupplFilesElement suppFilesElement, TracePackageTraceElement traceElement, IProgressMonitor monitor) {
         List<Pair<String, String>> fileNameAndLabelPairs = new ArrayList<>();
         for (TracePackageElement child : suppFilesElement.getChildren()) {
-            TracePackageSupplFileElement supplFile = (TracePackageSupplFileElement) child;
-            fileNameAndLabelPairs.add(new Pair<>(supplFile.getText(), new Path(supplFile.getText()).lastSegment()));
+            if (child.isChecked()) {
+                TracePackageSupplFileElement supplFile = (TracePackageSupplFileElement) child;
+                fileNameAndLabelPairs.add(new Pair<>(checkNotNull(supplFile.getText()), checkNotNull(new Path(supplFile.getText()).lastSegment())));
+            }
         }
 
         if (!fileNameAndLabelPairs.isEmpty()) {

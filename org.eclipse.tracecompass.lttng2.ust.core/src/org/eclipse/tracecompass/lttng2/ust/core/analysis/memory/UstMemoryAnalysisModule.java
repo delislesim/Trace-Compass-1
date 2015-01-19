@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 École Polytechnique de Montréal
+ * Copyright (c) 2014, 2015 École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -12,6 +12,10 @@
  *******************************************************************************/
 
 package org.eclipse.tracecompass.lttng2.ust.core.analysis.memory;
+
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
+
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.internal.lttng2.ust.core.memoryusage.MemoryUsageStateProvider;
@@ -51,7 +55,7 @@ public class UstMemoryAnalysisModule extends TmfStateSystemAnalysisModule {
             );
 
     /** The requirements as an immutable set */
-    private static final @NonNull ImmutableSet<TmfAnalysisRequirement> REQUIREMENTS;
+    private static final @NonNull Set<TmfAnalysisRequirement> REQUIREMENTS;
 
     static {
         /* Initialize the requirements for the analysis: domain and events */
@@ -67,14 +71,12 @@ public class UstMemoryAnalysisModule extends TmfStateSystemAnalysisModule {
         TmfAnalysisRequirement domainReq = new TmfAnalysisRequirement(SessionConfigStrings.CONFIG_ELEMENT_DOMAIN);
         domainReq.addValue(SessionConfigStrings.CONFIG_DOMAIN_TYPE_UST, ValuePriorityLevel.MANDATORY);
 
-        @SuppressWarnings("null")
-        @NonNull ImmutableSet<TmfAnalysisRequirement> reqSet = ImmutableSet.of(domainReq, eventsReq);
-        REQUIREMENTS = reqSet;
+        REQUIREMENTS = checkNotNull(ImmutableSet.of(domainReq, eventsReq));
     }
 
     @Override
     protected ITmfStateProvider createStateProvider() {
-        return new MemoryUsageStateProvider(getTrace());
+        return new MemoryUsageStateProvider(checkNotNull(getTrace()));
     }
 
     @Override

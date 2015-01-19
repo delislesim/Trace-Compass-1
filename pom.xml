@@ -21,7 +21,6 @@
   <artifactId>org.eclipse.tracecompass</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-
   <name>Trace Compass Parent</name>
 
   <licenses>
@@ -41,6 +40,8 @@
 <properties>
   <base.test.vmargs>-Xms256m -Xmx1024m -XX:MaxPermSize=256m</base.test.vmargs>
   <tycho-version>0.22.0</tycho-version>
+  <tycho-extras-version>0.22.0</tycho-extras-version>
+  <tycho.scmUrl>scm:git:git://git.eclipse.org/gitroot/tracecompass/org.eclipse.tracecompass.git</tycho.scmUrl>
   <target-platform>tracecompass-e4.4</target-platform>
   <sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
   <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -57,6 +58,11 @@
   <pluginRepository>
     <id>tycho-snapshots</id>
     <url>https://repo.eclipse.org/content/repositories/tycho-snapshots/</url>
+  </pluginRepository>
+  <pluginRepository>
+    <id>jboss-public-repository-group</id>
+    <name>JBoss Public Repository Group</name>
+    <url>http://repository.jboss.org/nexus/content/groups/public/</url>
   </pluginRepository>
 </pluginRepositories>
 
@@ -120,6 +126,9 @@
 </profiles>
 
   <modules>
+    <module>org.eclipse.tracecompass.common.core</module>
+
+    <module>org.eclipse.tracecompass.btf</module>
     <module>org.eclipse.tracecompass.btf.core</module>
     <module>org.eclipse.tracecompass.btf.core.tests</module>
     <module>org.eclipse.tracecompass.btf.ui</module>
@@ -167,6 +176,10 @@
     <module>org.eclipse.tracecompass.target</module>
     <module>org.eclipse.tracecompass.testing</module>
 
+    <module>org.eclipse.tracecompass.analysis.os.linux.core</module>
+    <module>org.eclipse.tracecompass.analysis.os.linux.core.tests</module>
+    <module>org.eclipse.tracecompass.analysis.os.linux.ui</module>
+
     <module>org.eclipse.tracecompass.lttng2.control</module>
     <module>org.eclipse.tracecompass.lttng2.control.core</module>
     <module>org.eclipse.tracecompass.lttng2.control.core.tests</module>
@@ -177,7 +190,6 @@
     <module>org.eclipse.tracecompass.lttng2.kernel.core</module>
     <module>org.eclipse.tracecompass.lttng2.kernel.core.tests</module>
     <module>org.eclipse.tracecompass.lttng2.kernel.ui</module>
-    <module>org.eclipse.tracecompass.lttng2.kernel.ui.tests</module>
     <module>org.eclipse.tracecompass.lttng2.kernel.ui.swtbot.tests</module>
 
     <module>org.eclipse.tracecompass.lttng2.ust</module>
@@ -357,6 +369,23 @@
           <artifactId>tycho-versions-plugin</artifactId>
           <version>${tycho-version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-packaging-plugin</artifactId>
+          <version>${tycho-version}</version>
+          <configuration>
+            <sourceReferences>
+              <generate>true</generate>
+            </sourceReferences>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.eclipse.tycho.extras</groupId>
+              <artifactId>tycho-sourceref-jgit</artifactId>
+              <version>${tycho-extras-version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
 	<plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
@@ -387,6 +416,11 @@
           <configuration>
             <excludePackageNames>org.eclipse.tracecompass.internal.*:*.test*</excludePackageNames>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jboss.tools.tycho-plugins</groupId>
+          <artifactId>repository-utils</artifactId>
+          <version>0.22.0</version>
         </plugin>
       </plugins>
     </pluginManagement>

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Ericsson
+ * Copyright (c) 2013, 2014 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -11,6 +11,8 @@
  *******************************************************************************/
 
 package org.eclipse.tracecompass.internal.gdbtrace.ui.views.events;
+
+import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -95,8 +97,9 @@ public class GdbEventsTable extends TmfEventsTable {
             fSelectedFrame = 0;
         } else if (trace instanceof TmfExperiment) {
             TmfExperiment experiment = (TmfExperiment) trace;
-            if (experiment.getTraces().length > 0) {
-                fSelectedTrace = (GdbTrace) experiment.getTraces()[0];
+            List<ITmfTrace> expTraces = experiment.getTraces();
+            if (!expTraces.isEmpty()) {
+                fSelectedTrace = (GdbTrace) expTraces.get(0);
                 fSelectedFrame = 0;
             }
         }

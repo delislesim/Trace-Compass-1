@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 École Polytechnique de Montréal
+ * Copyright (c) 2013, 2015 École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -12,7 +12,6 @@
 
 package org.eclipse.tracecompass.tmf.core.statesystem;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModule;
@@ -33,8 +32,7 @@ public interface ITmfAnalysisModuleWithStateSystems extends IAnalysisModule {
      * @return The state system corresponding to the given ID, null if there is
      *         no match.
      */
-    @Nullable
-    ITmfStateSystem getStateSystem(@NonNull String id);
+    @Nullable ITmfStateSystem getStateSystem(String id);
 
     /**
      * Return all the state systems provided by this analysis module, in
@@ -42,7 +40,6 @@ public interface ITmfAnalysisModuleWithStateSystems extends IAnalysisModule {
      *
      * @return The state systems
      */
-    @NonNull
     Iterable<ITmfStateSystem> getStateSystems();
 
 }

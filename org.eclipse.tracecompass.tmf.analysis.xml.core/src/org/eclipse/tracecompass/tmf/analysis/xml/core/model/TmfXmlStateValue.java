@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ecole Polytechnique de Montreal
+ * Copyright (c) 2014, 2015 Ecole Polytechnique de Montreal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -11,6 +11,8 @@
  ******************************************************************************/
 
 package org.eclipse.tracecompass.tmf.analysis.xml.core.model;
+
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
 
 import java.util.List;
 
@@ -146,8 +148,7 @@ public abstract class TmfXmlStateValue implements ITmfXmlStateValue {
         /*
          * Stack Actions : allow to define a stack with PUSH/POP/PEEK methods
          */
-        @SuppressWarnings("null")
-        @NonNull String stack = node.getAttribute(TmfXmlStrings.ATTRIBUTE_STACK);
+        String stack = checkNotNull(node.getAttribute(TmfXmlStrings.ATTRIBUTE_STACK));
         fStackType = ValueTypeStack.getTypeFromString(stack);
     }
 
@@ -268,7 +269,7 @@ public abstract class TmfXmlStateValue implements ITmfXmlStateValue {
             for (TmfCpuAspect aspect : cpuAspects) {
                 /* We will just pick the first valid one we find */
                 Integer cpu = aspect.resolve(event);
-                if (!cpu.equals(TmfCpuAspect.CPU_UNAVAILABLE)) {
+                if (cpu != null) {
                     return TmfStateValue.newValueInt(cpu.intValue());
                 }
             }

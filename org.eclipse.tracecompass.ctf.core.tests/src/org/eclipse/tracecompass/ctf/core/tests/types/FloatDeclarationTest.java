@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Ericsson
+ * Copyright (c) 2013, 2014 Ericsson
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -56,9 +56,9 @@ public class FloatDeclarationTest {
         FloatDeclaration floatDeclaration = new FloatDeclaration(8, 24, ByteOrder.BIG_ENDIAN, 0);
         FloatDeclaration a = new FloatDeclaration(8, 24, ByteOrder.BIG_ENDIAN, 0);
         FloatDeclaration b = new FloatDeclaration(8, 24, ByteOrder.LITTLE_ENDIAN, 0);
-        assertEquals(5106065, floatDeclaration.hashCode());
         assertEquals(a.hashCode(), floatDeclaration.hashCode());
         assertNotEquals(b.hashCode(), floatDeclaration.hashCode());
+        assertEquals(floatDeclaration.hashCode(), floatDeclaration.hashCode());
     }
 
     /**

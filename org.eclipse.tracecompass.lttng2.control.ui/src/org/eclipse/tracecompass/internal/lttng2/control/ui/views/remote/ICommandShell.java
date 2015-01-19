@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2012, 2014 Ericsson
+ * Copyright (c) 2012, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -11,6 +11,8 @@
  *   Markus Schorn - Bug 448058: Use org.eclipse.remote in favor of RSE
  **********************************************************************/
 package org.eclipse.tracecompass.internal.lttng2.control.ui.views.remote;
+
+import java.util.List;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -48,6 +50,6 @@ public interface ICommandShell {
      * @throws ExecutionException
      *             If the command fails
      */
-    ICommandResult executeCommand(String command,
+    ICommandResult executeCommand(List<String> command,
             IProgressMonitor monitor) throws ExecutionException;
 }

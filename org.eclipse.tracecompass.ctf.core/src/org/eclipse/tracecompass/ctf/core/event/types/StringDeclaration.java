@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2013 Ericsson, Ecole Polytechnique de Montreal and others
+ * Copyright (c) 2011, 2014 Ericsson, Ecole Polytechnique de Montreal and others
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -12,6 +12,9 @@
 
 package org.eclipse.tracecompass.ctf.core.event.types;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.common.core.NonNullUtils;
 import org.eclipse.tracecompass.ctf.core.event.io.BitBuffer;
 import org.eclipse.tracecompass.ctf.core.event.scope.IDefinitionScope;
 import org.eclipse.tracecompass.ctf.core.trace.CTFReaderException;
@@ -27,12 +30,18 @@ import org.eclipse.tracecompass.ctf.core.trace.CTFReaderException;
  * @author Matthew Khouzam
  * @author Simon Marchi
  */
+@NonNullByDefault
 public class StringDeclaration extends Declaration {
+
+    private static final StringDeclaration STRING_DEC_UTF8 = new StringDeclaration(Encoding.UTF8);
+    private static final StringDeclaration STRING_DEC_ASCII = new StringDeclaration(Encoding.ASCII);
+    private static final StringDeclaration STRING_DEC_NO_ENC = new StringDeclaration(Encoding.NONE);
 
     // ------------------------------------------------------------------------
     // Attributes
     // ------------------------------------------------------------------------
 
+    private static final int BITS_PER_BYTE = Byte.SIZE;
     private final Encoding fEncoding;
 
     // ------------------------------------------------------------------------
@@ -40,20 +49,45 @@ public class StringDeclaration extends Declaration {
     // ------------------------------------------------------------------------
 
     /**
-     * Generate a UTF8 string declaration
-     */
-    public StringDeclaration() {
-        fEncoding = Encoding.UTF8;
-    }
-
-    /**
      * Generate an encoded string declaration
      *
      * @param encoding
      *            the encoding, utf8 or ascii
      */
-    public StringDeclaration(Encoding encoding) {
+    private StringDeclaration(Encoding encoding) {
         fEncoding = encoding;
+    }
+
+    /**
+     * Create a StringDeclaration with the default UTF-8 encoding
+     *
+     * @return a {@link StringDeclaration} with UTF-8 encoding
+     */
+    public static StringDeclaration getStringDeclaration() {
+        return STRING_DEC_UTF8;
+    }
+
+    /**
+     * Create a StringDeclaration
+     *
+     * @param encoding
+     *            the {@link Encoding} can be Encoding.UTF8, Encoding.ASCII or
+     *            other
+     * @return a {@link StringDeclaration}
+     * @throws IllegalArgumentException
+     *             if the encoding is not recognized.
+     */
+    public static StringDeclaration getStringDeclaration(Encoding encoding) {
+        switch (encoding) {
+        case ASCII:
+            return STRING_DEC_ASCII;
+        case NONE:
+            return STRING_DEC_NO_ENC;
+        case UTF8:
+            return STRING_DEC_UTF8;
+        default:
+            throw new IllegalArgumentException("Unrecognized encoding: " + encoding); //$NON-NLS-1$
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -71,7 +105,7 @@ public class StringDeclaration extends Declaration {
     @Override
     public long getAlignment() {
         // See ctf 4.2.5: Strings are always aligned on byte size.
-        return 8;
+        return BITS_PER_BYTE;
     }
 
     /**
@@ -90,7 +124,7 @@ public class StringDeclaration extends Declaration {
      * @since 3.0
      */
     @Override
-    public StringDefinition createDefinition(IDefinitionScope definitionScope,
+    public StringDefinition createDefinition(@Nullable IDefinitionScope definitionScope,
             String fieldName, BitBuffer input) throws CTFReaderException {
         String value = read(input);
         return new StringDefinition(this, definitionScope, fieldName, value);
@@ -101,12 +135,12 @@ public class StringDeclaration extends Declaration {
         alignRead(input);
 
         StringBuilder sb = new StringBuilder();
-        char c = (char) input.get(8, false);
+        char c = (char) input.get(BITS_PER_BYTE, false);
         while (c != 0) {
             sb.append(c);
-            c = (char) input.get(8, false);
+            c = (char) input.get(BITS_PER_BYTE, false);
         }
-        return sb.toString();
+        return NonNullUtils.checkNotNull(sb.toString());
     }
 
     @Override
@@ -119,26 +153,24 @@ public class StringDeclaration extends Declaration {
     public int hashCode() {
         final int prime = 31;
         int result = prime;
-        if (fEncoding != null) {
-            switch (fEncoding) {
-            case ASCII:
-                result += 1;
-                break;
-            case NONE:
-                result += 2;
-                break;
-            case UTF8:
-                result += 3;
-                break;
-            default:
-                break;
-            }
+        switch (fEncoding) {
+        case ASCII:
+            result += 1;
+            break;
+        case NONE:
+            result += 2;
+            break;
+        case UTF8:
+            result += 3;
+            break;
+        default:
+            break;
         }
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -156,7 +188,7 @@ public class StringDeclaration extends Declaration {
     }
 
     @Override
-    public boolean isBinaryEquivalent(IDeclaration other) {
+    public boolean isBinaryEquivalent(@Nullable IDeclaration other) {
         return equals(other);
     }
 

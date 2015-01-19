@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2013 Ericsson, Ecole Polytechnique de Montreal and others
+ * Copyright (c) 2011, 2014 Ericsson, Ecole Polytechnique de Montreal and others
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -60,7 +60,7 @@ public interface IDeclaration {
      * @return the path of the definition
      * @since 3.0
      */
-    public @NonNull LexicalScope getPath(IDefinitionScope definitionScope, @NonNull String fieldName);
+    @NonNull LexicalScope getPath(IDefinitionScope definitionScope, @NonNull String fieldName);
 
     /**
      * The minimum alignment. if the field is 32 bits, the definition will pad
@@ -85,8 +85,8 @@ public interface IDeclaration {
     boolean equals(Object other);
 
     /**
-     * Are the two declarations equivalent on a binary level. eg: an 8 bit little
-     * endian and big endian int.
+     * Are the two declarations equivalent on a binary level. eg: an 8 bit
+     * little endian and big endian int.
      *
      * @param other
      *            the other {@link IDeclaration}

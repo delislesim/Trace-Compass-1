@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 Ericsson
+ * Copyright (c) 2013, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -17,8 +17,8 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.List;
 
+import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelStateProvider;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.trace.layout.LttngEventLayout;
-import org.eclipse.tracecompass.lttng2.kernel.core.analysis.kernel.LttngKernelStateProvider;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.interval.ITmfStateInterval;
 import org.eclipse.tracecompass.statesystem.core.statevalue.ITmfStateValue;
@@ -65,7 +65,7 @@ public class GenerateTestValues {
             TmfStateSystemAnalysisModule module = new TmfStateSystemAnalysisModule() {
                 @Override
                 protected ITmfStateProvider createStateProvider() {
-                    return new LttngKernelStateProvider(trace, LttngEventLayout.getInstance());
+                    return new KernelStateProvider(trace, LttngEventLayout.getInstance());
                 }
 
                 @Override

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ericsson
+ * Copyright (c) 2014, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -11,6 +11,8 @@
  *******************************************************************************/
 
 package org.eclipse.tracecompass.tmf.core.event.aspect;
+
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -71,21 +73,12 @@ public class TmfStateSystemAspect implements ITmfEventAspect {
     }
 
     @Override
-    public String resolve(ITmfEvent event) {
+    public @Nullable String resolve(ITmfEvent event) {
         try {
             ITmfStateValue value = fSS.querySingleState(event.getTimestamp().getValue(), fAttribute).getStateValue();
-
-            @SuppressWarnings("null")
-            @NonNull String ret = value.toString();
-            return ret;
+            return checkNotNull(value.toString());
         } catch (AttributeNotFoundException | StateSystemDisposedException e) {
-            return EMPTY_STRING;
+            return null;
         }
     }
-
-    @Override
-    public @Nullable String getFilterId() {
-        return null;
-    }
-
 }

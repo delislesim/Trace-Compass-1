@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2014 Ericsson
+ * Copyright (c) 2012, 2015 Ericsson
  * Copyright (c) 2010, 2011 École Polytechnique de Montréal
  * Copyright (c) 2010, 2011 Alexandre Montplaisir <alexandre.montplaisir@gmail.com>
  *
@@ -19,7 +19,7 @@ import static org.junit.Assume.assumeTrue;
 
 import java.util.List;
 
-import org.eclipse.tracecompass.internal.lttng2.kernel.core.Attributes;
+import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.Attributes;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.StateSystemUtils;
 import org.eclipse.tracecompass.statesystem.core.exceptions.AttributeNotFoundException;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2013 Ericsson, Ecole Polytechnique de Montreal and others
+ * Copyright (c) 2011, 2014 Ericsson, Ecole Polytechnique de Montreal and others
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -187,7 +187,7 @@ public final class FloatDeclaration extends Declaration implements ISimpleDataty
         final int prime = 31;
         int result = 1;
         result = prime * result + (int) (fAlignement ^ (fAlignement >>> 32));
-        result = prime * result + (fByteOrder.equals(ByteOrder.BIG_ENDIAN) ? 4321 : 1234);
+        result = prime * result + fByteOrder.toString().hashCode(); // don't evaluate object but string
         result = prime * result + fExponent;
         result = prime * result + fMantissa;
         return result;

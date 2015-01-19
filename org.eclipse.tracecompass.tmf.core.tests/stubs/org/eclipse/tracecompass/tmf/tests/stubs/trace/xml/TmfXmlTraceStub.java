@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 École Polytechnique de Montréal
+ * Copyright (c) 2014, 2015 École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -299,15 +299,10 @@ public class TmfXmlTraceStub extends TmfTrace {
         }
 
         @Override
-        public @Nullable String getFilterId() {
-            return getName();
-        }
-
-        @Override
-        public Integer resolve(ITmfEvent event) {
+        public @Nullable Integer resolve(ITmfEvent event) {
             Integer cpu = Ints.tryParse(fAspect.resolve(event));
             if (cpu == null) {
-                return TmfCpuAspect.CPU_UNAVAILABLE;
+                return null;
             }
             return cpu;
         }

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ericsson
+ * Copyright (c) 2014, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -51,18 +51,12 @@ public class TmfEventFieldAspect implements ITmfEventAspect {
     }
 
     @Override
-    public String resolve(ITmfEvent event) {
+    public @Nullable String resolve(ITmfEvent event) {
         ITmfEventField field = event.getContent().getField(fFieldName);
         if (field == null) {
-            return EMPTY_STRING;
+            return null;
         }
-        String fieldValue = field.getFormattedValue();
-        return (fieldValue == null ? EMPTY_STRING : fieldValue);
-    }
-
-    @Override
-    public @Nullable String getFilterId() {
-        return null;
+        return field.getFormattedValue();
     }
 
     // ------------------------------------------------------------------------

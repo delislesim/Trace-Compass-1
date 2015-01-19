@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 Ericsson
+ * Copyright (c) 2013, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -14,12 +14,15 @@
 
 package org.eclipse.tracecompass.tmf.core.trace;
 
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
+
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +33,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.tracecompass.common.core.NonNullUtils;
 import org.eclipse.tracecompass.internal.tmf.core.Activator;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.filter.ITmfFilter;
@@ -45,6 +49,8 @@ import org.eclipse.tracecompass.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Central trace manager for TMF. It tracks the currently opened traces and
@@ -127,8 +133,7 @@ public final class TmfTraceManager {
     /**
      * Gets the filter applied to the current trace
      *
-     * @return
-     *          a filter, or <code>null</code>
+     * @return a filter, or <code>null</code>
      * @since 2.2
      */
     public synchronized ITmfFilter getCurrentFilter() {
@@ -150,7 +155,7 @@ public final class TmfTraceManager {
      * @return The active trace set
      * @see #getTraceSet(ITmfTrace)
      */
-    public synchronized ITmfTrace[] getActiveTraceSet() {
+    public synchronized @NonNull Collection<ITmfTrace> getActiveTraceSet() {
         final ITmfTrace trace = fCurrentTrace;
         return getTraceSet(trace);
     }
@@ -200,17 +205,17 @@ public final class TmfTraceManager {
      *
      * @param trace
      *            The trace or experiment
-     * @return The corresponding trace set
+     * @return The corresponding trace set.
      */
-    public static ITmfTrace[] getTraceSet(ITmfTrace trace) {
+    public static @NonNull Collection<ITmfTrace> getTraceSet(ITmfTrace trace) {
         if (trace == null) {
-            return null;
+            return NonNullUtils.checkNotNull(ImmutableSet.<ITmfTrace> of());
         }
-        if (trace instanceof TmfExperiment) {
-            TmfExperiment exp = (TmfExperiment) trace;
-            return exp.getTraces();
+        List<ITmfTrace> traces = trace.getChildren(ITmfTrace.class);
+        if (traces.size() > 0) {
+            return NonNullUtils.checkNotNull(ImmutableSet.copyOf(traces));
         }
-        return new ITmfTrace[] { trace };
+        return NonNullUtils.checkNotNull(ImmutableSet.of(trace));
     }
 
     /**
@@ -221,25 +226,21 @@ public final class TmfTraceManager {
      *
      * @param trace
      *            The trace or experiment
-     * @return The corresponding trace set, including the experiment
+     * @return The corresponding trace set, including the experiment.
      * @since 3.1
      */
-    public static @NonNull Set<ITmfTrace> getTraceSetWithExperiment(ITmfTrace trace) {
+    public static @NonNull Collection<ITmfTrace> getTraceSetWithExperiment(ITmfTrace trace) {
         if (trace == null) {
-            @SuppressWarnings("null")
-            @NonNull Set<ITmfTrace> emptySet = Collections.EMPTY_SET;
-            return emptySet;
+            return checkNotNull(ImmutableSet.<ITmfTrace> of());
         }
         if (trace instanceof TmfExperiment) {
             TmfExperiment exp = (TmfExperiment) trace;
-            ITmfTrace[] traces = exp.getTraces();
-            Set<ITmfTrace> alltraces = new LinkedHashSet<>(Arrays.asList(traces));
+            List<ITmfTrace> traces = exp.getTraces();
+            Set<ITmfTrace> alltraces = new LinkedHashSet<>(traces);
             alltraces.add(exp);
-            return alltraces;
+            return NonNullUtils.checkNotNull(ImmutableSet.copyOf(alltraces));
         }
-        @SuppressWarnings("null")
-        @NonNull Set<ITmfTrace> singleton = Collections.singleton(trace);
-        return singleton;
+        return checkNotNull(Collections.singleton(trace));
     }
 
     /**
@@ -327,7 +328,6 @@ public final class TmfTraceManager {
         fCurrentTrace = trace;
     }
 
-
     /**
      * Handler for the TmfTraceSelectedSignal.
      *
@@ -405,8 +405,8 @@ public final class TmfTraceManager {
     /**
      * Signal handler for the TmfRangeSynchSignal signal.
      *
-     * The current window time range of *all* valid traces will be updated
-     * to the new requested times.
+     * The current window time range of *all* valid traces will be updated to
+     * the new requested times.
      *
      * @param signal
      *            The incoming signal
@@ -450,27 +450,28 @@ public final class TmfTraceManager {
             /* Trace is not part of the currently opened traces */
             return null;
         }
-        if (!(trace instanceof TmfExperiment)) {
+
+        List<ITmfTrace> traces = trace.getChildren(ITmfTrace.class);
+
+        if (traces.isEmpty()) {
             /* "trace" is a single trace, return its time range directly */
             return trace.getTimeRange();
         }
-        final ITmfTrace[] traces = ((TmfExperiment) trace).getTraces();
-        if (traces.length == 0) {
-            /* We are being trolled */
-            return null;
-        }
-        if (traces.length == 1) {
+
+        if (traces.size() == 1) {
             /* Trace is an experiment with only 1 trace */
-            return traces[0].getTimeRange();
+            return traces.get(0).getTimeRange();
         }
+
         /*
-         * Trace is an experiment with 2+ traces, so get the earliest start and
+         * Trace is an trace set with 2+ traces, so get the earliest start and
          * the latest end.
          */
-        ITmfTimestamp start = traces[0].getStartTime();
-        ITmfTimestamp end = traces[0].getEndTime();
-        for (int i = 1; i < traces.length; i++) {
-            ITmfTrace curTrace = traces[i];
+        ITmfTimestamp start = traces.get(0).getStartTime();
+        ITmfTimestamp end = traces.get(0).getEndTime();
+
+        for (int i = 1; i < traces.size(); i++) {
+            ITmfTrace curTrace = traces.get(i);
             if (curTrace.getStartTime().compareTo(start) < 0) {
                 start = curTrace.getStartTime();
             }
@@ -513,9 +514,9 @@ public final class TmfTraceManager {
      */
     private static String getTemporaryDir(ITmfTrace trace) {
         String pathName = getTemporaryDirPath() +
-            File.separator +
-            trace.getName() +
-            File.separator;
+                File.separator +
+                trace.getName() +
+                File.separator;
         File dir = new File(pathName);
         if (!dir.exists()) {
             dir.mkdirs();

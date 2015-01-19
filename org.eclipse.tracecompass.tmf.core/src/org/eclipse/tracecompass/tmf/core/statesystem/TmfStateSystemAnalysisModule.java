@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 École Polytechnique de Montréal
+ * Copyright (c) 2013, 2015 École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -13,6 +13,8 @@
 
 package org.eclipse.tracecompass.tmf.core.statesystem;
 
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -21,8 +23,6 @@ import java.util.concurrent.CountDownLatch;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.internal.tmf.core.statesystem.backends.partial.PartialHistoryBackend;
 import org.eclipse.tracecompass.internal.tmf.core.statesystem.backends.partial.PartialStateSystem;
@@ -60,7 +60,6 @@ import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
  * @author Geneviève Bastien
  * @since 3.0
  */
-@NonNullByDefault
 public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisModule
         implements ITmfAnalysisModuleWithStateSystems {
 
@@ -441,7 +440,7 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
 
         fTimeRange = TmfTimeRange.ETERNITY;
         final ITmfTrace trace = provider.getTrace();
-        if (trace != null && !isCompleteTrace(trace)) {
+        if (!isCompleteTrace(trace)) {
             TmfTimeRange traceTimeRange = trace.getTimeRange();
             if (traceTimeRange != null) {
                 fTimeRange = traceTimeRange;
@@ -485,9 +484,7 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
             this.sci = sp;
 
             // sci.getTrace() will eventually return a @NonNull
-            @SuppressWarnings("null")
-            @NonNull ITmfTrace tr = sci.getTrace();
-            trace = tr;
+            trace = checkNotNull(sci.getTrace());
 
         }
 
@@ -557,9 +554,7 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
 
     @Override
     public Iterable<ITmfStateSystem> getStateSystems() {
-        @SuppressWarnings("null")
-        @NonNull Iterable<ITmfStateSystem> ret = Collections.singleton((ITmfStateSystem) fStateSystem);
-        return ret;
+        return checkNotNull(Collections.<ITmfStateSystem> singleton(fStateSystem));
     }
 
     /**

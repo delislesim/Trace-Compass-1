@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2013 Ericsson
+ * Copyright (c) 2012, 2014 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -22,6 +22,7 @@ import java.nio.ByteOrder;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.ctf.core.event.io.BitBuffer;
+import org.eclipse.tracecompass.ctf.core.event.types.Encoding;
 import org.eclipse.tracecompass.ctf.core.event.types.EnumDeclaration;
 import org.eclipse.tracecompass.ctf.core.event.types.FloatDeclaration;
 import org.eclipse.tracecompass.ctf.core.event.types.FloatDefinition;
@@ -87,7 +88,7 @@ public class CtfTmfEventFieldTest {
         ByteBuffer bb = ByteBuffer.allocateDirect(capacity);
 
         StructDeclaration sDec = new StructDeclaration(1l);
-        StringDeclaration strDec = new StringDeclaration();
+        StringDeclaration strDec = StringDeclaration.getStringDeclaration(Encoding.UTF8);
         IntegerDeclaration intDec = IntegerDeclaration.UINT_8_DECL;
         FloatDeclaration flDec = new FloatDeclaration(8, 24,
                 ByteOrder.BIG_ENDIAN, 8);

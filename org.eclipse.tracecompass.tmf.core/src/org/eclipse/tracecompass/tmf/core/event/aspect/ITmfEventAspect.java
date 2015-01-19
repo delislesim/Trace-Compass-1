@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ericsson
+ * Copyright (c) 2014, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -12,10 +12,10 @@
 
 package org.eclipse.tracecompass.tmf.core.event.aspect;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEventType;
+import org.eclipse.tracecompass.tmf.core.timestamp.ITmfTimestamp;
 
 /**
  * An aspect is a piece of information that can be extracted, directly or
@@ -57,14 +57,8 @@ public interface ITmfEventAspect {
             }
 
             @Override
-            public String resolve(ITmfEvent event) {
-                String ret = event.getTimestamp().toString();
-                return (ret == null ? EMPTY_STRING : ret);
-            }
-
-            @Override
-            public @NonNull String getFilterId() {
-                return ITmfEvent.EVENT_FIELD_TIMESTAMP;
+            public @Nullable ITmfTimestamp resolve(ITmfEvent event) {
+                return event.getTimestamp();
             }
         };
 
@@ -83,18 +77,12 @@ public interface ITmfEventAspect {
             }
 
             @Override
-            public String resolve(ITmfEvent event) {
+            public @Nullable String resolve(ITmfEvent event) {
                 ITmfEventType type = event.getType();
                 if (type == null) {
-                    return EMPTY_STRING;
+                    return null;
                 }
-                String typeName = type.getName();
-                return (typeName == null ? EMPTY_STRING : typeName);
-            }
-
-            @Override
-            public @NonNull String getFilterId() {
-                return ITmfEvent.EVENT_FIELD_TYPE;
+                return type.getName();
             }
         };
 
@@ -113,14 +101,8 @@ public interface ITmfEventAspect {
             }
 
             @Override
-            public String resolve(ITmfEvent event) {
-                String ret = event.getContent().toString();
-                return (ret == null ? EMPTY_STRING : ret);
-            }
-
-            @Override
-            public @NonNull String getFilterId() {
-                return ITmfEvent.EVENT_FIELD_CONTENT;
+            public @Nullable String resolve(ITmfEvent event) {
+                return event.getContent().toString();
             }
         };
 
@@ -139,14 +121,8 @@ public interface ITmfEventAspect {
             }
 
             @Override
-            public String resolve(ITmfEvent event) {
-                String ret = event.getTrace().getName();
-                return (ret == null ? EMPTY_STRING : ret);
-            }
-
-            @Override
-            public @Nullable String getFilterId() {
-                return null;
+            public @Nullable String resolve(ITmfEvent event) {
+                return event.getTrace().getName();
             }
         };
     }
@@ -189,16 +165,5 @@ public interface ITmfEventAspect {
      *            The event to process
      * @return The resulting tidbit of information for this event.
      */
-    Object resolve(ITmfEvent event);
-
-    /**
-     * The filter ID of this aspect. This is currently used by the Filter View,
-     * and to filter on columns in the event table.
-     *
-     * TODO Remove this, replace with calls to {@link #resolve(ITmfEvent)}
-     * instead.
-     *
-     * @return The filter_id
-     */
-    @Nullable String getFilterId();
+    @Nullable Object resolve(ITmfEvent event);
 }

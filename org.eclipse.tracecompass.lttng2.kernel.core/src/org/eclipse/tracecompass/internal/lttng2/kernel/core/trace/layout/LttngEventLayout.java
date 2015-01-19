@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2012, 2014 Ericsson
+ * Copyright (c) 2012, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -12,9 +12,12 @@
 
 package org.eclipse.tracecompass.internal.lttng2.kernel.core.trace.layout;
 
+import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
+
 import java.util.Collection;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.tracecompass.analysis.os.linux.core.trace.IKernelAnalysisEventLayout;
 
 import com.google.common.collect.ImmutableList;
 
@@ -39,8 +42,8 @@ public class LttngEventLayout implements IKernelAnalysisEventLayout {
     private static final String SOFTIRQ_RAISE = "softirq_raise";
     private static final String SCHED_SWITCH = "sched_switch";
 
-    @SuppressWarnings("null")
-    private static final @NonNull Collection<String> SCHED_WAKEUP_EVENTS = ImmutableList.of("sched_wakeup", "sched_wakeup_new");
+    private static final Collection<String> SCHED_WAKEUP_EVENTS =
+            checkNotNull(ImmutableList.of("sched_wakeup", "sched_wakeup_new"));
 
     private static final String SCHED_PROCESS_FORK = "sched_process_fork";
     private static final String SCHED_PROCESS_EXIT = "sched_process_exit";

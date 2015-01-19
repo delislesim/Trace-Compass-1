@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013, 2014 Ericsson
+ * Copyright (c) 2013, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are made
  * available under the terms of the Eclipse Public License v1.0 which
@@ -63,8 +63,9 @@ public class TmfMipmapStateProviderTest {
     public static void init() {
         TmfMipmapStateProviderStub mmp = new TmfMipmapStateProviderStub(RESOLUTION, Type.LONG);
         IStateHistoryBackend be = new InMemoryBackend(0);
-        ssq = StateSystemFactory.newStateSystem(SSID, be);
-        mmp.assignTargetStateSystem(ssq);
+        ITmfStateSystemBuilder ssb = StateSystemFactory.newStateSystem(SSID, be);
+        mmp.assignTargetStateSystem(ssb);
+        ssq = ssb;
 
         for (long time = START_TIME; time <= END_TIME; time += INTERVAL) {
             long value = time / INTERVAL;

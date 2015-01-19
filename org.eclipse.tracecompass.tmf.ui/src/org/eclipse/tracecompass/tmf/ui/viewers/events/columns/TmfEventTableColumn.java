@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ericsson
+ * Copyright (c) 2014, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -12,9 +12,9 @@
 
 package org.eclipse.tracecompass.tmf.ui.viewers.events.columns;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.common.core.NonNullUtils;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
 
@@ -88,21 +88,16 @@ public class TmfEventTableColumn {
      * @return The string to display in the column for this event
      */
     public String getItemString(ITmfEvent event) {
-        /* resolve() is NonNull. toString() is not, but should never return null */
-        @SuppressWarnings("null")
-        @NonNull String ret = fAspect.resolve(event).toString();
-        return ret;
+        return NonNullUtils.nullToEmptyString(fAspect.resolve(event));
     }
 
     /**
-     * Return the FILTER_ID used by the filters to search this column.
+     * Get the event aspect assigned to this column
      *
-     * @return The filter ID for this column, or 'null' to not provide a filter
-     *         ID (which will mean this column will probably not be
-     *         searchable/filterable.)
+     * @return The event aspect
      */
-    public @Nullable String getFilterFieldId() {
-        return fAspect.getFilterId();
+    public ITmfEventAspect getEventAspect() {
+        return fAspect;
     }
 
     // ------------------------------------------------------------------------

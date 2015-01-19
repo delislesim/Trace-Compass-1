@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2013 Ericsson
+ * Copyright (c) 2009, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -18,6 +18,8 @@
  *******************************************************************************/
 
 package org.eclipse.tracecompass.tmf.ui.views.histogram;
+
+import java.util.Collection;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jface.action.Action;
@@ -750,9 +752,9 @@ public class HistogramView extends TmfView {
 
         fTimeSpanControl.setValue(duration);
 
-        ITmfTrace[] traces = TmfTraceManager.getTraceSet(fTrace);
-        if (traces != null) {
-            this.showTraceAction.setEnabled(traces.length < fFullTraceHistogram.getMaxNbTraces());
+        Collection<ITmfTrace> traces = TmfTraceManager.getTraceSet(fTrace);
+        if (!traces.isEmpty()) {
+            this.showTraceAction.setEnabled(traces.size() < fFullTraceHistogram.getMaxNbTraces());
         }
         updateLegendArea();
 
@@ -768,8 +770,8 @@ public class HistogramView extends TmfView {
         }
         disposeLegendImages();
         if (fFullTraceHistogram.showTraces()) {
-            ITmfTrace[] traces = TmfTraceManager.getTraceSet(fTrace);
-            fLegendImages = new Image[traces.length];
+            Collection<ITmfTrace> traces = TmfTraceManager.getTraceSet(fTrace);
+            fLegendImages = new Image[traces.size()];
             int traceIndex = 0;
             for (ITmfTrace trace : traces) {
                 fLegendImages[traceIndex] = new Image(fLegendArea.getDisplay(), 16, 16);

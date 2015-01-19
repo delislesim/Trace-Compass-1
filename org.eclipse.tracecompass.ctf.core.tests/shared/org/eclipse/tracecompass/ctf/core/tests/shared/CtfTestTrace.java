@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2013 Ericsson
+ * Copyright (c) 2013, 2014 Ericsson
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -200,6 +200,18 @@ public enum CtfTestTrace {
      * </pre>
      */
     ARM_64_BIT_HEADER("../org.eclipse.tracecompass.ctf.core.tests/traces/bug446190", 31556, 6),
+
+    /**
+     * Kernel Trace with flipping endianness
+     *
+     * <pre>
+     * Trace Size: 327 KB
+     * Tracer: lttng-kernel 2.5
+     * Event count: 14 310
+     * Trace length: 41 s
+     * </pre>
+     */
+    FLIPPING_ENDIANNESS("../org.eclipse.tracecompass.ctf.core.tests/traces/flipping-endianness", 14310, 41),
 
     /** Set of many traces, do not call getTrace */
     TRACE_EXPERIMENT("../org.eclipse.tracecompass.ctf.core.tests/traces/exp", -1, -1);
