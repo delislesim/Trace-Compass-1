@@ -43,7 +43,6 @@ public class DsfTraceSessionManager {
 
     public final static String TRACE_DEBUG_MODEL_ID = "org.eclipse.tracecompass.dsf"; //$NON-NLS-1$
     private final static Map<ITmfTrace, DsfSession> fTraceToSessionMap = new HashMap<>();
-
     /**
      *
      */
@@ -59,7 +58,8 @@ public class DsfTraceSessionManager {
     }
 
     /**
-     * @param signal -
+     * @param signal
+     *            -
      */
     @TmfSignalHandler
     public void traceOpened(TmfTraceOpenedSignal signal) {
@@ -120,7 +120,11 @@ public class DsfTraceSessionManager {
 
     /**
      * Create a DSF session f
+<<<<<<< HEAD
      * @param trace trace that needs to be associated to a new session
+=======
+     *
+>>>>>>> temp
      * @return The DSF session created.
      */
     public static DsfSession startDsfSession(ITmfTrace trace) {
@@ -142,7 +146,8 @@ public class DsfTraceSessionManager {
     }
 
     /**
-     * @param trace a
+     * @param trace
+     *            a
      * @return a
      */
     public static DsfSession getSessionId(ITmfTrace trace) {
@@ -150,7 +155,7 @@ public class DsfTraceSessionManager {
     }
 
     private static void startServices(final DsfSession session, final ITmfTrace trace) {
-         Runnable task = new Runnable() {
+        Runnable task = new Runnable() {
 
             @Override
             public void run() {

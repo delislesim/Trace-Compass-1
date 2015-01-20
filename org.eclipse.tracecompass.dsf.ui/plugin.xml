@@ -8,5 +8,17 @@
             id="org.eclipse.tracecompass.dsf.ui.visualizer">
       </visualizer>
    </extension>
+   
+      <extension
+         point="org.eclipse.debug.ui.launchConfigurationTabs">
+      <!-- Local application launch tabs-->
+      <tab
+            id="org.eclipse.tracecompass.dsf.ui.localApplicationLaunch.traceTab"
+            group="org.eclipse.cdt.launch.applicationLaunchTabGroup"
+            name="Tracing"
+            class="org.eclipse.tracecompass.internal.dsf.ui.TracingTab">
+        <associatedDelegate delegate="org.eclipse.cdt.dsf.gdb.launch.localCLaunch"/>
+      </tab>
+   </extension>   
 
 </plugin>

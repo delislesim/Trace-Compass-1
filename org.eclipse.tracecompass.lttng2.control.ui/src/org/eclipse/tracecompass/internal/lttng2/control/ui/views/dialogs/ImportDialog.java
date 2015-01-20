@@ -257,17 +257,8 @@ public class ImportDialog extends Dialog implements IImportDialog {
                     IFileStore trace = file.getParent();
                     IFileStore parent = trace.getParent();
 
-                    String path = fSession.isSnapshotSession() ? fSession.getSnapshotInfo().getSnapshotPath() : fSession.getSessionPath();
-                    path = getUnifiedPath(path);
-                    IPath sessionParentPath = new Path(path).removeLastSegments(1);
-                    IPath traceParentPath = new Path(parent.toURI().getPath());
-
-                    IPath relativeTracePath = traceParentPath.makeRelativeTo(sessionParentPath);
-
-                    IFolder destinationFolder = traceFolder.getFolder(new Path(relativeTracePath.toOSString()));
-
-                    ImportFileInfo info = new ImportFileInfo(trace, trace.getName(), destinationFolder, overwriteAll);
-                    IFolder folder = destinationFolder.getFolder(trace.getName());
+                    ImportFileInfo info = getImportFileInfo(fSession, parent, traceFolder, trace, overwriteAll);
+                    IFolder folder = info.getDestinationFolder().getFolder(trace.getName());
 
                     // Verify if trace directory already exists (and not
                     // overwrite)
@@ -301,6 +292,20 @@ public class ImportDialog extends Dialog implements IImportDialog {
 
         // validation successful -> call super.okPressed()
         super.okPressed();
+    }
+
+    public static ImportFileInfo getImportFileInfo(TraceSessionComponent session, IFileStore parent, IFolder traceFolder, IFileStore trace, boolean overwriteAll) {
+        String path = session.isSnapshotSession() ? session.getSnapshotInfo().getSnapshotPath() : session.getSessionPath();
+        path = getUnifiedPath(path);
+        IPath sessionParentPath = new Path(path).removeLastSegments(1);
+        IPath traceParentPath = new Path(parent.toURI().getPath());
+
+        IPath relativeTracePath = traceParentPath.makeRelativeTo(sessionParentPath);
+
+        IFolder destinationFolder = traceFolder.getFolder(new Path(relativeTracePath.toOSString()));
+
+        ImportFileInfo info = new ImportFileInfo(trace, trace.getName(), destinationFolder, overwriteAll);
+        return info;
     }
 
     // ------------------------------------------------------------------------

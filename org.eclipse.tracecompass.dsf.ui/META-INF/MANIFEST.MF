@@ -19,4 +19,13 @@ Require-Bundle: org.eclipse.cdt.dsf.gdb.multicorevisualizer.ui,
  org.eclipse.tracecompass.tmf.core,
  org.eclipse.core.runtime,
  org.eclipse.tracecompass.analysis.os.linux.core,
- org.eclipse.jdt.annotation
+ org.eclipse.tracecompass.lttng2.control.ui,
+ org.eclipse.debug.ui,
+ org.eclipse.jdt.annotation,
+ org.eclipse.remote.core,
+ org.eclipse.tracecompass.lttng2.control.core,
+ org.eclipse.core.filesystem,
+ org.eclipse.tracecompass.tmf.ui,
+ org.eclipse.ui.views
+Export-Package: org.eclipse.tracecompass.internal.dsf.ui;x-internal:=true,
+ org.eclipse.tracecompass.internal.dsf.ui.visualizer;x-internal:=true

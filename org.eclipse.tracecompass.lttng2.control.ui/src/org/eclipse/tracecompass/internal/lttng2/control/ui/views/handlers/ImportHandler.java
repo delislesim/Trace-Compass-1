@@ -128,8 +128,9 @@ public class ImportHandler extends BaseControlViewHandler {
 
             // create default project
             IProject project = TmfProjectRegistry.createProject(DEFAULT_REMOTE_PROJECT_NAME, null, null);
-
-            if (param.getSession().isLiveTrace()) {
+            boolean blah = param.getSession().isLiveTrace();
+            blah = false;
+            if (blah) {
                 importLiveTrace(new LttngRelaydConnectionInfo(param.getSession().getLiveUrl(), param.getSession().getLivePort(), param.getSession().getName()), project);
                 return null;
             } else if (param.getSession().isStreamedTrace()) {

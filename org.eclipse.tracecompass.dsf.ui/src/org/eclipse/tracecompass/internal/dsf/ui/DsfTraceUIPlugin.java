@@ -11,6 +11,7 @@
 package org.eclipse.tracecompass.internal.dsf.ui;
 
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -28,6 +29,7 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
     private static BundleContext fgBundleContext;
 
     private DsfTraceSessionManager traceManager;
+    private DsfUITraceSessionManager traceUIManager;
 
 	/**
 	 * The constructor
@@ -45,6 +47,7 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
         fgBundleContext = context;
 		super.start(context);
         traceManager = new DsfTraceSessionManager();
+        traceUIManager = new DsfUITraceSessionManager();
 	}
 
 	/*
@@ -57,6 +60,7 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
         fgBundleContext = null;
 		super.stop(context);
         traceManager.dispose();
+        traceUIManager.dispose();
 	}
 
 	/**
@@ -82,6 +86,100 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
      */
     public static void log(IStatus status) {
         getDefault().getLog().log(status);
+    }
+
+    // ------------------------------------------------------------------------
+    // Log INFO
+    // ------------------------------------------------------------------------
+
+    /**
+     * Logs a message with severity INFO in the runtime log of the plug-in.
+     *
+     * @param message
+     *            A message to log
+     */
+    public static void logInfo(String message) {
+        getDefault().getLog().log(new Status(IStatus.INFO, PLUGIN_ID, message));
+    }
+
+    /**
+     * Logs a message and exception with severity INFO in the runtime log of the
+     * plug-in.
+     *
+     * @param message
+     *            A message to log
+     * @param exception
+     *            The corresponding exception
+     */
+    public static void logInfo(String message, Throwable exception) {
+        getDefault().getLog().log(new Status(IStatus.INFO, PLUGIN_ID, message, exception));
+    }
+
+    // ------------------------------------------------------------------------
+    // Log WARNING
+    // ------------------------------------------------------------------------
+
+    /**
+     * Logs a message and exception with severity WARNING in the runtime log of
+     * the plug-in.
+     *
+     * @param message
+     *            A message to log
+     */
+    public static void logWarning(String message) {
+        getDefault().getLog().log(new Status(IStatus.WARNING, PLUGIN_ID, message));
+    }
+
+    /**
+     * Logs a message and exception with severity WARNING in the runtime log of
+     * the plug-in.
+     *
+     * @param message
+     *            A message to log
+     * @param exception
+     *            The corresponding exception
+     */
+    public static void logWarning(String message, Throwable exception) {
+        getDefault().getLog().log(new Status(IStatus.WARNING, PLUGIN_ID, message, exception));
+    }
+
+    // ------------------------------------------------------------------------
+    // Log ERROR
+    // ------------------------------------------------------------------------
+
+    /**
+     * Logs a message and exception with severity ERROR in the runtime log of
+     * the plug-in.
+     *
+     * @param message
+     *            A message to log
+     */
+    public static void logError(String message) {
+        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message));
+    }
+
+    /**
+     * Logs a message and exception with severity ERROR in the runtime log of
+     * the plug-in.
+     *
+     * @param message
+     *            A message to log
+     * @param exception
+     *            The corresponding exception
+     */
+    public static void logError(String message, Throwable exception) {
+        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, message, exception));
+    }
+
+    /**
+     * Logs a message and exception with severity ERROR in the runtime log of
+     * the plug-in.
+     *
+     * @param exception
+     *            The corresponding exception
+     */
+    public static void logError(Throwable exception) {
+        getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, exception.getLocalizedMessage(), exception));
     }
 
 }
