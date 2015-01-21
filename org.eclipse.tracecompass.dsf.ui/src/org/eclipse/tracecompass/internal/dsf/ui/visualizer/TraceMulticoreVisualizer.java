@@ -133,15 +133,17 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
 
     @Override
     public void setLoadMetersEnabled(boolean enabled) {
-        if (m_loadMetersEnabled == enabled) {
-            return;
+        if (fDataModel != null) {
+            if (m_loadMetersEnabled == enabled) {
+                return;
+            }
+            m_loadMetersEnabled = enabled;
+            // save load meter enablement in model
+            fDataModel.setLoadMetersEnabled(m_loadMetersEnabled);
+            disposeLoadMeterTimer();
+            // No polling timers for Tracing
+            // initializeLoadMeterTimer();
         }
-        m_loadMetersEnabled = enabled;
-        // save load meter enablement in model
-        fDataModel.setLoadMetersEnabled(m_loadMetersEnabled);
-        disposeLoadMeterTimer();
-        // No polling timers for Tracing
-        // initializeLoadMeterTimer();
     }
 
 }

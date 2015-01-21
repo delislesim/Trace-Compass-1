@@ -10,10 +10,12 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.internal.dsf.core.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.ImmediateExecutor;
@@ -35,13 +37,19 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.analysis.os.linux.core.cpuusage.KernelCpuUsageAnalysis;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.Attributes;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceCorePlugin;
+import org.eclipse.tracecompass.lttng2.kernel.core.analysis.kernel.LttngKernelAnalysis;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.exceptions.AttributeNotFoundException;
+import org.eclipse.tracecompass.statesystem.core.exceptions.StateSystemDisposedException;
+import org.eclipse.tracecompass.statesystem.core.exceptions.StateValueTypeException;
 import org.eclipse.tracecompass.statesystem.core.exceptions.TimeRangeException;
+import org.eclipse.tracecompass.statesystem.core.interval.ITmfStateInterval;
+import org.eclipse.tracecompass.statesystem.core.statevalue.ITmfStateValue;
 import org.eclipse.tracecompass.tmf.core.signal.TmfRangeSynchSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
@@ -286,11 +294,13 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
         // Broadcasted in nano seconds
         long beginTime = signal.getBeginTime().getValue();
         long endTime = signal.getEndTime().getValue();
-        fEndTime = signal.getEndTime().getValue();
+        fEndTime = endTime;
         if (beginTime == endTime) {
             // calculate load period over previous 1/2000 of the trace's time range
             long delta = (fStateSys.getCurrentEndTime() - fStateSys.getStartTime()) / 2000;
             fStartTime = fEndTime - delta;
+        } else {
+            fStartTime = beginTime;
         }
 
         assert fEndTime > fStartTime;
@@ -334,11 +344,29 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
     public void getCores(IDMContext dmc, final DataRequestMonitor<ICoreDMContext[]> rm) {
         ICPUDMContext cpuDmc = DMContexts.getAncestorOfType(dmc, ICPUDMContext.class);
 
-        // Not allowed to process a context with no cpu context to force well
-        // formed contexts in any future calls
+        List<ICoreDMContext> cores = new ArrayList<>();
         if (cpuDmc == null) {
-            rm.done(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Initialization problem, No ICPUDMContext found in context: " + dmc, null)); //$NON-NLS-1$
-            return;
+            // Retrieve all available cores
+           Set<ICPUDMContext> cpus = fMapCPUToCores.keySet();
+           if (cpus.size() < 1) {
+               // Not allowed to process a context with no cpu context to force well
+               // formed contexts in any future calls
+               //TODO: Create the CPU / core structure with no parent context, and then return all cores
+               System.out.println("*****************   DMC is null and no CPU in cache  *****************");
+               rm.done(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Initialization problem, No ICPUDMContext found in context: " + dmc, null)); //$NON-NLS-1$
+               return;
+           }
+
+           for (ICPUDMContext cpu : cpus) {
+               ICoreDMContext[] coreDmcs = fMapCPUToCores.get(cpu);
+               for (ICoreDMContext coreDmc : coreDmcs) {
+                   cores.add(coreDmc);
+               }
+           }
+
+           System.out.println("Returning all cores, no cpu specified");
+           rm.done(cores.toArray(new ICoreDMContext[cores.size()]) );
+           return;
         }
 
         // Check if the ICoreDMContexts exist in our cpu map
@@ -472,6 +500,63 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
     }
 
+    private void getActiveThread(ICoreDMContext coreDmc) {
+        // Validate context, and provide a handle to the internal class
+        // implementation
+        assert (coreDmc instanceof GDBCoreDMC);
+        GDBCoreDMC context = (GDBCoreDMC) coreDmc;
+
+        ITmfStateSystem ss = TmfStateSystemAnalysisModule.getStateSystem(fTrace, LttngKernelAnalysis.ID);
+        if (ss != null) {
+            String execName = "";
+            int currentThreadId = 0;
+
+            try {
+                int cpuQuark = resolveKernelCpuQuark(ss, context.fId);
+                int currentThreadQuark = ss.getQuarkRelative(cpuQuark, Attributes.CURRENT_THREAD);
+                ITmfStateInterval interval = ss.querySingleState(fEndTime, currentThreadQuark);
+                if (!interval.getStateValue().isNull()) {
+                    ITmfStateValue value = interval.getStateValue();
+                    currentThreadId = value.unboxInt();
+
+                    int execNameQuark = ss.getQuarkAbsolute(Attributes.THREADS, Integer.toString(currentThreadId), Attributes.EXEC_NAME);
+                    interval = ss.querySingleState(fEndTime, execNameQuark);
+                    if (!interval.getStateValue().isNull()) {
+                        value = interval.getStateValue();
+                        execName = value.unboxStr();
+                    }
+                }
+
+                System.out.println("Current Thread id: " + currentThreadId + "\nCurrent executable: " + execName); //$NON-NLS-1$
+
+            } catch (AttributeNotFoundException | TimeRangeException | StateValueTypeException e) {
+                System.out.println("Error resolving active thread"); //$NON-NLS-1$
+                e.printStackTrace();
+            } catch (StateSystemDisposedException e) {
+                /* Ignored */
+            }
+        }
+    }
+
+    private static int resolveKernelCpuQuark(ITmfStateSystem ss, String coreName) throws AttributeNotFoundException {
+        int cpusNode = ss.getQuarkAbsolute(Attributes.CPUS);
+        List<Integer> cpuNodes = ss.getSubAttributes(cpusNode, false);
+
+        //Get the names to match against the name on the cpu state system
+
+        int ssNode = -1;
+        // Resolve the selected cpu node quark on the kernel ss
+        for (int cpuNode : cpuNodes) {
+                String ssCpuName = ss.getAttributeName(cpuNode);
+                if (ssCpuName.equals(coreName)) {
+                        ssNode = cpuNode;
+                        break;
+                }
+        }
+
+        return ssNode;
+    }
+
     private ILoadInfo getCoreLoadInfo(ICoreDMContext coreDmc) {
         long startTime = fStartTime;
         long endTime = fEndTime;
@@ -492,6 +577,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
         Integer[] coreNode = new Integer[] { context.getNode() };
 
         Map<String, Long> tidToCPUTime = fCPUModule.getCpuUsageInRange(coreNode, startTime, endTime);
+
         // The map from thread to time spent includes a grand total identified
         // with the key "total"
         double totCpuTime = tidToCPUTime.get("total"); //$NON-NLS-1$
@@ -503,6 +589,8 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
         double loadPercent = (totCpuTime / duration) * 100;
         System.out.println("Core " + context.getId() + ", load: " + (int) loadPercent);
+
+        getActiveThread(coreDmc);
 
         return new GDBLoadInfo((int) loadPercent);
     }
