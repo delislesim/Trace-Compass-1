@@ -71,7 +71,7 @@ public class DsfTraceSessionManager {
      * @param trace - Remove the session associated to the given trace
      */
     public static void endSession(ITmfTrace trace) {
-        DsfSession session =  fTraceToSessionMap.get(trace);
+        DsfSession session =  fTraceToSessionMap.remove(trace);
         // Check if the session is still tracked / active
         if (session == null) {
             return;
@@ -92,8 +92,6 @@ public class DsfTraceSessionManager {
         }
 
         DsfSession.endSession(session);
-        // stop tracing this session
-        fTraceToSessionMap.remove(trace);
     }
 
 

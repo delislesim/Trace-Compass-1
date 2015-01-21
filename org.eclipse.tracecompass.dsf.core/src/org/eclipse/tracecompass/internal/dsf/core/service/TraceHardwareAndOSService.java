@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
+import org.eclipse.cdt.dsf.concurrent.ImmediateDataRequestMonitor;
 import org.eclipse.cdt.dsf.concurrent.ImmediateExecutor;
 import org.eclipse.cdt.dsf.concurrent.Immutable;
 import org.eclipse.cdt.dsf.concurrent.RequestMonitor;
@@ -281,6 +282,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
     @Override
     public void shutdown(RequestMonitor requestMonitor) {
         TmfSignalManager.deregister(this);
+        fMapCPUToCores.clear();
         unregister();
         super.shutdown(requestMonitor);
     }
@@ -333,6 +335,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
         if (fMapCPUToCores.keySet().size() > 0) {
             // CPU's already resolved for the associated trace
             ICPUDMContext[] cpus = fMapCPUToCores.keySet().toArray(new ICPUDMContext[fMapCPUToCores.size()]);
+            System.out.println("getCPUs, returning cpus from map: " + cpus.length);
             rm.done(cpus);
             return;
         }
@@ -344,28 +347,16 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
     public void getCores(IDMContext dmc, final DataRequestMonitor<ICoreDMContext[]> rm) {
         ICPUDMContext cpuDmc = DMContexts.getAncestorOfType(dmc, ICPUDMContext.class);
 
-        List<ICoreDMContext> cores = new ArrayList<>();
         if (cpuDmc == null) {
             // Retrieve all available cores
            Set<ICPUDMContext> cpus = fMapCPUToCores.keySet();
            if (cpus.size() < 1) {
-               // Not allowed to process a context with no cpu context to force well
-               // formed contexts in any future calls
-               //TODO: Create the CPU / core structure with no parent context, and then return all cores
-               System.out.println("*****************   DMC is null and no CPU in cache  *****************");
-               rm.done(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Initialization problem, No ICPUDMContext found in context: " + dmc, null)); //$NON-NLS-1$
-               return;
+               // Most likely not yet initialized, try to resolve the CPUs
+               getCPUs(null, new ImmediateDataRequestMonitor<IGDBHardwareAndOS.ICPUDMContext[]>() {
+               });
            }
 
-           for (ICPUDMContext cpu : cpus) {
-               ICoreDMContext[] coreDmcs = fMapCPUToCores.get(cpu);
-               for (ICoreDMContext coreDmc : coreDmcs) {
-                   cores.add(coreDmc);
-               }
-           }
-
-           System.out.println("Returning all cores, no cpu specified");
-           rm.done(cores.toArray(new ICoreDMContext[cores.size()]) );
+           rm.done(getAllCores());
            return;
         }
 
@@ -379,6 +370,22 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
 
         // Not available but cpu context is not null, not expected but we can assume there are no core context on this trace
         rm.done(new ICoreDMContext[0]);
+    }
+
+    private ICoreDMContext[] getAllCores() {
+        List<ICoreDMContext> cores = new ArrayList<>();
+        Set<ICPUDMContext> cpus = fMapCPUToCores.keySet();
+        if (cpus.size() > 0) {
+            for (ICPUDMContext cpu : cpus) {
+                ICoreDMContext[] coreDmcs = fMapCPUToCores.get(cpu);
+                for (ICoreDMContext coreDmc : coreDmcs) {
+                    cores.add(coreDmc);
+                }
+            }
+        }
+
+        System.out.println("getAllCores, returning " + cores.size() + ", cores");
+        return new ICoreDMContext[cores.size()];
     }
 
     @Override
@@ -434,6 +441,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
             return cpuDmcs;
         } catch (AttributeNotFoundException e) {
             // No core attributes found
+            System.out.println("State system, AttributeNotfound");
             return new ICPUDMContext[0];
         }
     }
@@ -484,11 +492,13 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
     @Override
     public void getLoadInfo(final IDMContext context, final DataRequestMonitor<ILoadInfo> rm) {
         if (context instanceof ICoreDMContext) {
+            System.out.println("********** CORE **************");
             rm.done(getCoreLoadInfo((ICoreDMContext) context));
             return;
         }
 
         if (context instanceof ICPUDMContext) {
+            System.out.println("*********** CPU *************");
             // Resolve the load for given cpu context
             rm.done(getCPULoadInfo((ICPUDMContext) context));
             return;
@@ -612,7 +622,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
             loadInfo = loadInfo / coreDmcs.length;
         }
 
-        System.out.println("CPU load: " + loadInfo); //$NON-NLS-1$
+        System.out.println("CPU load: " + cpuDmc.getId() + "->" +  loadInfo + "\n"); //$NON-NLS-1$
 
         return new GDBLoadInfo(loadInfo);
     }
