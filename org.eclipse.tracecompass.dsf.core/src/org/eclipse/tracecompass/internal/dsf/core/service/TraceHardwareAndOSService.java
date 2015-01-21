@@ -36,8 +36,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.analysis.os.linux.core.cpuusage.KernelCpuUsageAnalysis;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.Attributes;
+import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceCorePlugin;
-import org.eclipse.tracecompass.lttng2.kernel.core.analysis.kernel.LttngKernelAnalysis;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.exceptions.AttributeNotFoundException;
 import org.eclipse.tracecompass.statesystem.core.exceptions.StateSystemDisposedException;
@@ -506,7 +506,7 @@ public class TraceHardwareAndOSService extends AbstractDsfService implements IGD
         assert (coreDmc instanceof GDBCoreDMC);
         GDBCoreDMC context = (GDBCoreDMC) coreDmc;
 
-        ITmfStateSystem ss = TmfStateSystemAnalysisModule.getStateSystem(fTrace, LttngKernelAnalysis.ID);
+        ITmfStateSystem ss = TmfStateSystemAnalysisModule.getStateSystem(fTrace, KernelAnalysis.ID);
         if (ss != null) {
             String execName = "";
             int currentThreadId = 0;
