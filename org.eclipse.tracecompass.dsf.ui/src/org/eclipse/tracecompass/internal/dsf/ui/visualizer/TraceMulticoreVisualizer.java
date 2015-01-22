@@ -110,7 +110,8 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     @TmfSignalHandler
     public void timeSelected(TmfTimeSynchSignal signal) {
         setLoadMetersEnabled(true);
-        updateLoads();
+        // Refresh the data model
+        update();
     }
 
     /**
@@ -120,7 +121,8 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     @TmfSignalHandler
     public void timeRangeSelected(TmfRangeSynchSignal signal) {
         setLoadMetersEnabled(true);
-        updateLoads();
+        // Refresh the data model
+        update();
     }
 
     /**
