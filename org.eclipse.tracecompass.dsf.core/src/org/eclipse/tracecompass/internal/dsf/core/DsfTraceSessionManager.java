@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ericsson
+ * Copyright (c) 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -21,8 +21,11 @@ import org.eclipse.cdt.dsf.concurrent.RequestMonitor;
 import org.eclipse.cdt.dsf.service.DsfServicesTracker;
 import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.tracecompass.internal.dsf.core.service.DsfTraceModelService;
 import org.eclipse.tracecompass.internal.dsf.core.service.TraceCommandControlService;
 import org.eclipse.tracecompass.internal.dsf.core.service.TraceHardwareAndOSService;
+import org.eclipse.tracecompass.internal.dsf.core.service.TraceProcessesService;
+import org.eclipse.tracecompass.internal.dsf.core.service.TraceRunControlService;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
@@ -32,7 +35,6 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 /** */
 public class DsfTraceSessionManager {
 
-    /** */
     public final static String TRACE_DEBUG_MODEL_ID = "org.eclipse.tracecompass.dsf"; //$NON-NLS-1$
     private final static Map<ITmfTrace, DsfSession> fTraceToSessionMap = new HashMap<>();
 
@@ -80,7 +82,18 @@ public class DsfTraceSessionManager {
         // create a services tracker
         DsfServicesTracker tracker = new DsfServicesTracker(DsfTraceCorePlugin.getBundleContext(), session.getId());
 
+
         // remove the associated services
+        TraceRunControlService runControlService = tracker.getService(TraceRunControlService.class);
+        if (runControlService != null) {
+            runControlService.shutdown(new RequestMonitor(session.getExecutor(), null));
+        }
+
+        TraceProcessesService processesService = tracker.getService(TraceProcessesService.class);
+        if (processesService != null) {
+            processesService.shutdown(new RequestMonitor(session.getExecutor(), null));
+        }
+
         TraceHardwareAndOSService traceHWService = tracker.getService(TraceHardwareAndOSService.class);
         if (traceHWService != null) {
             traceHWService.shutdown(new RequestMonitor(session.getExecutor(), null));
@@ -91,9 +104,13 @@ public class DsfTraceSessionManager {
             commandService.shutdown(new RequestMonitor(session.getExecutor(), null));
         }
 
+        DsfTraceModelService modelService = tracker.getService(DsfTraceModelService.class);
+        if (modelService != null) {
+            modelService.shutdown(new RequestMonitor(session.getExecutor(), null));
+        }
+
         DsfSession.endSession(session);
     }
-
 
     /**
      * Create a DSF session f
@@ -135,10 +152,22 @@ public class DsfTraceSessionManager {
                     @Override
                     protected void handleSuccess() {
                         try {
-                            new TraceHardwareAndOSService(session, trace).initialize(new ImmediateRequestMonitor(null));
-                        } catch (CoreException e) {
+                            new DsfTraceModelService(session, trace).initialize(new ImmediateRequestMonitor(null) {
+                                @Override
+                                protected void handleSuccess() {
+                                    try {
+                                        new TraceHardwareAndOSService(session).initialize(new ImmediateRequestMonitor(null));
+                                        new TraceProcessesService(session).initialize(new ImmediateRequestMonitor(null));
+                                        new TraceRunControlService(session).initialize(new ImmediateRequestMonitor(null));
+                                    } catch (CoreException e) {
+                                        // TODO Auto-generated catch block
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        } catch (CoreException e1) {
                             // TODO Auto-generated catch block
-                            e.printStackTrace();
+                            e1.printStackTrace();
                         }
                     }
                 });

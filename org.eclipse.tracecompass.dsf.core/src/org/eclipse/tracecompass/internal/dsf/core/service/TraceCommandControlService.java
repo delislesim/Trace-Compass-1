@@ -61,7 +61,7 @@ public class TraceCommandControlService extends AbstractDsfService implements IC
 
         @Override
         public String getCommandControlId() {
-            return "0"; //$NON-NLS-1$
+            return getSessionId();
         }
     }
 
