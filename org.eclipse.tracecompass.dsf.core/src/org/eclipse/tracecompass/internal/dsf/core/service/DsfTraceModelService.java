@@ -61,6 +61,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfRangeSynchSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
@@ -78,6 +79,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     private long fEndTime;
     private ICommandControlDMContext fCommandControlContext;
     private Map<ICoreDMContext, TraceExecutionDMC> fMapCoreToExecution = new HashMap<>();
+    private boolean fTraceActive = true;
 
     @Immutable
     private class GDBCPUDMC extends AbstractDMContext implements ICPUDMContext
@@ -366,6 +368,10 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
      */
     @TmfSignalHandler
     public void timeSelected(TmfTimeSynchSignal signal) {
+        if (!fTraceActive) {
+            return;
+        }
+
         // Broadcasted in nano seconds
         long beginTime = signal.getBeginTime().getValue();
         long endTime = signal.getEndTime().getValue();
@@ -397,6 +403,10 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
      */
     @TmfSignalHandler
     public void timeRangeSelected(TmfRangeSynchSignal signal) {
+        if (!fTraceActive) {
+            return;
+        }
+
         // Broadcasted in nano seconds
         TmfTimeRange timeRange = signal.getCurrentRange();
         fStartTime = timeRange.getStartTime().getValue();
@@ -404,6 +414,20 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         System.out.println("Time Range selected: " + fStartTime + "->" + fEndTime);
         reset();
     }
+
+    /**
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void traceSelected(TmfTraceSelectedSignal signal) {
+        ITmfTrace activeTrace = signal.getTrace();
+        if (activeTrace == fTrace) {
+            fTraceActive = true;
+        } else {
+            fTraceActive = false;
+        }
+    }
+
 
     /**
      * @return The bundle context of the plug-in to which this service belongs.
