@@ -11,24 +11,39 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.internal.dsf.ui.visualizer;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.cdt.dsf.gdb.multicorevisualizer.internal.ui.view.Messages;
 import org.eclipse.cdt.dsf.gdb.multicorevisualizer.internal.ui.view.MulticoreVisualizer;
 import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.cdt.visualizer.ui.canvas.GraphicCanvas;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
+import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.tmf.core.signal.TmfRangeSynchSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimeSynchSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
+import org.eclipse.tracecompass.tmf.core.statesystem.TmfStateSystemAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 
 /** */
 @SuppressWarnings("restriction")
 public class TraceMulticoreVisualizer extends MulticoreVisualizer {
+    // Timeout between updates in the build thread in ms
+    private static final long BUILD_UPDATE_TIMEOUT = 500;
+    // Map to track the polling threads for trace parsing completion
+    private final Map<ITmfTrace, BuildThread> fBuildThreadMap = new HashMap<>();
 
     /**
      *
@@ -39,7 +54,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
 
     /** Returns non-localized unique name for this visualizer. */
     @Override
-    public String getName() {
+    public @NonNull String getName() {
         return "tracecompass"; //$NON-NLS-1$
     }
 
@@ -104,13 +119,100 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     }
 
     /**
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void traceOpened(TmfTraceOpenedSignal signal) {
+        ITmfTrace trace = signal.getTrace();
+        if (trace == null) {
+            return;
+        }
+
+        // Create a polling thread to know when the trace has been parsed
+        BuildThread buildThread = new BuildThread(trace, getName());
+
+        synchronized (fBuildThreadMap) {
+            fBuildThreadMap.put(trace, buildThread);
+        }
+
+        buildThread.start();
+    }
+
+    /**
+     * @param signal -
+     */
+    @TmfSignalHandler
+    public void traceClosed(TmfTraceClosedSignal signal) {
+        ITmfTrace trace = signal.getTrace();
+
+        // Remove the polling thread from the tracking list
+        BuildThread thread = null;
+        synchronized (fBuildThreadMap) {
+            thread = fBuildThreadMap.remove(trace);
+        }
+
+        if (thread != null) {
+            thread.cancel();
+        }
+    }
+
+    private class BuildThread extends Thread {
+        private final @NonNull ITmfTrace fBuildTrace;
+        private final @NonNull IProgressMonitor fMonitor;
+
+        public BuildThread(final @NonNull ITmfTrace trace, final @NonNull String name) {
+            super(name + " build"); //$NON-NLS-1$
+            fBuildTrace = trace;
+            fMonitor = new NullProgressMonitor();
+        }
+
+        @Override
+        public void run() {
+            buildEventList(fBuildTrace, fMonitor);
+            // trace build is done, remove it from the tracking list
+            synchronized (fBuildThreadMap) {
+                fBuildThreadMap.remove(fBuildTrace);
+            }
+        }
+
+        public void cancel() {
+            fMonitor.setCanceled(true);
+        }
+    }
+
+    private void buildEventList(@NonNull ITmfTrace trace, @NonNull IProgressMonitor monitor) {
+        ITmfStateSystem ssq = TmfStateSystemAnalysisModule.getStateSystem(trace, KernelAnalysis.ID);
+        if (ssq == null) {
+            return;
+        }
+
+        boolean complete = false;
+
+        // Poll until build completion of cancellation
+        while (!complete) {
+            if (monitor.isCanceled()) {
+                return;
+            }
+
+            complete = ssq.waitUntilBuilt(BUILD_UPDATE_TIMEOUT);
+            if (ssq.isCancelled()) {
+                return;
+            }
+        }
+
+        // The trace is now fully parsed
+        update();
+    }
+
+    /**
      * Enable Meters and request the cpu load from the service
      * @param signal -
      */
     @TmfSignalHandler
     public void timeSelected(TmfTimeSynchSignal signal) {
         setLoadMetersEnabled(true);
-        updateLoads();
+        // Refresh the data model
+        update();
     }
 
     /**
@@ -120,7 +222,8 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     @TmfSignalHandler
     public void timeRangeSelected(TmfRangeSynchSignal signal) {
         setLoadMetersEnabled(true);
-        updateLoads();
+        // Refresh the data model
+        update();
     }
 
     /**
@@ -133,15 +236,17 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
 
     @Override
     public void setLoadMetersEnabled(boolean enabled) {
-        if (m_loadMetersEnabled == enabled) {
-            return;
+        if (fDataModel != null) {
+            if (m_loadMetersEnabled == enabled) {
+                return;
+            }
+            m_loadMetersEnabled = enabled;
+            // save load meter enablement in model
+            fDataModel.setLoadMetersEnabled(m_loadMetersEnabled);
+            disposeLoadMeterTimer();
+            // No polling timers for Tracing
+            // initializeLoadMeterTimer();
         }
-        m_loadMetersEnabled = enabled;
-        // save load meter enablement in model
-        fDataModel.setLoadMetersEnabled(m_loadMetersEnabled);
-        disposeLoadMeterTimer();
-        // No polling timers for Tracing
-        // initializeLoadMeterTimer();
     }
 
 }
