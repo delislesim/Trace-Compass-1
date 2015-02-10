@@ -50,6 +50,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
      */
     public TraceMulticoreVisualizer() {
         TmfSignalManager.register(this);
+        fTargetData = new DsfTraceDataProxy();
     }
 
     /** Returns non-localized unique name for this visualizer. */

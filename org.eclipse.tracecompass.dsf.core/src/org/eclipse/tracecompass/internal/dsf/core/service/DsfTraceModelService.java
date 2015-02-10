@@ -46,9 +46,11 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.analysis.os.linux.core.cpuusage.KernelCpuUsageAnalysis;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.Attributes;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
+import org.eclipse.tracecompass.common.core.NonNullUtils;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceCorePlugin;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
 import org.eclipse.tracecompass.statesystem.core.exceptions.AttributeNotFoundException;
@@ -71,18 +73,19 @@ import org.osgi.framework.BundleContext;
 /** */
 public class DsfTraceModelService extends AbstractDsfService implements IDsfTraceModelService {
 
-    final private ITmfTrace fTrace;
-    final private KernelCpuUsageAnalysis fCPUModule;
-    final private ITmfStateSystem fStateSys;
-    final private Map<ICPUDMContext, ICoreDMContext[]> fMapCPUToCores = new HashMap<>();
-    private long fStartTime;
-    private long fEndTime;
-    private ICommandControlDMContext fCommandControlContext;
-    private Map<ICoreDMContext, TraceExecutionDMC> fMapCoreToExecution = new HashMap<>();
-    private boolean fTraceActive = true;
+    final protected ITmfTrace fTrace;
+    final protected KernelCpuUsageAnalysis fCPUModule;
+
+    final protected ITmfStateSystem fStateSys;
+    final protected Map<ICPUDMContext, ICoreDMContext[]> fMapCPUToCores = new HashMap<>();
+    protected long fStartTime;
+    protected long fEndTime;
+    protected ICommandControlDMContext fCommandControlContext;
+    protected Map<ICoreDMContext, TraceExecutionDMC> fMapCoreToExecution = new HashMap<>();
+    protected boolean fTraceActive = true;
 
     @Immutable
-    private class GDBCPUDMC extends AbstractDMContext implements ICPUDMContext
+    protected class GDBCPUDMC extends AbstractDMContext implements ICPUDMContext
     {
         /**
          * String ID that is used to identify the thread in the GDB/MI protocol.
@@ -123,7 +126,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     }
 
     @Immutable
-    private static class GDBCoreDMC extends AbstractDMContext
+    protected static class GDBCoreDMC extends AbstractDMContext
             implements ICoreDMContext
     {
         /**
@@ -168,7 +171,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         }
     }
 
-    private static class TraceExecutionDMC extends AbstractDMContext implements IContainerDMContext, IMIProcessDMContext, IMIExecutionDMContext {
+    protected static class TraceExecutionDMC extends AbstractDMContext implements IContainerDMContext, IMIProcessDMContext, IMIExecutionDMContext {
         IThreadDMData fThreadData;
 
         public TraceExecutionDMC(DsfSession session, GDBCoreDMC parent, IThreadDMData threadData) {
@@ -203,7 +206,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     }
 
     @Immutable
-    private class GDBLoadInfo implements ILoadInfo {
+    protected class GDBLoadInfo implements ILoadInfo {
         private int fILoad;
         private String fLoad;
         private Map<String, String> fDetailedLoad;
@@ -235,15 +238,22 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     }
 
     @Immutable
-    private static class TraceThreadDMData implements IGdbThreadDMData {
+    protected static class TraceThreadDMData implements IGdbThreadDMData {
         private int fThreadId;
         private String fExecutableName;
-        private String fCoreId;
+        private final List<String> fCoreId = new ArrayList<>();
+        private Integer fPpid;
+        private int fState;
 
-        TraceThreadDMData(int threadId, String executableName, String coreId) {
+        public TraceThreadDMData(int threadId, String executableName, int state) {
+            this(threadId, executableName, null, state);
+        }
+
+        public TraceThreadDMData(int threadId, String executableName, Integer ppid, int state) {
             fThreadId = threadId;
             fExecutableName = executableName;
-            fCoreId = coreId;
+            fPpid = ppid;
+            fState = state;
         }
 
         @Override
@@ -263,7 +273,15 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
 
         @Override
         public String[] getCores() {
-            return new String[] { fCoreId };
+            return fCoreId.toArray(new String[fCoreId.size()]);
+        }
+
+        public void addCore(@NonNull String coreId) {
+            fCoreId.add(coreId);
+        }
+
+        public void removeCore(@NonNull String coreId) {
+            fCoreId.remove(coreId);
         }
 
         @Override
@@ -271,6 +289,15 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
             // TODO resolve owner
             return "Owner ?"; //$NON-NLS-1$
         }
+
+        public Integer getPpid() {
+            return fPpid;
+        }
+
+        public int getState() {
+            return fState;
+        }
+
     }
 
     /**
@@ -343,7 +370,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
      *            The call-back object to notify when this service's
      *            initialization is done.
      */
-    private void doInitialize(RequestMonitor requestMonitor) {
+    protected void doInitialize(RequestMonitor requestMonitor) {
         // Register this service.
         register(new String[] { IDsfTraceModelService.class.getName(),
                 DsfTraceModelService.class.getName() },
@@ -393,7 +420,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     }
 
     // initialize model, ready to be refresh upon a query
-    private void reset() {
+    protected void reset() {
         fMapCPUToCores.clear();
         fMapCoreToExecution.clear();
     }
@@ -483,7 +510,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         return new ICoreDMContext[0];
     }
 
-    private ICoreDMContext[] getAllCores() {
+    protected ICoreDMContext[] getAllCores() {
         List<ICoreDMContext> cores = new ArrayList<>();
         Set<ICPUDMContext> cpus = fMapCPUToCores.keySet();
         if (cpus.size() > 0) {
@@ -509,7 +536,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         return cpuDmc;
     }
 
-    private ICoreDMContext createCoreContext(ICPUDMContext cpuDmc, Integer coreNode, String coreId) {
+    protected ICoreDMContext createCoreContext(ICPUDMContext cpuDmc, Integer coreNode, String coreId) {
         GDBCoreDMC core = new GDBCoreDMC(getSession().getId(), cpuDmc, coreNode, coreId);
         // Make it possible to resolve the execution context from a core or vice
         // versa
@@ -526,7 +553,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
      * @param dmc
      * @return
      */
-    private ICPUDMContext[] resolveCPUContexts(IHardwareTargetDMContext dmc) {
+    protected ICPUDMContext[] resolveCPUContexts(IHardwareTargetDMContext dmc) {
         // For now treat a TRACE-CPU as Core and associate it with a local CPU
         // context
         try {
@@ -573,7 +600,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         throw new CoreException(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Load information not supported for this context type", null)); //$NON-NLS-1$
     }
 
-    private IThreadDMData getActiveThread(ICoreDMContext coreDmc) {
+    protected IThreadDMData getActiveThread(ICoreDMContext coreDmc) {
         // Validate context, and provide a handle to the internal class
         // implementation
         assert (coreDmc instanceof GDBCoreDMC);
@@ -610,10 +637,19 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
             }
         }
 
-        return new TraceThreadDMData(currentThreadId, execName, coreDmc.getId());
+        Integer oState = getIntegerThreadAttribute(currentThreadId, Attributes.STATUS);
+        int state = oState == null ? 0 : oState.intValue();
+
+        // can be null
+        Integer ppid = getIntegerThreadAttribute(currentThreadId, Attributes.PPID);
+
+        TraceThreadDMData thread = new TraceThreadDMData(currentThreadId, execName, ppid, state);
+        thread.addCore(coreDmc.getId());
+
+        return thread;
     }
 
-    private static int resolveKernelCpuQuark(ITmfStateSystem ss, String coreName) throws AttributeNotFoundException {
+    protected static int resolveKernelCpuQuark(ITmfStateSystem ss, String coreName) throws AttributeNotFoundException {
         int cpusNode = ss.getQuarkAbsolute(Attributes.CPUS);
         List<Integer> cpuNodes = ss.getSubAttributes(cpusNode, false);
 
@@ -632,7 +668,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         return ssNode;
     }
 
-    private ILoadInfo getCoreLoadInfo(ICoreDMContext coreDmc) {
+    protected ILoadInfo getCoreLoadInfo(ICoreDMContext coreDmc) {
         long startTime = fStartTime;
         long endTime = fEndTime;
 
@@ -668,7 +704,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         return new GDBLoadInfo((int) loadPercent);
     }
 
-    private ILoadInfo getCPULoadInfo(ICPUDMContext cpuDmc) {
+    protected ILoadInfo getCPULoadInfo(ICPUDMContext cpuDmc) {
         int loadInfo = 0;
 
         // Resolve the context for the cores
@@ -721,5 +757,37 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
                 return StateChangeReason.UNKNOWN;
             }
         };
+    }
+
+    // TODO: This is based on KernelThreadInformationProvider.getParentPid,
+    // this can be merged by e.g. adding a method in KernelThreadInformationProvider to retrieve the thread STATUS
+    protected @Nullable Integer getIntegerThreadAttribute(Integer threadId, String attribute) {
+        Integer intRetResult = null;
+        ITmfStateSystem ss = TmfStateSystemAnalysisModule.getStateSystem(fTrace, KernelAnalysis.ID);
+
+        if (ss == null) {
+            return intRetResult;
+        }
+
+        Integer node;
+        try {
+            node = ss.getQuarkAbsolute(Attributes.THREADS, threadId.toString(), attribute);
+            ITmfStateInterval nodeInterval = ss.querySingleState(fEndTime, node);
+            ITmfStateValue value = nodeInterval.getStateValue();
+
+            switch (value.getType()) {
+            case INTEGER:
+                intRetResult = NonNullUtils.checkNotNull(Integer.valueOf(value.unboxInt()));
+                break;
+            case DOUBLE:
+            case LONG:
+            case NULL:
+            case STRING:
+            default:
+                break;
+            }
+        } catch (AttributeNotFoundException | StateSystemDisposedException | TimeRangeException e) {
+        }
+        return intRetResult;
     }
 }
