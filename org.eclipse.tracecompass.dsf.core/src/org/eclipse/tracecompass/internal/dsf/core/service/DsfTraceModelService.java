@@ -77,11 +77,11 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     final protected KernelCpuUsageAnalysis fCPUModule;
 
     final protected ITmfStateSystem fStateSys;
-    final protected Map<ICPUDMContext, ICoreDMContext[]> fMapCPUToCores = new HashMap<>();
+    final protected Map<ICPUDMContext, GDBCoreDMC[]> fMapCPUToCores = new HashMap<>();
     protected long fStartTime;
     protected long fEndTime;
     protected ICommandControlDMContext fCommandControlContext;
-    protected Map<ICoreDMContext, TraceExecutionDMC> fMapCoreToExecution = new HashMap<>();
+    protected Map<GDBCoreDMC, TraceExecutionDMC> fMapCoreToExecution = new HashMap<>();
     protected boolean fTraceActive = true;
 
     @Immutable
@@ -172,9 +172,9 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     }
 
     protected static class TraceExecutionDMC extends AbstractDMContext implements IContainerDMContext, IMIProcessDMContext, IMIExecutionDMContext {
-        IThreadDMData fThreadData;
+        TraceThreadDMData fThreadData;
 
-        public TraceExecutionDMC(DsfSession session, GDBCoreDMC parent, IThreadDMData threadData) {
+        public TraceExecutionDMC(DsfSession session, GDBCoreDMC parent, TraceThreadDMData threadData) {
             super(session, new IDMContext[] { parent });
             fThreadData = threadData;
         }
@@ -200,8 +200,9 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
 
         @Override
         public String getProcId() {
-            // TODO: Resolve process id
-            return "0"; //$NON-NLS-1$
+            Integer pid = fThreadData.getPpid();
+            pid = (pid == null ? Integer.valueOf(getThreadId()) : pid);
+            return String.valueOf(pid.intValue());
         }
     }
 
@@ -238,16 +239,12 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     }
 
     @Immutable
-    protected static class TraceThreadDMData implements IGdbThreadDMData {
+    public static class TraceThreadDMData implements IGdbThreadDMData {
         private int fThreadId;
         private String fExecutableName;
         private final List<String> fCoreId = new ArrayList<>();
         private Integer fPpid;
         private int fState;
-
-        public TraceThreadDMData(int threadId, String executableName, int state) {
-            this(threadId, executableName, null, state);
-        }
 
         public TraceThreadDMData(int threadId, String executableName, Integer ppid, int state) {
             fThreadId = threadId;
@@ -536,7 +533,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         return cpuDmc;
     }
 
-    protected ICoreDMContext createCoreContext(ICPUDMContext cpuDmc, Integer coreNode, String coreId) {
+    protected GDBCoreDMC createCoreContext(ICPUDMContext cpuDmc, Integer coreNode, String coreId) {
         GDBCoreDMC core = new GDBCoreDMC(getSession().getId(), cpuDmc, coreNode, coreId);
         // Make it possible to resolve the execution context from a core or vice
         // versa
@@ -566,7 +563,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
             for (Integer coreNode : coreNodes) {
                 String coreName = fStateSys.getAttributeName(coreNode);
                 ICPUDMContext cpuDmc = cpuDmcs[i] = createCPUContext(dmc, String.valueOf(i));
-                ICoreDMContext[] coreDmcs = new ICoreDMContext[] { createCoreContext(cpuDmcs[i], coreNode, coreName) };
+                GDBCoreDMC[] coreDmcs = new GDBCoreDMC[] { createCoreContext(cpuDmcs[i], coreNode, coreName) };
                 fMapCPUToCores.put(cpuDmc, coreDmcs);
                 System.out.println("resolved core #" + coreName);
                 i++;
@@ -600,7 +597,7 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         throw new CoreException(new Status(IStatus.ERROR, DsfTraceCorePlugin.PLUGIN_ID, INVALID_HANDLE, "Load information not supported for this context type", null)); //$NON-NLS-1$
     }
 
-    protected IThreadDMData getActiveThread(ICoreDMContext coreDmc) {
+    protected TraceThreadDMData getActiveThread(ICoreDMContext coreDmc) {
         // Validate context, and provide a handle to the internal class
         // implementation
         assert (coreDmc instanceof GDBCoreDMC);
@@ -729,14 +726,15 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     // Processes related API
     @Override
     public IDMContext[] getProcessesBeingDebugged(IDMContext dmc) {
+        Collection<IDMContext> execDmcs = new ArrayList<>();
         if (dmc instanceof TraceExecutionDMC) {
-            // Returning this specific execution context, the visualizer is
-            // unaware that the process
-            // and execution context are consolidated on this context
-            return new IDMContext[] { dmc };
+            // Returning a single execution context
+            execDmcs.add(dmc);
+        } else if (dmc instanceof GDBCoreDMC) {
+            // Returning all thread execution contexts for a core
+            execDmcs.add(fMapCoreToExecution.get(dmc));
         }
 
-        Collection<TraceExecutionDMC> execDmcs = fMapCoreToExecution.values();
         return execDmcs.toArray(new TraceExecutionDMC[execDmcs.size()]);
     }
 
@@ -750,6 +748,11 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
     // IRunControl related API
     @Override
     public IExecutionDMData getExecutionData(IExecutionDMContext dmc) {
+        // TODO: no mapping between thread cpu stopped mode and the actual debug reason
+        // assert dmc instanceof TraceExecutionDMC;
+        // TraceExecutionDMC executionCtx = (TraceExecutionDMC) dmc;
+        // int threadState = executionCtx.fThreadData.getState();
+
         return new IExecutionDMData() {
 
             @Override
@@ -789,5 +792,12 @@ public class DsfTraceModelService extends AbstractDsfService implements IDsfTrac
         } catch (AttributeNotFoundException | StateSystemDisposedException | TimeRangeException e) {
         }
         return intRetResult;
+    }
+
+    @Override
+    public boolean isSuspended(IExecutionDMContext context) {
+        // The execution context provided in this implementation
+        // are for the active threads only.
+        return false;
     }
 }

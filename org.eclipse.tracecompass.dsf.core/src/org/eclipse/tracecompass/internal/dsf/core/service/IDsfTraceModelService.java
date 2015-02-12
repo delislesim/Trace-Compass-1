@@ -89,4 +89,10 @@ public interface IDsfTraceModelService {
      * @return - The execution data associated to the given context
      */
     public IExecutionDMData getExecutionData(IExecutionDMContext dmc);
+
+    /**
+     * @param context
+     * @return - Determine if the given execution context is suspended
+     */
+    public boolean isSuspended(IExecutionDMContext context);
 }

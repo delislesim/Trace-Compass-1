@@ -191,7 +191,7 @@ public class DsfTraceSessionManager {
             service = new DsfTraceModelService3(session, trace);
             break;
         case THREAD_GROUPS_BY_PROCESS:
-        	//TODO: 
+        	//TODO:
         case THREAD_GROUPS_BY_STATE:
         	//TODO:
         case RUNNING_THREAD:
