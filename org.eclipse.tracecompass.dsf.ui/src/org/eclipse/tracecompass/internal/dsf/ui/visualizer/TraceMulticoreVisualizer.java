@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.cdt.dsf.concurrent.ConfinedToDsfExecutor;
+import org.eclipse.cdt.dsf.concurrent.DataRequestMonitor;
 import org.eclipse.cdt.dsf.datamodel.DMContexts;
 import org.eclipse.cdt.dsf.debug.service.IProcesses.IThreadDMData;
 import org.eclipse.cdt.dsf.debug.service.IStack.IFrameDMData;
@@ -34,6 +35,7 @@ import org.eclipse.cdt.visualizer.ui.canvas.GraphicCanvas;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
@@ -56,6 +58,20 @@ import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     // Timeout between updates in the build thread in ms
     private static final long BUILD_UPDATE_TIMEOUT = 500;
+
+    /** Toolbar / menu action */
+    protected HighlightAction m_enableHighlightActionPerProcessName = null;
+
+    /** Toolbar / menu action */
+    protected HighlightAction m_enableHighlightActionPerKernelState = null;
+
+    /** Toolbar / menu action */
+    protected HighlightAction m_enableHighlightActionNone = null;
+
+    /** Which color highlight mode is currently enabled */
+    private String m_highlightMode = null;
+
+
     // Map to track the polling threads for trace parsing completion
     private final Map<ITmfTrace, BuildThread> fBuildThreadMap = new HashMap<>();
 
@@ -76,7 +92,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
     /** Returns localized name to display for this visualizer. */
     @Override
     public String getDisplayName() {
-        return "Trace Visualizer";
+        return "Trace Visualizer"; //$NON-NLS-1$
     }
 
     /** Returns localized tooltip text to display for this visualizer. */
@@ -90,6 +106,75 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
         super.dispose();
         TmfSignalManager.deregister(this);
     }
+
+
+
+    // --- action management ---
+
+    /** Creates Visualizer actions for menus/toolbar */
+    @Override
+    protected void createActions()
+    {
+        super.createActions();
+
+        m_enableHighlightActionPerProcessName = new HighlightAction("Process Name");
+        m_enableHighlightActionPerProcessName.init(this);
+
+        m_enableHighlightActionPerKernelState = new HighlightAction("Kernel State");
+        m_enableHighlightActionPerKernelState.init(this);
+
+        m_enableHighlightActionNone = new HighlightAction("None");
+        m_enableHighlightActionNone.init(this);
+    }
+
+    /** Updates Visualizer actions displayed on menu/toolbars. */
+    @Override
+    protected void updateActions()
+    {
+        if (! m_actionsInitialized) {
+            return;
+        }
+
+        super.updateActions();
+        m_enableHighlightActionPerKernelState.setEnabled(true);
+        m_enableHighlightActionPerProcessName.setEnabled(true);
+        m_enableHighlightActionNone.setEnabled(true);
+    }
+
+    /** Cleans up Visualizer actions. */
+    @Override
+    protected void disposeActions()
+    {
+        super.disposeActions();
+        if (m_enableHighlightActionPerProcessName != null) {
+            m_enableHighlightActionPerProcessName.dispose();
+            m_enableHighlightActionPerProcessName = null;
+        }
+        if (m_enableHighlightActionPerKernelState != null) {
+            m_enableHighlightActionPerKernelState.dispose();
+            m_enableHighlightActionPerKernelState = null;
+        }
+
+        if (m_enableHighlightActionNone != null) {
+            m_enableHighlightActionNone.dispose();
+            m_enableHighlightActionNone = null;
+        }
+    }
+
+    @Override
+    public void populateMenu(IMenuManager menuManager)
+    {
+//        super.populateMenu(menuManager);
+        createActions();
+
+        menuManager.add(m_enableHighlightActionPerProcessName);
+        menuManager.add(m_enableHighlightActionPerKernelState);
+        menuManager.add(m_enableHighlightActionNone);
+
+        updateActions();
+    }
+
+
 
     @Override
     public GraphicCanvas createCanvas(Composite parent) {
@@ -118,19 +203,20 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
 
     @Override
     public int handlesSelection(ISelection selection) {
-        int result = 0;
-
-        ITmfTrace trace = TmfTraceManager.getInstance().getActiveTrace();
-        if (trace != null) {
-            result = 1;
-        }
-        else {
-            result = 0;
-        }
-
-        updateDebugViewListener();
-
-        return result;
+//        int result = 0;
+//
+//        ITmfTrace trace = TmfTraceManager.getInstance().getActiveTrace();
+//        if (trace != null) {
+//            result = 10;
+//        }
+//        else {
+//            result = 0;
+//        }
+//
+//        updateDebugViewListener();
+//
+//        return result;
+        return 10;
     }
 
     /**
@@ -264,6 +350,31 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
         }
     }
 
+    /** Starts visualizer model request.
+     *  Calls getVisualizerModelDone() with the constructed model.
+     * @return
+     */
+    @Override
+    @ConfinedToDsfExecutor("getSession().getExecutor()")
+    public void getVisualizerModel() {
+        String sessionId = m_sessionState.getSessionID();
+        DsfSession session = DsfSession.getSession(sessionId);
+
+        if (session != null) {
+            fDataModel = new TraceVisualizerModel(sessionId);
+            // set/reset highlight mode
+            ((TraceVisualizerModel)fDataModel).setColorHighlightMode(m_highlightMode);
+            fTargetData.getCPUs(m_sessionState, new DataRequestMonitor<ICPUDMContext[]>(session.getExecutor(), null) {
+                @Override
+                protected void handleCompleted() {
+                    ICPUDMContext[] cpuContexts = isSuccess() ? getData() : null;
+                    getCPUsDone(cpuContexts, fDataModel);
+                }
+            });
+        }
+    }
+
+
     /** Invoked when getThreadExecutionState() request completes. */
     @Override
     @ConfinedToDsfExecutor("getSession().getExecutor()")
@@ -302,10 +413,10 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
         // thread can be added twice to the model: once at model creation and once more
         // through the listener.   Checking at both places to prevent this.
         VisualizerThread t = model.getThread(tid);
-        assert t instanceof TraceVisualizerThread;
+        assert t instanceof TraceVisualizerModelThread;
 
         if (t == null) {
-            t = new TraceVisualizerThread(core, pid, osTid, tid, state, frame, traceThreadData.getState());
+            t = new TraceVisualizerModelThread(core, pid, osTid, tid, state, frame, traceThreadData.getState());
             model.addThread(t);
         }
         // if the thread is already in the model, update it's parameters.
@@ -330,7 +441,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
 
     /**
      * TODO: Temporary translation, to be replaced for a more accessible enum after
-     * locating user classes for this information e.g. coloring baseed on thread state
+     * locating user classes for this information e.g. coloring based on thread state
      */
     private static String resolveKernelState(int value) {
         switch (value) {
@@ -348,6 +459,20 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
             return "WAIT_FOR_CPU"; //$NON-NLS-1$
         default:
             return ""; //$NON-NLS-1$
+        }
+    }
+
+    /**
+     * @param enabled whether to enable color highlight or not
+     *
+     */
+    public void setHighlightEnabled(String mode) {
+        // remember which highlight mode is enabled
+        m_highlightMode = mode;
+        if(fDataModel != null) {
+            TraceVisualizerModel model = (TraceVisualizerModel) fDataModel;
+            model.setColorHighlightMode(mode);
+            m_canvas.requestUpdate();
         }
     }
 
