@@ -60,7 +60,7 @@ public class TraceRunControlService extends AbstractDsfTraceService implements I
      */
     @Override
     public boolean isSuspended(IExecutionDMContext context) {
-        return false;
+        return fModelService.isSuspended(context);
     }
 
     /* (non-Javadoc)

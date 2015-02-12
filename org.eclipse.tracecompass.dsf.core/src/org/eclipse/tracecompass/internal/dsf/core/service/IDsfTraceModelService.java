@@ -10,6 +10,7 @@
  *******************************************************************************/
 package org.eclipse.tracecompass.internal.dsf.core.service;
 
+import org.eclipse.cdt.dsf.concurrent.RequestMonitor;
 import org.eclipse.cdt.dsf.datamodel.IDMContext;
 import org.eclipse.cdt.dsf.debug.service.IProcesses.IThreadDMContext;
 import org.eclipse.cdt.dsf.debug.service.IProcesses.IThreadDMData;
@@ -26,6 +27,15 @@ import org.eclipse.core.runtime.CoreException;
  *
  */
 public interface IDsfTraceModelService {
+
+    /*********************/
+    /* Initialization */
+    /*********************/
+    /**
+     * @param immediateRequestMonitor -
+     */
+    public void initialize(RequestMonitor requestMonitor);
+
     /*********************/
     /* HW OS related API */
     /*********************/
@@ -79,4 +89,10 @@ public interface IDsfTraceModelService {
      * @return - The execution data associated to the given context
      */
     public IExecutionDMData getExecutionData(IExecutionDMContext dmc);
+
+    /**
+     * @param context
+     * @return - Determine if the given execution context is suspended
+     */
+    public boolean isSuspended(IExecutionDMContext context);
 }
