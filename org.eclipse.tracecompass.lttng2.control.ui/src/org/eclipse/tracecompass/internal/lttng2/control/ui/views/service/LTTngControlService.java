@@ -287,7 +287,7 @@ public class LTTngControlService implements ILttngControlService {
             matcher = LTTngControlServiceConstants.LIST_LIVE_TIMER_INTERVAL_PATTERN.matcher(line);
             if (matcher.matches()) {
                 long liveDelay = Long.parseLong(matcher.group(1));
-                if (liveDelay > 0) {
+                if ((liveDelay > 0) && (liveDelay <= LTTngControlServiceConstants.MAX_LIVE_TIMER_INTERVAL)) {
                     sessionInfo.setLive(true);
                     sessionInfo.setLiveUrl(SessionInfo.DEFAULT_LIVE_NETWORK_URL);
                     sessionInfo.setLivePort(SessionInfo.DEFAULT_LIVE_PORT);
@@ -1485,9 +1485,9 @@ public class LTTngControlService implements ILttngControlService {
     protected List<String> createCommand(String... strings) {
         List<String> command = new ArrayList<>();
         command.add(LTTngControlServiceConstants.CONTROL_COMMAND);
-        String groupOption = getTracingGroupOption();
+        List<String> groupOption = getTracingGroupOption();
         if (!groupOption.isEmpty()) {
-            command.add(groupOption);
+            command.addAll(groupOption);
         }
         String verboseOption = getVerboseOption();
         if (!verboseOption.isEmpty()) {
@@ -1502,11 +1502,13 @@ public class LTTngControlService implements ILttngControlService {
     /**
      * @return the tracing group option if configured in the preferences
      */
-    protected String getTracingGroupOption() {
+    protected List<String> getTracingGroupOption() {
+        List<String> groupOption = new ArrayList<>();
         if (!ControlPreferences.getInstance().isDefaultTracingGroup() && !ControlPreferences.getInstance().getTracingGroup().equals("")) { //$NON-NLS-1$
-            return LTTngControlServiceConstants.OPTION_TRACING_GROUP + ControlPreferences.getInstance().getTracingGroup();
+            groupOption.add(LTTngControlServiceConstants.OPTION_TRACING_GROUP);
+            groupOption.add(ControlPreferences.getInstance().getTracingGroup());
         }
-        return ""; //$NON-NLS-1$
+        return groupOption;
     }
 
     /**

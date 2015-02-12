@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2014 Ericsson
+ * Copyright (c) 2014, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -9,10 +9,12 @@
  * Contributors:
  *   Alexandre Montplaisir - Initial API and implementation
  *   Patrick Tasse - Add support for folder elements
+ *   Bernd Hufmann - Update trace type auto-detection
  *******************************************************************************/
 
 package org.eclipse.tracecompass.tmf.ui.project.model;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -137,7 +139,7 @@ public final class TmfTraceTypeUIUtils {
             Button b = new Button(shellToShow, SWT.RADIO);
             final String displayName = candidate.getCategoryName() + ':' + candidate.getName();
             b.setText(displayName);
-            names.put(displayName, candidate.getCanonicalName());
+            names.put(displayName, candidate.getTraceTypeId());
 
             b.addSelectionListener(new SelectionListener() {
 
@@ -212,14 +214,20 @@ public final class TmfTraceTypeUIUtils {
 
         TraceTypeHelper traceTypeToSet = null;
         if (validCandidates.isEmpty()) {
+            File traceFile = new File(path);
+            if (traceFile.isFile()) {
+                return null;
+            }
             final String errorMsg = NLS.bind(Messages.TmfOpenTraceHelper_NoTraceTypeMatch, path);
             throw new TmfTraceImportException(errorMsg);
-        } else if (validCandidates.size() != 1) {
+        }
+
+        if (validCandidates.size() != 1) {
             List<Pair<Integer, TraceTypeHelper>> candidates = new ArrayList<>(validCandidates);
             List<Pair<Integer, TraceTypeHelper>> reducedCandidates = reduce(candidates);
             for (Pair<Integer, TraceTypeHelper> candidatePair : reducedCandidates) {
                 TraceTypeHelper candidate = candidatePair.getSecond();
-                if (candidate.getCanonicalName().equals(traceTypeHint)) {
+                if (candidate.getTraceTypeId().equals(traceTypeHint)) {
                     traceTypeToSet = candidate;
                     break;
                 }
@@ -228,7 +236,10 @@ public final class TmfTraceTypeUIUtils {
                 if (reducedCandidates.size() == 0) {
                     throw new TmfTraceImportException(Messages.TmfOpenTraceHelper_ReduceError);
                 } else if (reducedCandidates.size() == 1) {
-                    traceTypeToSet = reducedCandidates.get(0).getSecond();
+                    // Don't select the trace type if it has the lowest confidence
+                    if (reducedCandidates.get(0).getFirst() > 0) {
+                        traceTypeToSet = reducedCandidates.get(0).getSecond();
+                    }
                 } else if (shell == null) {
                     Pair<Integer, TraceTypeHelper> candidate = reducedCandidates.get(0);
                     // if the best match has lowest confidence, don't select it
@@ -240,7 +251,10 @@ public final class TmfTraceTypeUIUtils {
                 }
             }
         } else {
-            traceTypeToSet = validCandidates.first().getSecond();
+            // Don't select the trace type if it has the lowest confidence
+            if (validCandidates.first().getFirst() > 0) {
+                traceTypeToSet = validCandidates.first().getSecond();
+            }
         }
         return traceTypeToSet;
     }
@@ -276,7 +290,7 @@ public final class TmfTraceTypeUIUtils {
          * @since 3.1
          */
     public static IStatus setTraceType(IResource resource, TraceTypeHelper traceType, boolean refresh) throws CoreException {
-        String traceTypeId = traceType.getCanonicalName();
+        String traceTypeId = traceType.getTraceTypeId();
 
         resource.setPersistentProperty(TmfCommonConstants.TRACETYPE, traceTypeId);
 

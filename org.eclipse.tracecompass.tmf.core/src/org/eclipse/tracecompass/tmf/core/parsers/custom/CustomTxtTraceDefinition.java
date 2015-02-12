@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 Ericsson
+ * Copyright (c) 2010, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -59,6 +59,13 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
     /** Input lines */
     public List<InputLine> inputs;
 
+    /**
+     * Custom text label used internally and therefore should not be
+     * externalized
+     */
+    public static final String CUSTOM_TXT_CATEGORY = "Custom Text"; //$NON-NLS-1$
+
+
     /** File name of the default definition file */
     protected static final String CUSTOM_TXT_TRACE_DEFINITIONS_DEFAULT_FILE_NAME = "custom_txt_default_parsers.xml"; //$NON-NLS-1$
     /** File name of the definition file */
@@ -73,12 +80,21 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
             Activator.getDefault().getStateLocation().addTrailingSeparator().append(CUSTOM_TXT_TRACE_DEFINITIONS_FILE_NAME).toString();
 
     /**
-     * Legacy path to the XML definitions file (in the UI plug-in) TODO Remove
+     * Legacy path to the XML definitions file (in the UI plug-in of linuxtools) TODO Remove
      * once we feel the transition phase is over.
      */
-    private static final String CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY =
+    private static final String CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY_UI =
             Activator.getDefault().getStateLocation().removeLastSegments(1).addTrailingSeparator()
                     .append("org.eclipse.linuxtools.tmf.ui") //$NON-NLS-1$
+                    .append(CUSTOM_TXT_TRACE_DEFINITIONS_FILE_NAME).toString();
+
+    /**
+     * Legacy path to the XML definitions file (in the core plug-in of linuxtools) TODO Remove
+     * once we feel the transition phase is over.
+     */
+    private static final String CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY_CORE =
+            Activator.getDefault().getStateLocation().removeLastSegments(1).addTrailingSeparator()
+                    .append("org.eclipse.linuxtools.tmf.core") //$NON-NLS-1$
                     .append(CUSTOM_TXT_TRACE_DEFINITIONS_FILE_NAME).toString();
 
     private static final String CUSTOM_TXT_TRACE_DEFINITION_ROOT_ELEMENT = Messages.CustomTxtTraceDefinition_definitionRootElement;
@@ -100,29 +116,7 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
      * Default constructor.
      */
     public CustomTxtTraceDefinition() {
-        this(TmfTraceType.CUSTOM_TXT_CATEGORY, "", new ArrayList<InputLine>(0), new ArrayList<OutputColumn>(0), ""); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    /**
-     * Full constructor.
-     *
-     * @param traceType
-     *            Name of the trace type
-     * @param inputs
-     *            List of inputs
-     * @param outputs
-     *            List of output columns
-     * @param timeStampOutputFormat
-     *            The timestamp format to use
-     * @deprecated Use {@link #CustomTxtTraceDefinition(String, String, List, List, String)}
-     */
-    @Deprecated
-    public CustomTxtTraceDefinition(String traceType, List<InputLine> inputs,
-            List<OutputColumn> outputs, String timeStampOutputFormat) {
-        this.definitionName = traceType;
-        this.inputs = inputs;
-        this.outputs = outputs;
-        this.timeStampOutputFormat = timeStampOutputFormat;
+        this(CUSTOM_TXT_CATEGORY, "", new ArrayList<InputLine>(0), new ArrayList<OutputColumn>(0), ""); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -622,17 +616,18 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
      */
     public static CustomTxtTraceDefinition[] loadAll(boolean includeDefaults) {
         File defaultFile = new File(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME);
-        File legacyFile = new File(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY);
+        File legacyFileCore = new File(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY_CORE);
+        File legacyFileUI = new File(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY_UI);
 
         /*
          * If there is no file at the expected location, check the legacy
-         * location instead.
+         * locations instead.
          */
-        if (!defaultFile.exists() && legacyFile.exists()) {
-            CustomTxtTraceDefinition[] oldDefs = loadAll(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY);
-            for (CustomTxtTraceDefinition def : oldDefs) {
-                /* Save in the new location */
-                def.save();
+        if (!defaultFile.exists()) {
+            if (legacyFileCore.exists()) {
+                transferDefinitions(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY_CORE);
+            } else if (legacyFileUI.exists()) {
+                transferDefinitions(CUSTOM_TXT_TRACE_DEFINITIONS_PATH_NAME_LEGACY_UI);
             }
         }
 
@@ -652,6 +647,14 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
         }
         return defs.toArray(new CustomTxtTraceDefinition[0]);
 
+    }
+
+    private static void transferDefinitions(String defFile) {
+        CustomTxtTraceDefinition[] oldDefs = loadAll(defFile);
+        for (CustomTxtTraceDefinition def : oldDefs) {
+            /* Save in the new location */
+            def.save();
+        }
     }
 
     /**
@@ -703,19 +706,6 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
             Activator.logError("Error loading all in CustomTxtTraceDefinition: path=" + path, e); //$NON-NLS-1$
         }
         return new CustomTxtTraceDefinition[0];
-    }
-
-    /**
-     * Load a single definition.
-     *
-     * @param definitionName
-     *            Name of the definition to load
-     * @return The loaded trace definition
-     * @deprecated Use {@link #load(String, String)}
-     */
-    @Deprecated
-    public static CustomTxtTraceDefinition load(String definitionName) {
-        return load(TmfTraceType.CUSTOM_TXT_CATEGORY, definitionName);
     }
 
     /**
@@ -777,7 +767,7 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
                 Element element = (Element) node;
                 String categoryAttribute = element.getAttribute(CATEGORY_ATTRIBUTE);
                 if (categoryAttribute.isEmpty()) {
-                    categoryAttribute = TmfTraceType.CUSTOM_TXT_CATEGORY;
+                    categoryAttribute = CUSTOM_TXT_CATEGORY;
                 }
                 String nameAttribute = element.getAttribute(NAME_ATTRIBUTE);
                 if (categoryName.equals(categoryAttribute) &&
@@ -801,7 +791,7 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
 
         def.categoryName = definitionElement.getAttribute(CATEGORY_ATTRIBUTE);
         if (def.categoryName.isEmpty()) {
-            def.categoryName = TmfTraceType.CUSTOM_TXT_CATEGORY;
+            def.categoryName = CUSTOM_TXT_CATEGORY;
         }
         def.definitionName = definitionElement.getAttribute(NAME_ATTRIBUTE);
         if (def.definitionName.isEmpty()) {
@@ -864,18 +854,6 @@ public class CustomTxtTraceDefinition extends CustomTraceDefinition {
             }
         }
         return inputLine;
-    }
-
-    /**
-     * Delete a definition from the currently loaded ones.
-     *
-     * @param definitionName
-     *            The name of the definition to delete
-     * @deprecated Use {@link #delete(String, String)}
-     */
-    @Deprecated
-    public static void delete(String definitionName) {
-        delete(TmfTraceType.CUSTOM_TXT_CATEGORY, definitionName);
     }
 
     /**

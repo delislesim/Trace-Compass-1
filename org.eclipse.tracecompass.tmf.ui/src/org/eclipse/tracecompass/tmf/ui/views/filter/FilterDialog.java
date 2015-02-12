@@ -46,10 +46,10 @@ public class FilterDialog extends Dialog {
     @Override
     protected Control createDialogArea(Composite parent) {
         getShell().setText(Messages.FilterDialog_FilterDialogTitle);
-        getShell().setMinimumSize(getShell().computeSize(500, 200));
+        getShell().setMinimumSize(getShell().computeSize(550, 250));
         Composite composite = (Composite) super.createDialogArea(parent);
 
-        fViewer = new FilterViewer(composite, SWT.BORDER);
+        fViewer = new FilterViewer(composite, SWT.BORDER, true);
         fViewer.setInput(fRoot);
         return composite;
     }

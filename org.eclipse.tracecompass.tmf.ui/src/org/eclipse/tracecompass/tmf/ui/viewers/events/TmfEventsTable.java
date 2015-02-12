@@ -115,7 +115,7 @@ import org.eclipse.tracecompass.tmf.core.component.ITmfEventProvider;
 import org.eclipse.tracecompass.tmf.core.component.TmfComponent;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
-import org.eclipse.tracecompass.tmf.core.event.aspect.TmfEventFieldAspect;
+import org.eclipse.tracecompass.tmf.core.event.aspect.TmfContentFieldAspect;
 import org.eclipse.tracecompass.tmf.core.event.collapse.ITmfCollapsibleEvent;
 import org.eclipse.tracecompass.tmf.core.event.lookup.ITmfCallsite;
 import org.eclipse.tracecompass.tmf.core.event.lookup.ITmfModelLookup;
@@ -123,7 +123,6 @@ import org.eclipse.tracecompass.tmf.core.event.lookup.ITmfSourceLookup;
 import org.eclipse.tracecompass.tmf.core.filter.ITmfFilter;
 import org.eclipse.tracecompass.tmf.core.filter.model.ITmfFilterTreeNode;
 import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterAndNode;
-import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterMatchesAspectNode;
 import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterMatchesNode;
 import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterNode;
 import org.eclipse.tracecompass.tmf.core.request.ITmfEventRequest.ExecutionType;
@@ -337,7 +336,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
      * @param cacheSize
      *            The size of the event table cache
      * @param columnData
-     *            Unused
+     *            The column data array
      * @deprecated Deprecated constructor, use
      *             {@link #TmfEventsTable(Composite, int, Collection)}
      */
@@ -346,7 +345,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             final org.eclipse.tracecompass.tmf.ui.widgets.virtualtable.ColumnData[] columnData) {
         /*
          * We'll do a "best-effort" to keep trace types still using this API to
-         * keep working, by defining a TmfEventTableFieldColumn for each
+         * keep working, by defining a TmfEventTableColumn for each
          * ColumnData they passed.
          */
         this(parent, cacheSize, convertFromColumnData(columnData));
@@ -360,7 +359,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         for (org.eclipse.tracecompass.tmf.ui.widgets.virtualtable.ColumnData col : columnData) {
             String fieldName = col.header;
             if (fieldName != null) {
-                builder.add(new TmfEventFieldAspect(fieldName, fieldName));
+                builder.add(new TmfContentFieldAspect(fieldName, fieldName));
             }
         }
         return checkNotNull(builder.build());
@@ -668,9 +667,16 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                 }
                 final TableItem[] selection = fTable.getSelection();
                 if ((selection != null) && (selection.length > 0)) {
-                    final TmfTimestamp ts = (TmfTimestamp) fTable.getSelection()[0].getData(Key.TIMESTAMP);
+                    TableItem item = fTable.getSelection()[0];
+                    final TmfTimestamp ts = (TmfTimestamp) item.getData(Key.TIMESTAMP);
                     if (ts != null) {
                         broadcast(new TmfTimeSynchSignal(TmfEventsTable.this, ts));
+                    }
+                    if (item.getData() instanceof ITmfEvent) {
+                        broadcast(new TmfEventSelectedSignal(TmfEventsTable.this, (ITmfEvent) item.getData()));
+                        fireSelectionChanged(new SelectionChangedEvent(TmfEventsTable.this, new StructuredSelection(item.getData())));
+                    } else {
+                        fireSelectionChanged(new SelectionChangedEvent(TmfEventsTable.this, StructuredSelection.EMPTY));
                     }
                 }
             }
@@ -1383,7 +1389,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
                             tableEditor.getEditor().dispose();
                             return false;
                         }
-                        final TmfFilterMatchesAspectNode filter = new TmfFilterMatchesAspectNode(null);
+                        final TmfFilterMatchesNode filter = new TmfFilterMatchesNode(null);
                         ITmfEventAspect aspect = (ITmfEventAspect) column.getData(Key.ASPECT);
                         filter.setEventAspect(aspect);
                         filter.setRegex(regex);

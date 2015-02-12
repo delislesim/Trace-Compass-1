@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 Ericsson, École Polytechnique de Montréal
+ * Copyright (c) 2010, 2015 Ericsson, École Polytechnique de Montréal
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
+import org.eclipse.tracecompass.internal.tmf.ui.editors.ITmfEventsEditorConstants;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisManager;
@@ -43,9 +44,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
-import org.eclipse.tracecompass.tmf.core.trace.TmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
-import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
@@ -136,7 +135,7 @@ public abstract class TmfCommonProjectElement extends TmfProjectModelElement {
                  * it
                  */
                 IFolder newresource = ResourcesPlugin.getWorkspace().getRoot().getFolder(path.append(module.getId()));
-                analysis = new TmfAnalysisElement(module.getName(), newresource, this, module.getId());
+                analysis = new TmfAnalysisElement(module.getName(), newresource, this, module);
             }
             analysis.refreshChildren();
         }
@@ -253,13 +252,13 @@ public abstract class TmfCommonProjectElement extends TmfProjectModelElement {
      *
      * @param bookmarksFolder
      *            Folder where to put the bookmark file
-     * @param traceType
-     *            The canonical name to set as tracetype
+     * @param editorInputType
+     *            The editor input type to set (trace or experiment)
      * @return The bookmark file
      * @throws CoreException
      *             if the bookmarks file cannot be created
      */
-    protected IFile createBookmarksFile(IFolder bookmarksFolder, String traceType) throws CoreException {
+    protected IFile createBookmarksFile(IFolder bookmarksFolder, String editorInputType) throws CoreException {
         IFile file = getBookmarksFile();
         if (!file.exists()) {
             final IFile bookmarksFile = bookmarksFolder.getFile(BOOKMARKS_HIDDEN_FILE);
@@ -270,7 +269,7 @@ public abstract class TmfCommonProjectElement extends TmfProjectModelElement {
             bookmarksFile.setHidden(true);
             file.createLink(bookmarksFile.getLocation(), IResource.REPLACE, null);
             file.setHidden(true);
-            file.setPersistentProperty(TmfCommonConstants.TRACETYPE, traceType);
+            file.setPersistentProperty(TmfCommonConstants.TRACETYPE, editorInputType);
         }
         return file;
     }
@@ -353,9 +352,9 @@ public abstract class TmfCommonProjectElement extends TmfProjectModelElement {
                 IFolder folderTrace = (IFolder) trace;
                 for (IResource member : folderTrace.members()) {
                     String traceTypeId = TmfTraceType.getTraceTypeId(member);
-                    if (TmfTrace.class.getCanonicalName().equals(traceTypeId)) {
+                    if (ITmfEventsEditorConstants.TRACE_INPUT_TYPE_CONSTANTS.contains(traceTypeId)) {
                         member.delete(true, null);
-                    } else if (TmfExperiment.class.getCanonicalName().equals(traceTypeId)) {
+                    } else if (ITmfEventsEditorConstants.EXPERIMENT_INPUT_TYPE_CONSTANTS.contains(traceTypeId)) {
                         member.delete(true, null);
                     }
                 }

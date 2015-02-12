@@ -64,7 +64,7 @@ public class KernelCpuUsageStateProvider extends AbstractTmfStateProvider {
      *            The event layout to use for this state provider.
      */
     public KernelCpuUsageStateProvider(ITmfTrace trace, IKernelAnalysisEventLayout layout) {
-        super(trace, ITmfEvent.class, "Kernel CPU usage"); //$NON-NLS-1$
+        super(trace, "Kernel CPU usage"); //$NON-NLS-1$
         fTraceStart = trace.getStartTime().getValue();
         fLayout = layout;
     }
@@ -91,18 +91,12 @@ public class KernelCpuUsageStateProvider extends AbstractTmfStateProvider {
         final String eventName = event.getType().getName();
 
         if (eventName.equals(fLayout.eventSchedSwitch())) {
-            Integer cpu = null;
-            Iterable<TmfCpuAspect> aspects = TmfTraceUtils.getEventAspectsOfClass(event.getTrace(), TmfCpuAspect.class);
-            for (TmfCpuAspect aspect : aspects) {
-                cpu = aspect.resolve(event);
-                if (cpu != null) {
-                    break;
-                }
-            }
-            if (cpu == null) {
+            Object cpuObj = TmfTraceUtils.resolveEventAspectOfClassForEvent(event.getTrace(), TmfCpuAspect.class, event);
+            if (cpuObj == null) {
                 /* We couldn't find any CPU information, ignore this event */
                 return;
             }
+            Integer cpu = (Integer) cpuObj;
 
             /*
              * Fields: string prev_comm, int32 prev_tid, int32 prev_prio, int64

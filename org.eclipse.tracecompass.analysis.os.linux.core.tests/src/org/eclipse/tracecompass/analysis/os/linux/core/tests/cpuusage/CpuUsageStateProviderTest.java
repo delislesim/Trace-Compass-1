@@ -56,11 +56,6 @@ public class CpuUsageStateProviderTest {
 
     private static final String CPU_USAGE_FILE = "testfiles/cpu_analysis.xml";
 
-    /**
-     * The ID of the cpu usage analysis module for development traces
-     */
-    private static final String TEST_CPU_USAGE_ANALYSIS_ID = "org.eclipse.tracecompass.analysis.os.linux.tests.cpuusage";
-
     private ITmfTrace fTrace;
     private KernelCpuUsageAnalysis fModule;
 
@@ -104,7 +99,7 @@ public class CpuUsageStateProviderTest {
         module.waitForCompletion();
         /* End of the FIXME block */
 
-        fModule = TmfTraceUtils.getAnalysisModuleOfClass(fTrace, KernelCpuUsageAnalysis.class, TEST_CPU_USAGE_ANALYSIS_ID);
+        fModule = TmfTraceUtils.getAnalysisModuleOfClass(fTrace, KernelCpuUsageAnalysis.class, KernelCpuUsageAnalysis.ID);
         assertNotNull(fModule);
     }
 
@@ -165,21 +160,25 @@ public class CpuUsageStateProviderTest {
              * Query at the end and make sure all processes on all CPU have the
              * expected values
              */
-            Map<String, Long> expected = new HashMap<>();
-            expected.put("CPUs/0/1", 0L);
-            expected.put("CPUs/0/2", 19L);
-            expected.put("CPUs/0/3", 5L);
-            expected.put("CPUs/1/1", 5L);
-            expected.put("CPUs/1/3", 6L);
-            expected.put("CPUs/1/4", 8L);
-            List<ITmfStateInterval> intervals = ss.queryFullState(25L);
-            Map<String, Long> intervalMap = new HashMap<>();
-            for (ITmfStateInterval oneInterval : intervals) {
-                if (!oneInterval.getStateValue().isNull()) {
-                    intervalMap.put(ss.getFullAttributePath(oneInterval.getAttribute()), oneInterval.getStateValue().unboxLong());
-                }
-            }
-            assertEquals(expected, intervalMap);
+            List<ITmfStateInterval> state = ss.queryFullState(25L);
+
+            int quark = ss.getQuarkAbsolute("CPUs", "0", "1");
+            assertEquals(0L, state.get(quark).getStateValue().unboxLong());
+
+            quark = ss.getQuarkAbsolute("CPUs", "0", "2");
+            assertEquals(19L, state.get(quark).getStateValue().unboxLong());
+
+            quark = ss.getQuarkAbsolute("CPUs", "0", "3");
+            assertEquals(5L, state.get(quark).getStateValue().unboxLong());
+
+            quark = ss.getQuarkAbsolute("CPUs", "1", "1");
+            assertEquals(5L, state.get(quark).getStateValue().unboxLong());
+
+            quark = ss.getQuarkAbsolute("CPUs", "1", "3");
+            assertEquals(6L, state.get(quark).getStateValue().unboxLong());
+
+            quark = ss.getQuarkAbsolute("CPUs", "1", "4");
+            assertEquals(8L, state.get(quark).getStateValue().unboxLong());
 
         } catch (AttributeNotFoundException | StateSystemDisposedException e) {
             fail(e.getMessage());

@@ -88,7 +88,7 @@ public class KernelStateProvider extends AbstractTmfStateProvider {
      *            depending on the tracer implementation.
      */
     public KernelStateProvider(ITmfTrace trace, IKernelAnalysisEventLayout layout) {
-        super(trace, ITmfEvent.class, "Kernel"); //$NON-NLS-1$
+        super(trace, "Kernel"); //$NON-NLS-1$
         fLayout = layout;
         fEventNames = buildEventNames(layout);
     }
@@ -110,8 +110,9 @@ public class KernelStateProvider extends AbstractTmfStateProvider {
         builder.put(layout.eventSchedProcessExit(), SCHED_PROCESS_EXIT_INDEX);
         builder.put(layout.eventSchedProcessFree(), SCHED_PROCESS_FREE_INDEX);
 
-        if (layout.eventStatedumpProcessState() != null) {
-            builder.put(layout.eventStatedumpProcessState(), STATEDUMP_PROCESS_STATE_INDEX);
+        final String eventStatedumpProcessState = layout.eventStatedumpProcessState();
+        if (eventStatedumpProcessState != null) {
+            builder.put(eventStatedumpProcessState, STATEDUMP_PROCESS_STATE_INDEX);
         }
 
         for (String eventSchedWakeup : layout.eventsSchedWakeup()) {
@@ -147,18 +148,12 @@ public class KernelStateProvider extends AbstractTmfStateProvider {
             return;
         }
 
-        Integer cpu = null;
-        Iterable<TmfCpuAspect> aspects = TmfTraceUtils.getEventAspectsOfClass(event.getTrace(), TmfCpuAspect.class);
-        for (TmfCpuAspect aspect : aspects) {
-            cpu = aspect.resolve(event);
-            if (cpu != null) {
-                break;
-            }
-        }
-        if (cpu == null) {
+        Object cpuObj = TmfTraceUtils.resolveEventAspectOfClassForEvent(event.getTrace(), TmfCpuAspect.class, event);
+        if (cpuObj == null) {
             /* We couldn't find any CPU information, ignore this event */
             return;
         }
+        Integer cpu = (Integer) cpuObj;
 
         final String eventName = event.getType().getName();
         final long ts = event.getTimestamp().getValue();

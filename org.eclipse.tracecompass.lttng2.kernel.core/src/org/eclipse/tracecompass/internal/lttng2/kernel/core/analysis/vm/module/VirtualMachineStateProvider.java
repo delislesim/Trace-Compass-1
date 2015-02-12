@@ -20,12 +20,12 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelThreadInformationProvider;
+import org.eclipse.tracecompass.analysis.os.linux.core.model.HostThread;
 import org.eclipse.tracecompass.analysis.os.linux.core.trace.IKernelAnalysisEventLayout;
 import org.eclipse.tracecompass.common.core.NonNullUtils;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.Activator;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.VcpuStateValues;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.VmAttributes;
-import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.HostThread;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.IVirtualMachineModel;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.VirtualCPU;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.VirtualMachine;
@@ -97,7 +97,7 @@ public class VirtualMachineStateProvider extends AbstractTmfStateProvider {
      *            The virtual machine experiment
      */
     public VirtualMachineStateProvider(TmfExperiment experiment) {
-        super(experiment, ITmfEvent.class, "Virtual Machine State Provider"); //$NON-NLS-1$
+        super(experiment, "Virtual Machine State Provider"); //$NON-NLS-1$
 
         fModel = new QemuKvmVmModel(experiment);
         Table<ITmfTrace, String, Integer> table = NonNullUtils.checkNotNull(HashBasedTable.<ITmfTrace, String, Integer> create());
@@ -219,22 +219,12 @@ public class VirtualMachineStateProvider extends AbstractTmfStateProvider {
 
                 if (host.isGuest()) {
                     /* Get the event's CPU */
-                    Integer cpu = null;
-                    Iterable<TmfCpuAspect> aspects = TmfTraceUtils.getEventAspectsOfClass(event.getTrace(), TmfCpuAspect.class);
-                    for (TmfCpuAspect aspect : aspects) {
-                        Integer aspectRes = aspect.resolve(event);
-                        if (aspectRes != null) {
-                            cpu = aspectRes;
-                            break;
-                        }
-                    }
-                    if (cpu == null) {
-                        /*
-                         * We couldn't find any CPU information, ignore this
-                         * event
-                         */
+                    Object cpuObj = TmfTraceUtils.resolveEventAspectOfClassForEvent(event.getTrace(), TmfCpuAspect.class, event);
+                    if (cpuObj == null) {
+                        /* We couldn't find any CPU information, ignore this event */
                         break;
                     }
+                    Integer cpu = (Integer) cpuObj;
 
                     /*
                      * If sched switch is from a guest, just update the status
@@ -362,19 +352,12 @@ public class VirtualMachineStateProvider extends AbstractTmfStateProvider {
         }
 
         /* Get the CPU the event is running on */
-        Integer cpu = null;
-        Iterable<TmfCpuAspect> aspects = TmfTraceUtils.getEventAspectsOfClass(event.getTrace(), TmfCpuAspect.class);
-        for (TmfCpuAspect aspect : aspects) {
-            Integer aspectRes = aspect.resolve(event);
-            if (aspectRes != null) {
-                cpu = aspectRes;
-                break;
-            }
-        }
-        if (cpu == null) {
+        Object cpuObj = TmfTraceUtils.resolveEventAspectOfClassForEvent(event.getTrace(), TmfCpuAspect.class, event);
+        if (cpuObj == null) {
             /* We couldn't find any CPU information, ignore this event */
             return null;
         }
+        Integer cpu = (Integer) cpuObj;
 
         Integer currentTid = KernelThreadInformationProvider.getThreadOnCpu(module, cpu, ts);
         if (currentTid == null) {

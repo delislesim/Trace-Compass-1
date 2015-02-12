@@ -21,8 +21,8 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelThreadInformationProvider;
+import org.eclipse.tracecompass.analysis.os.linux.core.model.HostThread;
 import org.eclipse.tracecompass.common.core.NonNullUtils;
-import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.HostThread;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.IVirtualMachineModel;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.VirtualCPU;
 import org.eclipse.tracecompass.internal.lttng2.kernel.core.analysis.vm.model.VirtualMachine;
@@ -209,19 +209,12 @@ public class QemuKvmVmModel implements IVirtualMachineModel {
         final long ts = event.getTimestamp().getValue();
         final String hostId = event.getTrace().getHostId();
 
-        Integer cpu = null;
-        Iterable<TmfCpuAspect> aspects = TmfTraceUtils.getEventAspectsOfClass(event.getTrace(), TmfCpuAspect.class);
-        for (TmfCpuAspect aspect : aspects) {
-            Integer thisCpu = aspect.resolve(event);
-            if (thisCpu != null) {
-                cpu = thisCpu;
-                break;
-            }
-        }
-        if (cpu == null) {
+        Object cpuObj = TmfTraceUtils.resolveEventAspectOfClassForEvent(event.getTrace(), TmfCpuAspect.class, event);
+        if (cpuObj == null) {
             /* We couldn't find any CPU information, ignore this event */
             return;
         }
+        Integer cpu = (Integer) cpuObj;
 
         /* Find a virtual machine with the vm uid payload value */
         ITmfEventField data = content.getField(QemuKvmStrings.VM_UID_PAYLOAD);

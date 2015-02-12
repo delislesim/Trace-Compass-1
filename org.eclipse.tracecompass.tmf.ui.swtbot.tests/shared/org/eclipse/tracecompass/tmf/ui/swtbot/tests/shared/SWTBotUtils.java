@@ -47,6 +47,7 @@ import org.eclipse.tracecompass.tmf.ui.views.TracingPerspectiveFactory;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorReference;
 import org.eclipse.ui.IPageLayout;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
 import org.hamcrest.Matcher;
@@ -363,5 +364,55 @@ public final class SWTBotUtils {
             }
         }
         return nodeName;
+    }
+
+    /**
+     * Select the traces folder
+     *
+     * @param bot
+     *            a given workbench bot
+     * @param projectName
+     *            the name of the project (it needs to exist or else it would time out)
+     * @return a {@link SWTBotTreeItem} of the "Traces" directory
+     */
+    public static SWTBotTreeItem selectTracesFolder(SWTWorkbenchBot bot, String projectName) {
+        SWTBotView projectExplorerBot = bot.viewByTitle("Project Explorer");
+        projectExplorerBot.show();
+        SWTBotTreeItem treeItem = projectExplorerBot.bot().tree().getTreeItem(projectName);
+        treeItem.select();
+        treeItem.expand();
+        SWTBotTreeItem treeNode = null;
+        for (String node : treeItem.getNodes()) {
+            if (node.matches("Traces\\s\\[(\\d)*\\]")) {
+                treeNode = treeItem.getNode(node);
+                break;
+            }
+        }
+        assertNotNull(treeNode);
+        return treeNode;
+    }
+
+    /**
+     * Open a view by id.
+     *
+     * @param id
+     *            view id.
+     */
+    public static void openView(final String id) {
+        final PartInitException res[] = new PartInitException[1];
+        UIThreadRunnable.syncExec(new VoidResult() {
+            @Override
+            public void run() {
+                try {
+                    PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(id);
+                } catch (PartInitException e) {
+                    res[0] = e;
+                }
+            }
+        });
+        if (res[0] != null) {
+            fail(res[0].getMessage());
+        }
+        waitForJobs();
     }
 }

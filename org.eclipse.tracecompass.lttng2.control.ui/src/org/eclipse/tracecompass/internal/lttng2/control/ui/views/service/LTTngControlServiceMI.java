@@ -8,6 +8,7 @@
  *
  * Contributors:
  *   Jonathan Rajotte - Initial support for machine interface lttng 2.6
+ *   Bernd Hufmann - Fix check for live session
  **********************************************************************/
 
 package org.eclipse.tracecompass.internal.lttng2.control.ui.views.service;
@@ -273,7 +274,7 @@ public class LTTngControlServiceMI extends LTTngControlService {
                 break;
             case MIStrings.LIVE_TIMER_INTERVAL:
                 long liveDelay = Long.parseLong(rawInfo.getTextContent());
-                if (liveDelay > 0) {
+                if ((liveDelay > 0 && (liveDelay <= LTTngControlServiceConstants.MAX_LIVE_TIMER_INTERVAL))) {
                     sessionInfo.setLive(true);
                     sessionInfo.setLiveUrl(SessionInfo.DEFAULT_LIVE_NETWORK_URL);
                     sessionInfo.setLivePort(SessionInfo.DEFAULT_LIVE_PORT);
@@ -729,12 +730,12 @@ public class LTTngControlServiceMI extends LTTngControlService {
     protected List<String> createCommand(String... strings) {
         List<String> command = new ArrayList<>();
         command.add(LTTngControlServiceConstants.CONTROL_COMMAND);
+        List<String> groupOption = getTracingGroupOption();
+        if (!groupOption.isEmpty()) {
+            command.addAll(groupOption);
+        }
         command.add(LTTngControlServiceConstants.CONTROL_COMMAND_MI_OPTION);
         command.add(LTTngControlServiceConstants.CONTROL_COMMAND_MI_XML);
-        String groupOption = getTracingGroupOption();
-        if (!groupOption.isEmpty()) {
-            command.add(groupOption);
-        }
         for (String string : strings) {
             command.add(string);
         }

@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.internal.tmf.core.Activator;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
@@ -71,9 +72,6 @@ import com.google.common.collect.ImmutableList;
  * <li> public ITmfContext seekEvent(double ratio)
  * <li> public IStatus validate(IProject project, String path)
  * </ul>
- * A concrete trace must provide its corresponding parser. A common way to
- * accomplish this is by making the concrete class extend TmfTrace and
- * implement ITmfEventParser.
  * <p>
  * When constructing an event, the concrete trace should use the trace's
  * timestamp transform to create the timestamp, by either transforming the
@@ -90,7 +88,7 @@ import com.google.common.collect.ImmutableList;
  * @see ITmfTraceIndexer
  * @see ITmfEventParser
  */
-public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, ITmfTraceCompleteness {
+public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, ITmfEventParser, ITmfTraceCompleteness {
 
     // ------------------------------------------------------------------------
     // Class attributes
@@ -113,6 +111,9 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
     // The resource used for persistent properties for this trace
     private IResource fResource;
 
+    // The trace type id
+    private @Nullable String fTraceTypeId;
+
     // The trace path
     private String fPath;
 
@@ -131,9 +132,6 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
 
     // The trace indexer
     private ITmfTraceIndexer fIndexer;
-
-    // The trace parser
-    private ITmfEventParser fParser;
 
     private ITmfTimestampTransform fTsTransform;
 
@@ -167,9 +165,6 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
      * @param interval
      *            The trace streaming interval. You can use '0' for post-mortem
      *            traces.
-     * @param parser
-     *            The trace event parser. Use 'null' if (and only if) the trace
-     *            object itself is also the ITmfEventParser to be used.
      * @throws TmfTraceException
      *             If something failed during the opening
      */
@@ -177,13 +172,11 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
             final Class<? extends ITmfEvent> type,
             final String path,
             final int cacheSize,
-            final long interval,
-            final ITmfEventParser parser)
-                    throws TmfTraceException {
+            final long interval)
+            throws TmfTraceException {
         super();
         fCacheSize = (cacheSize > 0) ? cacheSize : ITmfTrace.DEFAULT_TRACE_CACHE_SIZE;
         fStreamingInterval = interval;
-        fParser = parser;
         initialize(resource, path, type);
     }
 
@@ -200,7 +193,6 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
         }
         fCacheSize = trace.getCacheSize();
         fStreamingInterval = trace.getStreamingInterval();
-        fParser = trace.fParser;
         initialize(trace.getResource(), trace.getPath(), trace.getEventType());
     }
 
@@ -222,11 +214,12 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
     // ------------------------------------------------------------------------
 
     @Override
-    public void initTrace(final IResource resource, final String path, final Class<? extends ITmfEvent> type, String name) throws TmfTraceException {
+    public void initTrace(final IResource resource, final String path, final Class<? extends ITmfEvent> type, String name, String traceTypeId) throws TmfTraceException {
         if (name == null) {
             throw new IllegalArgumentException();
         }
         setName(name);
+        fTraceTypeId = traceTypeId;
         initTrace(resource, path, type);
     }
 
@@ -256,13 +249,6 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
         String traceName = getName();
         if (traceName.isEmpty()) {
             traceName = (resource != null) ? resource.getName() : new Path(path).lastSegment();
-        }
-        if (fParser == null) {
-            if (this instanceof ITmfEventParser) {
-                fParser = (ITmfEventParser) this;
-            } else {
-                throw new TmfTraceException("Invalid trace parser"); //$NON-NLS-1$
-            }
         }
         super.init(traceName, type);
         // register as VIP after super.init() because TmfComponent registers to signal manager there
@@ -381,6 +367,11 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
     }
 
     @Override
+    public @Nullable String getTraceTypeId() {
+        return fTraceTypeId;
+    }
+
+    @Override
     public String getPath() {
         return fPath;
     }
@@ -401,13 +392,6 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
      */
     protected ITmfTraceIndexer getIndexer() {
         return fIndexer;
-    }
-
-    /**
-     * @return the trace parser
-     */
-    protected ITmfEventParser getParser() {
-        return fParser;
     }
 
     // ------------------------------------------------------------------------
@@ -523,15 +507,6 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
         fStreamingInterval = (interval > 0) ? interval : 0;
     }
 
-    /**
-     * Set the trace parser. Must be done at initialization time.
-     *
-     * @param parser the new trace parser
-     */
-    protected void setParser(final ITmfEventParser parser) {
-        fParser = parser;
-    }
-
     // ------------------------------------------------------------------------
     // ITmfTrace - SeekEvent operations (returning a trace context)
     // ------------------------------------------------------------------------
@@ -597,30 +572,22 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
     }
 
     // ------------------------------------------------------------------------
-    // ITmfTrace - Read operations (returning an actual event)
+    // Read operations (returning an actual event)
     // ------------------------------------------------------------------------
+
+    @Override
+    public abstract ITmfEvent parseEvent(ITmfContext context);
 
     @Override
     public synchronized ITmfEvent getNext(final ITmfContext context) {
         // parseEvent() does not update the context
-        final ITmfEvent event = fParser.parseEvent(context);
+        final ITmfEvent event = parseEvent(context);
         if (event != null) {
             updateAttributes(context, event.getTimestamp());
             context.setLocation(getCurrentLocation());
             context.increaseRank();
-            processEvent(event);
         }
         return event;
-    }
-
-    /**
-     * Hook for special event processing by the concrete class
-     * (called by TmfTrace.getEvent())
-     *
-     * @param event the event
-     */
-    protected void processEvent(final ITmfEvent event) {
-        // Do nothing
     }
 
     /**
