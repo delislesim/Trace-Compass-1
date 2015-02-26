@@ -120,11 +120,7 @@ public class DsfTraceSessionManager {
 
     /**
      * Create a DSF session f
-<<<<<<< HEAD
      * @param trace trace that needs to be associated to a new session
-=======
-     *
->>>>>>> temp
      * @return The DSF session created.
      */
     public static DsfSession startDsfSession(ITmfTrace trace) {
