@@ -151,9 +151,22 @@ public class TraceMulticoreVisualizerThread extends MulticoreVisualizerThread {
             gc.setBackground(IMulticoreVisualizerConstants.COLOR_THREAD_TEXT_BG);
             gc.setForeground(IMulticoreVisualizerConstants.COLOR_THREAD_TEXT_FG);
 
-            // draw TID
+
+            // draw TID label
+            // Add more information if there is space for it
+            int PIXEL_PER_CHAR = 5;
             String displayTID = Integer.toString(m_thread.getTID());
-            displayTID += " - " + getExecutable() + " - (" + getKernelStateLabel() + ")";
+            if (m_core.getWidth() > displayTID.length() * PIXEL_PER_CHAR) {
+                String newLabel = displayTID + " - " + getExecutable(); //$NON-NLS-1$
+                if (m_core.getWidth() > newLabel.length() * PIXEL_PER_CHAR) {
+                    displayTID = newLabel;
+                    newLabel = displayTID + " - (" + getKernelStateLabel() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
+                    if (m_core.getWidth() > newLabel.length() * PIXEL_PER_CHAR) {
+                        displayTID = newLabel;
+                    }
+                }
+            }
+
             GUIUtils.drawText(gc, displayTID, x + w + 4, y + 2);
 
             // draw selection marker, if any
