@@ -29,7 +29,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
-import org.eclipse.remote.core.IRemoteFileManager;
+import org.eclipse.remote.core.IRemoteFileService;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.Activator;
 import org.eclipse.tracecompass.internal.lttng2.control.ui.views.dialogs.ImportDialog;
@@ -132,7 +132,7 @@ public class DsfUITraceSessionManager {
 
                 IRemoteSystemProxy proxy = session.getTargetNode().getRemoteSystemProxy();
 
-                IRemoteFileManager fsss = proxy.getFileServiceSubSystem();
+                IRemoteFileService fsss = proxy.getRemoteFileService();
 
                 final String path = session.getSnapshotInfo().getSnapshotPath();
                 final IFileStore remoteFolder = fsss.getResource(path);
