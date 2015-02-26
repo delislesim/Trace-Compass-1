@@ -18,6 +18,9 @@
             name="Tracing"
             class="org.eclipse.tracecompass.internal.dsf.ui.TracingTab">
         <associatedDelegate delegate="org.eclipse.cdt.dsf.gdb.launch.localCLaunch"/>
+        <placement
+              after="org.eclipse.debug.ui.commonTab">
+        </placement>
       </tab>
    </extension>   
 

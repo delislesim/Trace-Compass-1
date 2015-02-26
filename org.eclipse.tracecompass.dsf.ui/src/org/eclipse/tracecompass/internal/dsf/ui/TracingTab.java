@@ -248,7 +248,7 @@ public class TracingTab extends AbstractLaunchConfigurationTab {
         }
         catch (CoreException e) {
             setErrorMessage(LaunchMessages.getFormattedString("Launch.common.Exception_occurred_reading_configuration_EXCEPTION", e.getStatus().getMessage())); //$NON-NLS-1$
-//            GdbUIPlugin.log(e);
+            DsfTraceUIPlugin.logError(e);
         }
     }
 
@@ -262,13 +262,11 @@ public class TracingTab extends AbstractLaunchConfigurationTab {
 
     @Override
     public Image getImage() {
-        // TODO Auto-generated method stub
-        return super.getImage();
+        return DsfTraceUIPlugin.getDefault().getImageFromImageRegistry("icons/obj16/tracing_tab.gif"); //$NON-NLS-1$
     }
 
     @Override
     public String getName() {
         return "Tracing"; //$NON-NLS-1$
     }
-
 }
