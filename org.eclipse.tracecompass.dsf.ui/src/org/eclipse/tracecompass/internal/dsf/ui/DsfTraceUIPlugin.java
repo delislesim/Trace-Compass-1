@@ -1,17 +1,19 @@
 /*******************************************************************************
- * Copyright (c) 2006, 2010 Wind River Systems and others.
+ * Copyright (c) 2015 Ericsson and others.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *     Wind River Systems - initial API and implementation
+ *     Ericsson - initial API and implementation
  *******************************************************************************/
 package org.eclipse.tracecompass.internal.dsf.ui;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.tracecompass.internal.dsf.core.DsfTraceSessionManager;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -182,4 +184,30 @@ public class DsfTraceUIPlugin extends AbstractUIPlugin {
         getDefault().getLog().log(new Status(IStatus.ERROR, PLUGIN_ID, exception.getLocalizedMessage(), exception));
     }
 
+    /**
+     * Get the ImageDescriptor from a given path
+     *
+     * @param path
+     *            The path to the image file
+     * @return The ImageDescriptor object
+     */
+    public ImageDescriptor getImageDescripterFromPath(String path) {
+        return AbstractUIPlugin.imageDescriptorFromPlugin(PLUGIN_ID, path);
+    }
+
+    /**
+     * Get the Image from a registry
+     *
+     * @param path
+     *            The path to the image registry
+     * @return The Image object
+     */
+    public Image getImageFromImageRegistry(String path) {
+        Image icon = getImageRegistry().get(path);
+        if (icon == null) {
+            icon = getImageDescripterFromPath(path).createImage();
+            plugin.getImageRegistry().put(path, icon);
+        }
+        return icon;
+    }
 }
