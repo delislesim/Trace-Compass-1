@@ -244,7 +244,11 @@ public class TracingTab extends AbstractLaunchConfigurationTab {
     @Override
     public void initializeFrom(ILaunchConfiguration configuration) {
         try {
-            fLttngSession.setText(configuration.getAttribute(ATTR_TRACING_TARGET_NODE, "") + " / " + configuration.getAttribute(ATTR_TRACING_SESSION_NAME, "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            String targetNode = configuration.getAttribute(ATTR_TRACING_TARGET_NODE, ""); //$NON-NLS-1$
+            String sessionName = configuration.getAttribute(ATTR_TRACING_SESSION_NAME, ""); //$NON-NLS-1$
+            if (!targetNode.isEmpty() && !sessionName.isEmpty()) {
+                fLttngSession.setText(targetNode + " / " + sessionName); //$NON-NLS-1$
+            }
         }
         catch (CoreException e) {
             setErrorMessage(LaunchMessages.getFormattedString("Launch.common.Exception_occurred_reading_configuration_EXCEPTION", e.getStatus().getMessage())); //$NON-NLS-1$
