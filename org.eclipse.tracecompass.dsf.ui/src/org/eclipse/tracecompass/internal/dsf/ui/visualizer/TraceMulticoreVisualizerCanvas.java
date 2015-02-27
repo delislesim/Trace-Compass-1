@@ -83,7 +83,7 @@ public class TraceMulticoreVisualizerCanvas extends MulticoreVisualizerCanvas {
             if (m_model != null) {
                 for (VisualizerCPU cpu : m_model.getCPUs()) {
                     // current filter permits displaying this CPU?
-                    if (m_canvasFilterManager.displayObject(cpu)) {
+                    if (m_canvasFilterManager.displayObject(cpu) && cpu.getID() >= 0 && cpu.getID() <= 1000) {
                         MulticoreVisualizerCPU mcpu = new MulticoreVisualizerCPU(cpu.getID());
                         m_cpus.add(mcpu);
                         m_cpuMap.put(cpu, mcpu);
