@@ -39,7 +39,6 @@ public class DsfTraceSessionManager {
 
     //TODO: Temporary preference of prototype implementation, to choose a thread presentation option
     private enum Mode{RUNNING_THREAD,  NON_SLEEPING_THREADS, THREAD_GROUPS_BY_PROCESS, THREAD_GROUPS_BY_STATE}
-    private static Mode mode = Mode.NON_SLEEPING_THREADS;
 
     public final static String TRACE_DEBUG_MODEL_ID = "org.eclipse.tracecompass.dsf"; //$NON-NLS-1$
     private final static Map<ITmfTrace, DsfSession> fTraceToSessionMap = new HashMap<>();
@@ -187,6 +186,7 @@ public class DsfTraceSessionManager {
     private static IDsfTraceModelService getTraceModelService(DsfSession session, ITmfTrace trace) throws CoreException {
         IDsfTraceModelService service = new DsfTraceModelService(session, trace);
 
+        Mode mode = Mode.NON_SLEEPING_THREADS;
         switch (mode) {
         case NON_SLEEPING_THREADS:
             service = new DsfTraceModelService3(session, trace);
