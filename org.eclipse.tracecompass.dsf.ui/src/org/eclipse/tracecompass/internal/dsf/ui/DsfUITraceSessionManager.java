@@ -9,7 +9,11 @@ import java.util.List;
 
 import org.eclipse.cdt.dsf.debug.service.IRunControl.ISuspendedDMEvent;
 import org.eclipse.cdt.dsf.debug.service.IRunControl.StateChangeReason;
+import org.eclipse.cdt.dsf.debug.service.command.ICommandControlService.ICommandControlInitializedDMEvent;
+import org.eclipse.cdt.dsf.gdb.service.IGDBBackend;
+import org.eclipse.cdt.dsf.gdb.service.SessionType;
 import org.eclipse.cdt.dsf.service.DsfServiceEventHandler;
+import org.eclipse.cdt.dsf.service.DsfServicesTracker;
 import org.eclipse.cdt.dsf.service.DsfSession;
 import org.eclipse.cdt.dsf.service.DsfSession.SessionStartedListener;
 import org.eclipse.core.commands.ExecutionException;
@@ -242,5 +246,38 @@ public class DsfUITraceSessionManager {
 
     public void dispose() {
         DsfSession.removeSessionStartedListener(fSessionStartedListener);
+    }
+
+    @DsfServiceEventHandler
+    public void handleEvent(ICommandControlInitializedDMEvent event) {
+        String sessionId = event.getDMContext().getSessionId();
+        DsfServicesTracker tracker = new DsfServicesTracker(DsfTraceUIPlugin.getBundleContext(), sessionId);
+        IGDBBackend backendService = tracker.getService(IGDBBackend.class);
+        if (backendService != null && backendService.getSessionType() == SessionType.CORE){
+            DsfSession session = DsfSession.getSession(sessionId);
+            ILaunch launch = (ILaunch) session.getModelAdapter(ILaunch.class);
+            try {
+                ILaunchConfiguration launchConfiguration = launch.getLaunchConfiguration();
+                String tracesPath = launchConfiguration.getAttribute(CoreTracingTab.ATTR_TRACING_CORE_TRACES, ""); //$NON-NLS-1$
+                if (tracesPath != null && !tracesPath.isEmpty()) {
+//                    Display.getDefault().syncExec(new Runnable() {
+//
+//                        @Override
+//                        public void run() {
+//                            try {
+//                                //TODO open the specified trace here
+//                            } catch (CoreException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    });
+                }
+            } catch (CoreException e) {
+                DsfTraceUIPlugin.logError(e);
+            }
+
+        }
+
+        tracker.dispose();
     }
 }
