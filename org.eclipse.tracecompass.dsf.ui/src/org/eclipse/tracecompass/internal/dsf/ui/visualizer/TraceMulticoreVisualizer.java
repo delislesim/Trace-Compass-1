@@ -36,6 +36,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.tracecompass.analysis.os.linux.core.kernelanalysis.KernelAnalysis;
@@ -174,7 +175,16 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
         updateActions();
     }
 
+    @Override
+    public void populateToolBar(IToolBarManager toolBarManager)
+    {
+        // initialize menu/toolbar actions, if needed
+        createActions();
 
+//        toolBarManager.add(m_pinToDbgSessionAction);
+
+        updateActions();
+    }
 
     @Override
     public GraphicCanvas createCanvas(Composite parent) {
