@@ -28,13 +28,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IContainer;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -84,11 +87,13 @@ import org.eclipse.tracecompass.tmf.core.TmfProjectNature;
 import org.eclipse.tracecompass.tmf.core.project.model.TmfTraceImportException;
 import org.eclipse.tracecompass.tmf.core.project.model.TmfTraceType;
 import org.eclipse.tracecompass.tmf.core.project.model.TraceTypeHelper;
+import org.eclipse.tracecompass.tmf.core.util.Pair;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectRegistry;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceTypeUIUtils;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTracesFolder;
+import org.eclipse.tracecompass.tmf.ui.project.model.TraceUtils;
 import org.eclipse.ui.dialogs.FileSystemElement;
 import org.eclipse.ui.dialogs.IOverwriteQuery;
 import org.eclipse.ui.dialogs.WizardResourceImportPage;
@@ -783,21 +788,30 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
     }
 
     private TraceFileSystemElement getFileSystemTree() {
+        Pair<IFileSystemObject, FileSystemObjectImportStructureProvider> rootObjectAndProvider = getRootObjectAndProvider(getSourceFile());
+        if (rootObjectAndProvider == null) {
+            return null;
+        }
+        return selectFiles(rootObjectAndProvider.getFirst(), rootObjectAndProvider.getSecond());
+    }
+
+    private Pair<IFileSystemObject, FileSystemObjectImportStructureProvider> getRootObjectAndProvider(File sourceFile) {
+        if (sourceFile == null) {
+            return null;
+        }
+
         IFileSystemObject rootElement = null;
         FileSystemObjectImportStructureProvider importStructureProvider = null;
 
         // Import from directory
-        if (isImportFromDirectory()) {
+        if (!isArchiveFile(sourceFile)) {
             importStructureProvider = new FileSystemObjectImportStructureProvider(FileSystemStructureProvider.INSTANCE, null);
-            File sourceDirectory = getSourceDirectory();
-            if (sourceDirectory == null) {
-                return null;
-            }
+            File sourceDirectory = sourceFile;
             rootElement = importStructureProvider.getIFileSystemObject(sourceDirectory);
         } else {
             // Import from archive
             FileSystemObjectLeveledImportStructureProvider leveledImportStructureProvider = null;
-            String archivePath = getSourceArchiveFile() != null ? getSourceArchiveFile().getAbsolutePath() : ""; //$NON-NLS-1$
+            String archivePath = sourceFile.getAbsolutePath();
             if (ArchiveFileManipulations.isTarFile(archivePath)) {
                 if (ensureTarSourceIsValid(archivePath)) {
                     // We close the file when we dispose the import provider,
@@ -823,7 +837,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             return null;
         }
 
-        return selectFiles(rootElement, importStructureProvider);
+        return new Pair<>(rootElement, importStructureProvider);
     }
 
     /**
@@ -989,13 +1003,13 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             @Override
             public void run() {
                 // Create the root element from the supplied file system object
-                results[0] = createRootElement(rootFileSystemObject, structureProvider);
+                results[0] = createRootTraceFileElement(rootFileSystemObject, structureProvider);
             }
         });
         return results[0];
     }
 
-    private static TraceFileSystemElement createRootElement(IFileSystemObject element,
+    private static TraceFileSystemElement createRootTraceFileElement(IFileSystemObject element,
             FileSystemObjectImportStructureProvider provider) {
         boolean isContainer = provider.isFolder(element);
         String elementLabel = provider.getLabel(element);
@@ -1107,7 +1121,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
     @Override
     public boolean validateSourceGroup() {
 
-        File source = isImportFromDirectory() ? getSourceDirectory() : getSourceArchiveFile();
+        File source = getSourceFile();
         if (source == null) {
             setMessage(Messages.ImportTraceWizard_SelectTraceSourceEmpty);
             setErrorMessage(null);
@@ -1150,8 +1164,17 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         return true;
     }
 
+    private File getSourceFile() {
+        return isImportFromDirectory() ? getSourceDirectory() : getSourceArchiveFile();
+    }
+
     private boolean isImportFromDirectory() {
         return fImportFromDirectoryRadio != null && fImportFromDirectoryRadio.getSelection();
+    }
+
+    private static boolean isArchiveFile(File sourceFile) {
+        String absolutePath = sourceFile.getAbsolutePath();
+        return ArchiveFileManipulations.isTarFile(absolutePath) || ArchiveFileManipulations.isZipFile(absolutePath);
     }
 
     @Override
@@ -1367,6 +1390,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         private boolean fImportFromArchive;
         private int fImportOptionFlags;
         private ImportConflictHandler fConflictHandler;
+        private String fCurrentPath;
 
         private TraceValidateAndImportOperation(String traceId, IPath baseSourceContainerPath, IPath destinationContainerPath, boolean importFromArchive, int importOptionFlags) {
             fTraceType = traceId;
@@ -1384,21 +1408,20 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         }
 
         public void run(IProgressMonitor progressMonitor) {
-            String currentPath = null;
             try {
 
-                final ArrayList<TraceFileSystemElement> fileSystemElements = new ArrayList<>();
+                final List<TraceFileSystemElement> checkedFileSystemElements = new LinkedList<>();
                 IElementFilter passThroughFilter = new IElementFilter() {
 
                     @Override
                     public void filterElements(Collection elements, IProgressMonitor monitor) {
-                        fileSystemElements.addAll(elements);
+                        checkedFileSystemElements.addAll(elements);
                     }
 
                     @Override
                     public void filterElements(Object[] elements, IProgressMonitor monitor) {
                         for (int i = 0; i < elements.length; i++) {
-                            fileSystemElements.add((TraceFileSystemElement) elements[i]);
+                            checkedFileSystemElements.add((TraceFileSystemElement) elements[i]);
                         }
                     }
                 };
@@ -1411,83 +1434,61 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 // Check if operation was cancelled.
                 ModalContext.checkCanceled(subMonitor);
 
-                Iterator<TraceFileSystemElement> fileSystemElementsIter = fileSystemElements.iterator();
-                IFolder destTempFolder = null;
-                subMonitor = SubMonitor.convert(progressMonitor, fileSystemElements.size());
+                List<TraceFileSystemElement> selectedFileSystemElements = checkedFileSystemElements;
+                IFolder destTempFolder = fTargetFolder.getProject().getFolder(TRACE_IMPORT_TEMP_FOLDER);
+                if (destTempFolder.exists()) {
+                    SubProgressMonitor monitor = new SubProgressMonitor(subMonitor, 1, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
+                    destTempFolder.delete(true, monitor);
+                }
+                SubProgressMonitor monitor = new SubProgressMonitor(subMonitor, 1, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
+                destTempFolder.create(IResource.HIDDEN, true, monitor);
+
+                subMonitor = SubMonitor.convert(progressMonitor, selectedFileSystemElements.size());
                 if (fImportFromArchive) {
                     // When importing from archive, we first extract the
-                    // *selected* files to a temporary folder then create a new
-                    // Iterator<TraceFileSystemElement> that points to the
-                    // extracted files. This way, the import operator can
-                    // continue as it normally would.
+                    // *selected* files to a temporary folder then create new
+                    // TraceFileSystemElements
 
-                    subMonitor = SubMonitor.convert(progressMonitor, fileSystemElements.size() * 2);
-                    destTempFolder = fTargetFolder.getProject().getFolder(TRACE_IMPORT_TEMP_FOLDER);
-                    if (destTempFolder.exists()) {
-                        SubProgressMonitor monitor = new SubProgressMonitor(subMonitor, 1, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
-                        destTempFolder.delete(true, monitor);
-                    }
-                    SubProgressMonitor monitor = new SubProgressMonitor(subMonitor, 1, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
-                    destTempFolder.create(IResource.HIDDEN, true, monitor);
+                    subMonitor = SubMonitor.convert(progressMonitor, selectedFileSystemElements.size() * 2);
 
-                    fileSystemElementsIter = extractSelectedFiles(fileSystemElementsIter, destTempFolder, subMonitor);
+                    // Extract selected files from source archive to temporary folder
+                    //calculateSourceLocations(selectedFileSystemElements, sourceLocationMap, null);
+                    extractArchiveContent(selectedFileSystemElements.iterator(), destTempFolder, subMonitor);
+
                     // We need to update the source container path because the
                     // "preserve folder structure" option would create the
-                    // wrong folders otherwise.
+                    // wrong trace folders otherwise.
                     fBaseSourceContainerPath = destTempFolder.getLocation();
+                    String baseSourceLocation = getRootElement(selectedFileSystemElements.get(0)).getSourceLocation();
+                    // Extract additional archives contained in the extracted files (archives in archives)
+                    List<TraceFileSystemElement> tempFolderFileSystemElements = getElementsInFolder(destTempFolder);
+                    extractAllArchiveFiles(tempFolderFileSystemElements.listIterator(), destTempFolder, subMonitor);
+
+                    // Import all resulting extracted files
+                    tempFolderFileSystemElements = getElementsInFolder(destTempFolder);
+                    calculateSourceLocations2(tempFolderFileSystemElements, baseSourceLocation);
+                    importFileSystemElements(progressMonitor, subMonitor, tempFolderFileSystemElements.listIterator());
+                } else {
+                    // Import selected files, excluding archives (done in a later step)
+                    importFileSystemElements(progressMonitor, subMonitor, selectedFileSystemElements.listIterator());
+
+                    // Extract archives in selected files (if any) to temporary folder
+                    extractAllArchiveFiles(selectedFileSystemElements.listIterator(), destTempFolder, subMonitor);
+
+                    // Never import extracted files as links, they would link to the
+                    // temporary directory that will be deleted
+                    fImportOptionFlags = fImportOptionFlags & ~OPTION_CREATE_LINKS_IN_WORKSPACE;
+
+                    String baseSourceLocation = URIUtil.toUnencodedString(fBaseSourceContainerPath.toFile().getCanonicalFile().toURI());
+                    // Import extracted files that are now in the temporary folder
+                    fBaseSourceContainerPath = destTempFolder.getLocation();
+                    List<TraceFileSystemElement> tempFolderFileSystemElements = getElementsInFolder(destTempFolder);
+                    //String baseSourceLocation = getRootElement((TraceFileSystemElement) selectedFileSystemElements.get(0).getFiles().getChildren()[0]).getSourceLocation();
+                    calculateSourceLocations2(tempFolderFileSystemElements, baseSourceLocation);
+                    importFileSystemElements(progressMonitor, subMonitor, tempFolderFileSystemElements.listIterator());
                 }
 
-                // Map to remember already imported directory traces
-                final Map<String, TraceFileSystemElement> directoryTraces = new HashMap<>();
-                while (fileSystemElementsIter.hasNext()) {
-                    ModalContext.checkCanceled(progressMonitor);
-                    currentPath = null;
-                    TraceFileSystemElement element = fileSystemElementsIter.next();
-                    IFileSystemObject fileSystemObject = element.getFileSystemObject();
-                    String resourcePath = element.getFileSystemObject().getAbsolutePath(fBaseSourceContainerPath.toOSString());
-                    element.setDestinationContainerPath(computeDestinationContainerPath(new Path(resourcePath)));
-
-                    currentPath = resourcePath;
-                    SubMonitor sub = subMonitor.newChild(1);
-                    if (element.isDirectory()) {
-                        if (!directoryTraces.containsKey(resourcePath) && isDirectoryTrace(element)) {
-                            directoryTraces.put(resourcePath, element);
-                            validateAndImportTrace(element, sub);
-                        }
-                    } else {
-                        TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
-                        String parentPath = parentElement.getFileSystemObject().getAbsolutePath(fBaseSourceContainerPath.toOSString());
-                        parentElement.setDestinationContainerPath(computeDestinationContainerPath(new Path(parentPath)));
-                        currentPath = parentPath;
-                        if (!directoryTraces.containsKey(parentPath)) {
-                            if (isDirectoryTrace(parentElement)) {
-                                directoryTraces.put(parentPath, parentElement);
-                                validateAndImportTrace(parentElement, sub);
-                            } else {
-                                boolean validateFile = true;
-                                TraceFileSystemElement grandParentElement = (TraceFileSystemElement) parentElement.getParent();
-                                // Special case for LTTng trace that may contain index directory and files
-                                if (grandParentElement != null) {
-                                    String grandParentPath = grandParentElement.getFileSystemObject().getAbsolutePath(fBaseSourceContainerPath.toOSString());
-                                    grandParentElement.setDestinationContainerPath(computeDestinationContainerPath(new Path(parentPath)));
-                                    currentPath = grandParentPath;
-                                    if (directoryTraces.containsKey(grandParentPath)) {
-                                        validateFile = false;
-                                    } else if (isDirectoryTrace(grandParentElement)) {
-                                        directoryTraces.put(grandParentPath, grandParentElement);
-                                        validateAndImportTrace(grandParentElement, sub);
-                                        validateFile = false;
-                                    }
-                                }
-                                if (validateFile && (fileSystemObject.exists())) {
-                                    validateAndImportTrace(element, sub);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (destTempFolder != null && destTempFolder.exists()) {
+                if (destTempFolder.exists()) {
                     destTempFolder.delete(true, progressMonitor);
                 }
 
@@ -1496,23 +1497,179 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 setStatus(Status.CANCEL_STATUS);
             } catch (Exception e) {
                 String errorMessage = Messages.ImportTraceWizard_ImportProblem + ": " + //$NON-NLS-1$
-                        (currentPath != null ? currentPath : ""); //$NON-NLS-1$
+                        (fCurrentPath != null ? fCurrentPath : ""); //$NON-NLS-1$
                 Activator.getDefault().logError(errorMessage, e);
                 setStatus(new Status(IStatus.ERROR, Activator.PLUGIN_ID, errorMessage, e));
             }
         }
 
-        private Iterator<TraceFileSystemElement> extractSelectedFiles(Iterator<TraceFileSystemElement> fileSystemElementsIter, IFolder tempFolder, IProgressMonitor progressMonitor) throws InterruptedException,
+        private void importFileSystemElements(IProgressMonitor progressMonitor, SubMonitor subMonitor, ListIterator<TraceFileSystemElement> fileSystemElementsIter)
+                throws InterruptedException, TmfTraceImportException, CoreException, InvocationTargetException {
+            // Map to remember already imported directory traces
+            final Map<String, TraceFileSystemElement> directoryTraces = new HashMap<>();
+            while (fileSystemElementsIter.hasNext()) {
+                ModalContext.checkCanceled(progressMonitor);
+                fCurrentPath = null;
+                TraceFileSystemElement element = fileSystemElementsIter.next();
+                IFileSystemObject fileSystemObject = element.getFileSystemObject();
+                String resourcePath = element.getFileSystemObject().getAbsolutePath(fBaseSourceContainerPath.toOSString());
+                element.setDestinationContainerPath(computeDestinationContainerPath(new Path(resourcePath)));
+
+                fCurrentPath = resourcePath;
+                SubMonitor sub = subMonitor.newChild(1);
+                if (element.isDirectory()) {
+                    if (!directoryTraces.containsKey(resourcePath) && isDirectoryTrace(element)) {
+                        directoryTraces.put(resourcePath, element);
+                        validateAndImportTrace(element, sub);
+                    }
+                } else {
+                    TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
+                    String parentPath = parentElement.getFileSystemObject().getAbsolutePath(fBaseSourceContainerPath.toOSString());
+                    parentElement.setDestinationContainerPath(computeDestinationContainerPath(new Path(parentPath)));
+                    fCurrentPath = parentPath;
+                    if (!directoryTraces.containsKey(parentPath)) {
+                        if (isDirectoryTrace(parentElement)) {
+                            directoryTraces.put(parentPath, parentElement);
+                            validateAndImportTrace(parentElement, sub);
+                        } else {
+                            boolean validateFile = true;
+                            TraceFileSystemElement grandParentElement = (TraceFileSystemElement) parentElement.getParent();
+                            // Special case for LTTng trace that may contain index directory and files
+                            if (grandParentElement != null) {
+                                String grandParentPath = grandParentElement.getFileSystemObject().getAbsolutePath(fBaseSourceContainerPath.toOSString());
+                                grandParentElement.setDestinationContainerPath(computeDestinationContainerPath(new Path(parentPath)));
+                                fCurrentPath = grandParentPath;
+                                if (directoryTraces.containsKey(grandParentPath)) {
+                                    validateFile = false;
+                                } else if (isDirectoryTrace(grandParentElement)) {
+                                    directoryTraces.put(grandParentPath, grandParentElement);
+                                    validateAndImportTrace(grandParentElement, sub);
+                                    validateFile = false;
+                                }
+                            }
+                            if (validateFile && (fileSystemObject.exists())) {
+                                validateAndImportTrace(element, sub);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private List<TraceFileSystemElement> getElementsInFolder(IFolder folder) {
+            // Create the new import provider and root element based on the specified folder
+            FileSystemObjectImportStructureProvider importStructureProvider = new FileSystemObjectImportStructureProvider(FileSystemStructureProvider.INSTANCE, null);
+            IFileSystemObject rootElement = importStructureProvider.getIFileSystemObject(new File(folder.getLocation().toOSString()));
+            TraceFileSystemElement createRootElement = createRootTraceFileElement(rootElement, importStructureProvider);
+            List<TraceFileSystemElement> list = new LinkedList<>();
+            getAllChildren(list, createRootElement);
+            return list;
+        }
+
+        private void extractAllArchiveFiles(ListIterator<TraceFileSystemElement> fileSystemElementsIter, IFolder destFolder, SubMonitor progressMonitor) throws InterruptedException, CoreException, InvocationTargetException {
+            while (fileSystemElementsIter.hasNext()) {
+                ModalContext.checkCanceled(progressMonitor);
+                TraceFileSystemElement element = fileSystemElementsIter.next();
+                File archiveFile = (File) element.getFileSystemObject().getRawFileSystemObject();
+                boolean isArchiveFileElement = element.getFileSystemObject() instanceof FileFileSystemObject && isArchiveFile(archiveFile);
+                if (isArchiveFileElement) {
+                    IFolder folder = createExtractedFolder(destFolder, element, progressMonitor);
+                    IPath relativePath = new Path(element.getFileSystemObject().getAbsolutePath(null)).makeRelativeTo(fBaseSourceContainerPath);
+                    extractArchiveToFolder(archiveFile, folder, progressMonitor);
+
+                    //TODO common code with createExtractedFolder
+                    IFile fileRes = destFolder.getFile(relativePath);
+                    fileRes.delete(true, progressMonitor);
+                    IPath newPath = destFolder.getFullPath().append(relativePath);
+                    folder.move(newPath, true, progressMonitor);
+                    folder = ResourcesPlugin.getWorkspace().getRoot().getFolder(newPath);
+
+                    // Create the new import provider and root element based on the
+                    // extracted temp folder
+                    FileSystemObjectImportStructureProvider importStructureProvider = new FileSystemObjectImportStructureProvider(FileSystemStructureProvider.INSTANCE, null);
+                    IFileSystemObject rootElement = importStructureProvider.getIFileSystemObject(new File(folder.getLocation().toOSString()));
+                    TraceFileSystemElement newElement = createRootTraceFileElement(rootElement, importStructureProvider);
+                    newElement.setParent(element.getParent());
+
+                    fileSystemElementsIter.set(newElement);
+                    // Go back so that we visit the new element we just extracted
+                    fileSystemElementsIter.previous();
+                }
+            }
+        }
+
+        private void extractArchiveToFolder(File sourceFile, IFolder destinationFolder, IProgressMonitor progressMonitor) throws InvocationTargetException, InterruptedException {
+            Pair<IFileSystemObject, FileSystemObjectImportStructureProvider> rootObjectAndProvider = getRootObjectAndProvider(sourceFile);
+            TraceFileSystemElement rootElement = createRootTraceFileElement(rootObjectAndProvider.getFirst(), rootObjectAndProvider.getSecond());
+            List<TraceFileSystemElement> fileSystemElements = new ArrayList<>();
+            getAllChildren(fileSystemElements, rootElement);
+            //calculateSourceLocations(fileSystemElements, sourceLocationMap, baseSourceLocation);
+            extractArchiveContent(fileSystemElements.listIterator(), destinationFolder, progressMonitor);
+            rootObjectAndProvider.getSecond().dispose();
+        }
+
+        private IFolder createExtractedFolder(IFolder destinationFolder, TraceFileSystemElement element, IProgressMonitor monitor) throws CoreException {
+            IFolder extractedFolder;
+            String suffix = ""; //$NON-NLS-1$
+            int i = 2;
+            while (true) {
+                IPath relativePath = new Path(element.getFileSystemObject().getAbsolutePath(null) + ".extract" + suffix).makeRelativeTo(fBaseSourceContainerPath); //$NON-NLS-1$
+                if (destinationFolder.findMember(relativePath) == null) {
+                    extractedFolder = destinationFolder.getFolder(relativePath);
+                    break;
+                }
+                suffix = "(" + i + ")"; //$NON-NLS-1$//$NON-NLS-2$
+                i++;
+            }
+
+            TraceUtils.createFolder(extractedFolder, monitor);
+            return extractedFolder;
+        }
+
+        private void calculateSourceLocations2(List<TraceFileSystemElement> fileSystemElements, String baseSourceLocation) {
+            // Collect all the elements
+            for (TraceFileSystemElement element : fileSystemElements) {
+                IPath tempRelative = new Path(element.getFileSystemObject().getAbsolutePath(null)).makeRelativeTo(fBaseSourceContainerPath);
+                String sourceLocation = baseSourceLocation + tempRelative;
+                element.setSourceLocation(sourceLocation);
+
+                TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
+                tempRelative = new Path(parentElement.getFileSystemObject().getAbsolutePath(null)).makeRelativeTo(fBaseSourceContainerPath);
+                sourceLocation = baseSourceLocation + tempRelative + '/';
+                parentElement.setSourceLocation(sourceLocation);
+            }
+        }
+
+//        private void calculateSourceLocations(List<TraceFileSystemElement> fileSystemElements, Map<IPath, String> sourceLocationMap, String baseSourceLocation) {
+//            // Collect all the elements
+//            for (TraceFileSystemElement element : fileSystemElements) {
+//                IPath relativePath = new Path(element.getFileSystemObject().getName()).removeTrailingSeparator();
+//                if (!sourceLocationMap.containsKey(relativePath)) {
+//                    String sourceLocation = element.getSourceLocation();
+//                    if (baseSourceLocation != null) {
+//                        sourceLocation = baseSourceLocation + '/' + relativePath;
+//                    }
+//                    sourceLocationMap.put(relativePath, sourceLocation);
+//                }
+//                TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
+//                relativePath = new Path(parentElement.getFileSystemObject().getName()).removeTrailingSeparator();
+//                if (!sourceLocationMap.containsKey(relativePath)) {
+//                    String sourceLocation = element.getSourceLocation();
+//                    if (baseSourceLocation != null) {
+//                        sourceLocation = baseSourceLocation + '/' + relativePath;
+//                    }
+//                    sourceLocationMap.put(relativePath, sourceLocation);
+//                }
+//            }
+//        }
+
+        private void extractArchiveContent(Iterator<TraceFileSystemElement> fileSystemElementsIter, IFolder tempFolder, IProgressMonitor progressMonitor) throws InterruptedException,
                 InvocationTargetException {
             List<TraceFileSystemElement> subList = new ArrayList<>();
-            Map<IPath, String> sourceLocationMap = new HashMap<>();
             // Collect all the elements
             while (fileSystemElementsIter.hasNext()) {
                 ModalContext.checkCanceled(progressMonitor);
                 TraceFileSystemElement element = fileSystemElementsIter.next();
-                sourceLocationMap.put(new Path(element.getFileSystemObject().getName()).removeTrailingSeparator(), element.getSourceLocation());
-                TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
-                sourceLocationMap.put(new Path(parentElement.getFileSystemObject().getName()).removeTrailingSeparator(), parentElement.getSourceLocation());
                 if (element.isDirectory()) {
                     Object[] array = element.getFiles().getChildren();
                     for (int i = 0; i < array.length; i++) {
@@ -1523,10 +1680,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             }
 
             // Find a sensible root element
-            TraceFileSystemElement root = subList.get(0);
-            while (root.getParent() != null) {
-                root = (TraceFileSystemElement) root.getParent();
-            }
+            TraceFileSystemElement root = getRootElement(subList.get(0));
 
             ImportProvider fileSystemStructureProvider = new ImportProvider();
 
@@ -1547,24 +1701,14 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             operation.setVirtualFolders(false);
 
             operation.run(new SubProgressMonitor(progressMonitor, subList.size(), SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK));
+        }
 
-            // Create the new import provider and root element based on the
-            // extracted temp folder
-            FileSystemObjectImportStructureProvider importStructureProvider = new FileSystemObjectImportStructureProvider(FileSystemStructureProvider.INSTANCE, null);
-            IFileSystemObject rootElement = importStructureProvider.getIFileSystemObject(new File(tempFolder.getLocation().toOSString()));
-            TraceFileSystemElement createRootElement = createRootElement(rootElement, importStructureProvider);
-            List<TraceFileSystemElement> list = new ArrayList<>();
-            getAllChildren(list, createRootElement);
-            Iterator<TraceFileSystemElement> extractedElementsIter = list.iterator();
-            IPath tempPath = new Path(tempFolder.getLocation().toOSString());
-            for (TraceFileSystemElement element : list) {
-                IPath path = new Path(((File) element.getFileSystemObject().getRawFileSystemObject()).getAbsolutePath()).makeRelativeTo(tempPath);
-                element.setSourceLocation(sourceLocationMap.get(path));
-                TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
-                IPath parentPath = new Path(((File) parentElement.getFileSystemObject().getRawFileSystemObject()).getAbsolutePath()).makeRelativeTo(tempPath);
-                parentElement.setSourceLocation(sourceLocationMap.get(parentPath));
+        private TraceFileSystemElement getRootElement(TraceFileSystemElement element) {
+            TraceFileSystemElement root = element;
+            while (root.getParent() != null) {
+                root = (TraceFileSystemElement) root.getParent();
             }
-            return extractedElementsIter;
+            return root;
         }
 
         /**
@@ -1614,6 +1758,13 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             String parentContainerPath = fBaseSourceContainerPath.toOSString();
             String path = fileSystemElement.getFileSystemObject().getAbsolutePath(parentContainerPath);
             TraceTypeHelper traceTypeHelper = null;
+
+            File file = (File) fileSystemElement.getFileSystemObject().getRawFileSystemObject();
+            boolean isArchiveFileElement = fileSystemElement.getFileSystemObject() instanceof FileFileSystemObject && isArchiveFile(file);
+            if (isArchiveFileElement) {
+                // We'll be extracting this later, do not import as a trace
+                return;
+            }
 
             if (fTraceType == null) {
                 // Auto Detection
@@ -1897,6 +2048,10 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         boolean exists();
     }
 
+//    private static abstract class FileSystemObject {
+//        private FileSystemObjectImportStructureProvider fPro
+//    }
+
     /**
      * The "File" implementation of an IFileSystemObject
      */
@@ -1950,7 +2105,12 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 }
             }
             if (sourceLocation == null) {
-                sourceLocation = URIUtil.toUnencodedString(fFileSystemObject.toURI());
+                try {
+                    sourceLocation = URIUtil.toUnencodedString(fFileSystemObject.getCanonicalFile().toURI());
+                } catch (IOException e) {
+                    // Something went wrong canonicalizing the file. We can still use the URI but there might be extra ../ in it.
+                    sourceLocation = URIUtil.toUnencodedString(fFileSystemObject.toURI());
+                }
             }
             return sourceLocation;
         }
@@ -1996,9 +2156,17 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
         @Override
         public String getSourceLocation() {
-            URI uri = new File(fArchivePath).toURI();
+            File file = new File(fArchivePath);
+            try {
+                file = file.getCanonicalFile();
+            } catch (IOException e) {
+                // Will still work but might extra ../ in the path
+            }
+            URI uri = file.toURI();
             IPath entryPath = new Path(fFileSystemObject.getName());
-            return URIUtil.toUnencodedString(URIUtil.toJarURI(uri, entryPath));
+
+            URI jarURI = entryPath.isRoot() ? URIUtil.toJarURI(uri, Path.EMPTY) : URIUtil.toJarURI(uri, entryPath);
+            return URIUtil.toUnencodedString(jarURI);
         }
 
         @Override
@@ -2042,9 +2210,17 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
         @Override
         public String getSourceLocation() {
-            URI uri = new File(fArchivePath).toURI();
+            File file = new File(fArchivePath);
+            try {
+                file = file.getCanonicalFile();
+            } catch (IOException e) {
+                // Will still work but might extra ../ in the path
+            }
+            URI uri = file.toURI();
             IPath entryPath = new Path(fFileSystemObject.getName());
-            return URIUtil.toUnencodedString(URIUtil.toJarURI(uri, entryPath));
+
+            URI jarURI = entryPath.isRoot() ? URIUtil.toJarURI(uri, Path.EMPTY) : URIUtil.toJarURI(uri, entryPath);
+            return URIUtil.toUnencodedString(jarURI);
         }
 
         @Override

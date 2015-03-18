@@ -24,7 +24,7 @@ public interface IUml2SDTestConstants {
     /**
      * Timeout for waiting for GUI display to refresh (in milliseconds).
      */
-    public static final int GUI_REFESH_DELAY = 1000;
+    public static final int GUI_REFESH_DELAY = 5000;
     /**
      * Initial delay before indexing (in milliseconds).
      */
