@@ -806,8 +806,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         // Import from directory
         if (!isArchiveFile(sourceFile)) {
             importStructureProvider = new FileSystemObjectImportStructureProvider(FileSystemStructureProvider.INSTANCE, null);
-            File sourceDirectory = sourceFile;
-            rootElement = importStructureProvider.getIFileSystemObject(sourceDirectory);
+            rootElement = importStructureProvider.getIFileSystemObject(sourceFile);
         } else {
             // Import from archive
             FileSystemObjectLeveledImportStructureProvider leveledImportStructureProvider = null;
@@ -1466,7 +1465,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
                     // Import all resulting extracted files
                     tempFolderFileSystemElements = getElementsInFolder(destTempFolder);
-                    calculateSourceLocations2(tempFolderFileSystemElements, baseSourceLocation);
+                    calculateSourceLocations(tempFolderFileSystemElements, baseSourceLocation);
                     importFileSystemElements(progressMonitor, subMonitor, tempFolderFileSystemElements.listIterator());
                 } else {
                     // Import selected files, excluding archives (done in a later step)
@@ -1484,7 +1483,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                     fBaseSourceContainerPath = destTempFolder.getLocation();
                     List<TraceFileSystemElement> tempFolderFileSystemElements = getElementsInFolder(destTempFolder);
                     //String baseSourceLocation = getRootElement((TraceFileSystemElement) selectedFileSystemElements.get(0).getFiles().getChildren()[0]).getSourceLocation();
-                    calculateSourceLocations2(tempFolderFileSystemElements, baseSourceLocation);
+                    calculateSourceLocations(tempFolderFileSystemElements, baseSourceLocation);
                     importFileSystemElements(progressMonitor, subMonitor, tempFolderFileSystemElements.listIterator());
                 }
 
@@ -1603,7 +1602,6 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             TraceFileSystemElement rootElement = createRootTraceFileElement(rootObjectAndProvider.getFirst(), rootObjectAndProvider.getSecond());
             List<TraceFileSystemElement> fileSystemElements = new ArrayList<>();
             getAllChildren(fileSystemElements, rootElement);
-            //calculateSourceLocations(fileSystemElements, sourceLocationMap, baseSourceLocation);
             extractArchiveContent(fileSystemElements.listIterator(), destinationFolder, progressMonitor);
             rootObjectAndProvider.getSecond().dispose();
         }
@@ -1626,7 +1624,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             return extractedFolder;
         }
 
-        private void calculateSourceLocations2(List<TraceFileSystemElement> fileSystemElements, String baseSourceLocation) {
+        private void calculateSourceLocations(List<TraceFileSystemElement> fileSystemElements, String baseSourceLocation) {
             // Collect all the elements
             for (TraceFileSystemElement element : fileSystemElements) {
                 IPath tempRelative = new Path(element.getFileSystemObject().getAbsolutePath(null)).makeRelativeTo(fBaseSourceContainerPath);
@@ -1639,29 +1637,6 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 parentElement.setSourceLocation(sourceLocation);
             }
         }
-
-//        private void calculateSourceLocations(List<TraceFileSystemElement> fileSystemElements, Map<IPath, String> sourceLocationMap, String baseSourceLocation) {
-//            // Collect all the elements
-//            for (TraceFileSystemElement element : fileSystemElements) {
-//                IPath relativePath = new Path(element.getFileSystemObject().getName()).removeTrailingSeparator();
-//                if (!sourceLocationMap.containsKey(relativePath)) {
-//                    String sourceLocation = element.getSourceLocation();
-//                    if (baseSourceLocation != null) {
-//                        sourceLocation = baseSourceLocation + '/' + relativePath;
-//                    }
-//                    sourceLocationMap.put(relativePath, sourceLocation);
-//                }
-//                TraceFileSystemElement parentElement = (TraceFileSystemElement) element.getParent();
-//                relativePath = new Path(parentElement.getFileSystemObject().getName()).removeTrailingSeparator();
-//                if (!sourceLocationMap.containsKey(relativePath)) {
-//                    String sourceLocation = element.getSourceLocation();
-//                    if (baseSourceLocation != null) {
-//                        sourceLocation = baseSourceLocation + '/' + relativePath;
-//                    }
-//                    sourceLocationMap.put(relativePath, sourceLocation);
-//                }
-//            }
-//        }
 
         private void extractArchiveContent(Iterator<TraceFileSystemElement> fileSystemElementsIter, IFolder tempFolder, IProgressMonitor progressMonitor) throws InterruptedException,
                 InvocationTargetException {
@@ -2048,10 +2023,6 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         boolean exists();
     }
 
-//    private static abstract class FileSystemObject {
-//        private FileSystemObjectImportStructureProvider fPro
-//    }
-
     /**
      * The "File" implementation of an IFileSystemObject
      */
@@ -2160,7 +2131,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             try {
                 file = file.getCanonicalFile();
             } catch (IOException e) {
-                // Will still work but might extra ../ in the path
+                // Will still work but might have extra ../ in the path
             }
             URI uri = file.toURI();
             IPath entryPath = new Path(fFileSystemObject.getName());
@@ -2214,7 +2185,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             try {
                 file = file.getCanonicalFile();
             } catch (IOException e) {
-                // Will still work but might extra ../ in the path
+                // Will still work but might have extra ../ in the path
             }
             URI uri = file.toURI();
             IPath entryPath = new Path(fFileSystemObject.getName());
