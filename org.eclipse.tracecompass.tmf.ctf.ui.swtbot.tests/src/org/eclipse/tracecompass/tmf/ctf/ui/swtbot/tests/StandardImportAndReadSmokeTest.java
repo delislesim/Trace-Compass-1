@@ -170,9 +170,16 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
         importFinish();
 
-        checkOptions(options, false, TRACE_FOLDER_PARENT_PATH + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME);
+        IPath expectedElementPath = new Path(TRACE_NAME);
+        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
+        try {
+            checkOptions(expectedOptions, false, URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator, expectedElementPath);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, new Path(TRACE_NAME));
+        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
         testViews(editor);
 
         SWTBotUtils.deleteProject(getProjectName(), fBot);
@@ -193,9 +200,16 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
         importFinish();
 
-        checkOptions(options, false, TRACE_FOLDER_PARENT_PATH + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME);
+        IPath expectedElementPath = new Path(TRACE_NAME);
+        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
+        try {
+            checkOptions(expectedOptions, false, URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator, expectedElementPath);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, new Path(TRACE_NAME));
+        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
         testViews(editor);
 
         SWTBotUtils.deleteProject(getProjectName(), fBot);
@@ -210,48 +224,22 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
 
         openImportWizard();
         selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
-        selectFolder(TRACE_FOLDER_PARENT_NAME, "kernel");
-        selectFolder(TRACE_FOLDER_PARENT_NAME, "kernel_vm");
         selectFile(ARCHIVE_FILE_NAME, TRACE_FOLDER_PARENT_NAME);
 
         int options = ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE;
         setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
         importFinish();
 
-        checkOptions(options, false, TRACE_FOLDER_PARENT_PATH + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME);
-        IPath elementPath = new Path(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-//        TmfProjectElement project = TmfProjectRegistry.getProject(getProjectResource());
-//        TmfTraceFolder tracesFolder = project.getTracesFolder();
-//        assertEquals(4, tracesFolder.getTraces().size());
-//
-//        IResource traceRes = tracesFolder.getResource().findMember("kernel");
-//        assertTrue(traceRes.exists());
-//        assertTrue(traceRes.isLinked());
-//
-//        // Extracted traces should not be linked
-//        IPath elementPath = new Path(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-//        traceRes = tracesFolder.getResource().findMember(elementPath);
-//        assertTrue(traceRes.exists());
-//        assertFalse(traceRes.isLinked());
-//
-//        String sourceLocation = null;
-//        try {
-//            sourceLocation = traceRes.getPersistentProperty(TmfCommonConstants.SOURCE_LOCATION);
-//        } catch (CoreException e) {
-//            e.printStackTrace();
-//            Assert.fail(e.getMessage());
-//        }
-//        assertNotNull(sourceLocation);
-//        try {
-//            String expectedLocation;
-//            expectedLocation = "file:" + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalFile().toString() + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-//            assertEquals(expectedLocation, sourceLocation);
-//
-//        } catch (IOException e) {
-//            Assert.fail(e.getMessage());
-//        }
+        IPath expectedElementPath = new Path(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
+        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
+        try {
+            checkOptions(expectedOptions, false, URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator, expectedElementPath);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, elementPath);
+        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
         testViews(editor);
 
         SWTBotUtils.deleteProject(getProjectName(), fBot);
@@ -278,35 +266,10 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
 
         String expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TEST_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR
               + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-        checkOptions(options, true, expectedSourceLocation);
+        Path expectedElementPath = new Path(TRACE_NAME);
+        checkOptions(options, true, expectedSourceLocation, expectedElementPath);
 
-//        TmfProjectElement project = TmfProjectRegistry.getProject(getProjectResource());
-//        TmfTraceFolder tracesFolder = project.getTracesFolder();
-//        List<TmfTraceElement> traces = tracesFolder.getTraces();
-//        assertEquals(2, traces.size());
-//        IFolder traceResource = tracesFolder.getResource().getFolder(TRACE_NAME);
-//        assertNotNull(traceResource);
-//        assertFalse(traceResource.isLinked());
-//
-//        String sourceLocation = null;
-//        try {
-//            sourceLocation = traceResource.getPersistentProperty(TmfCommonConstants.SOURCE_LOCATION);
-//        } catch (CoreException e) {
-//            e.printStackTrace();
-//            Assert.fail(e.getMessage());
-//        }
-//        assertNotNull(sourceLocation);
-//        try {
-//            String expectedLocation;
-//            expectedLocation = "jar:file:" + new File(TEST_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR
-//                    + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-//            assertEquals(expectedLocation, sourceLocation);
-//
-//        } catch (IOException e) {
-//            Assert.fail(e.getMessage());
-//        }
-
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, new Path(TRACE_NAME));
+        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
         testViews(editor);
 
         SWTBotUtils.deleteProject(getProjectName(), fBot);
@@ -325,44 +288,19 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         final String TEST_ARCHIVE_PATH = createArchive();
 
         openImportWizard();
+
         selectImportFromArchive(TEST_ARCHIVE_PATH);
         selectFile(ARCHIVE_FILE_NAME, ARCHIVE_ROOT_ELEMENT_NAME, TRACE_PROJECT_NAME, TRACE_FOLDER_PARENT_NAME);
 
-        int options = ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE;
+        int options = ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE;
         setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
         importFinish();
+        String expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TEST_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR
+                + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
+        IPath expectedElementPath = new Path(TRACE_PROJECT_NAME).append(TRACE_FOLDER_PARENT_NAME).append(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
+        checkOptions(options, true, expectedSourceLocation, expectedElementPath);
 
-        IPath elementPath = new Path(TRACE_PROJECT_NAME).append(TRACE_FOLDER_PARENT_NAME).append(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-        checkOptions(options, true, TEST_ARCHIVE_PATH);
-
-//        TmfProjectElement project = TmfProjectRegistry.getProject(getProjectResource());
-//        TmfTraceFolder tracesFolder = project.getTracesFolder();
-//        List<TmfTraceElement> traces = tracesFolder.getTraces();
-//        assertEquals(2, traces.size());
-//        IPath tracePath = new Path(TRACE_PROJECT_NAME).append(TRACE_FOLDER_PARENT_NAME).append(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-//
-//        IFolder traceResource = tracesFolder.getResource().getFolder(tracePath);
-//        assertNotNull(traceResource);
-//        assertFalse(traceResource.isLinked());
-//        String sourceLocation = null;
-//        try {
-//            sourceLocation = traceResource.getPersistentProperty(TmfCommonConstants.SOURCE_LOCATION);
-//        } catch (CoreException e) {
-//            e.printStackTrace();
-//            Assert.fail(e.getMessage());
-//        }
-//        assertNotNull(sourceLocation);
-//        try {
-//            String expectedLocation;
-//            expectedLocation = "jar:file:" + new File(TEST_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR
-//                    + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-//            assertEquals(expectedLocation, sourceLocation);
-//
-//        } catch (IOException e) {
-//            Assert.fail(e.getMessage());
-//        }
-
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, elementPath);
+        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
         testViews(editor);
 
 
@@ -430,8 +368,9 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
         importFinish();
 
-        checkOptions(options, fromArchive, expectedSourceLocation);
-        TmfEventsEditor tmfEd = SWTBotUtils.openEditor(fBot, getProjectName(), getTraceElementPath(options));
+        IPath expectedElementPath = getTraceElementPath(options);
+        checkOptions(options, fromArchive, expectedSourceLocation, expectedElementPath);
+        TmfEventsEditor tmfEd = SWTBotUtils.openEditor(fBot, getProjectName(), expectedElementPath);
         if (testViews) {
             testViews(tmfEd);
         }
@@ -552,7 +491,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         }
     }
 
-    private void checkOptions(int optionFlags, boolean fromArchive, String sourcePath) {
+    private void checkOptions(int optionFlags, boolean fromArchive, String expectedSourceLocation, IPath expectedElementPath) {
         IProject project = getProjectResource();
         assertTrue(project.exists());
         TmfProjectElement tmfProject = TmfProjectRegistry.getProject(project, true);
@@ -575,7 +514,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
 
         // i.e. /Tracing/Traces
         IPath expectedPath = Path.ROOT.append(new Path(TRACE_PROJECT_NAME)).append(TmfTracesFolder.TRACES_FOLDER_NAME);
-        expectedPath = expectedPath.append(getTraceElementPath(optionFlags));
+        expectedPath = expectedPath.append(expectedElementPath);
         assertEquals(expectedPath, traceResource.getFullPath());
 
         String sourceLocation = null;
@@ -586,18 +525,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
             Assert.fail(e.getMessage());
         }
         assertNotNull(sourceLocation);
-        try {
-            String expectedLocation;
-            if (fromArchive) {
-                expectedLocation = URI_JAR_FILE_SCHEME + new File(sourcePath).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-            } else {
-                expectedLocation = URI_FILE_SCHEME + new File(sourcePath).getCanonicalFile().toString() + URI_SEPARATOR;
-            }
-            assertEquals(expectedLocation, sourceLocation);
-
-        } catch (IOException e) {
-            Assert.fail(e.getMessage());
-        }
+        assertEquals(expectedSourceLocation, sourceLocation);
     }
 
     private static IPath getTraceElementPath(int optionFlags) {
