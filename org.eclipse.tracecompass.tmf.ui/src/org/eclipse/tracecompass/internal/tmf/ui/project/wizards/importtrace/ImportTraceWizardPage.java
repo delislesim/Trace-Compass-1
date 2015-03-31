@@ -1443,17 +1443,18 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 SubProgressMonitor monitor = new SubProgressMonitor(subMonitor, 1, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
                 destTempFolder.create(IResource.HIDDEN, true, monitor);
 
-                subMonitor = SubMonitor.convert(progressMonitor, selectedFileSystemElements.size());
+
+                subMonitor = SubMonitor.convert(progressMonitor, 2);
                 String baseSourceLocation;
                 if (fImportFromArchive) {
                     // When importing from archive, we first extract the
                     // *selected* files to a temporary folder then create new
                     // TraceFileSystemElements
 
-                    subMonitor = SubMonitor.convert(progressMonitor, selectedFileSystemElements.size() * 2);
+                    SubMonitor archiveMonitor = SubMonitor.convert(subMonitor.newChild(1), 2);
 
                     // Extract selected files from source archive to temporary folder
-                    extractArchiveContent(selectedFileSystemElements.iterator(), destTempFolder, subMonitor);
+                    extractArchiveContent(selectedFileSystemElements.iterator(), destTempFolder, archiveMonitor.newChild(1));
 
                     // We need to update the source container path because the
                     // "preserve folder structure" option would create the
@@ -1463,13 +1464,14 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                     baseSourceLocation = getRootElement(selectedFileSystemElements.get(0)).getSourceLocation();
                     // Extract additional archives contained in the extracted files (archives in archives)
                     List<TraceFileSystemElement> tempFolderFileSystemElements = createElementsForFolder(destTempFolder);
-                    extractAllArchiveFiles(tempFolderFileSystemElements.listIterator(), destTempFolder, subMonitor);
+                    extractAllArchiveFiles(tempFolderFileSystemElements, destTempFolder, archiveMonitor.newChild(1));
                 } else {
+                    SubMonitor directoryMonitor = SubMonitor.convert(subMonitor.newChild(1), 2);
                     // Import selected files, excluding archives (done in a later step)
-                    importFileSystemElements(subMonitor, selectedFileSystemElements.listIterator());
+                    importFileSystemElements(directoryMonitor.newChild(1), selectedFileSystemElements);
 
                     // Extract archives in selected files (if any) to temporary folder
-                    extractAllArchiveFiles(selectedFileSystemElements.listIterator(), destTempFolder, subMonitor);
+                    extractAllArchiveFiles(selectedFileSystemElements, destTempFolder, directoryMonitor.newChild(1));
                     // Even if the files were extracted to temporary folder, they have to look like they originate from the source folder
                     baseSourceLocation = URIUtil.toUnencodedString(fBaseSourceContainerPath.toFile().getCanonicalFile().toURI());
                     // For "preserve folder structure" to work
@@ -1482,7 +1484,8 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 // Never import extracted files as links, they would link to the
                 // temporary directory that will be deleted
                 fImportOptionFlags = fImportOptionFlags & ~OPTION_CREATE_LINKS_IN_WORKSPACE;
-                importFileSystemElements(subMonitor, tempFolderFileSystemElements.listIterator());
+                SubMonitor importTempMonitor = subMonitor.newChild(1);
+                importFileSystemElements(importTempMonitor, tempFolderFileSystemElements);
 
                 if (destTempFolder.exists()) {
                     destTempFolder.delete(true, progressMonitor);
@@ -1502,12 +1505,16 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         /**
          * Import a collection of file system elements into the workspace.
          */
-        private void importFileSystemElements(SubMonitor subMonitor, ListIterator<TraceFileSystemElement> fileSystemElementsIter)
+        private void importFileSystemElements(IProgressMonitor monitor, List<TraceFileSystemElement> fileSystemElements)
                 throws InterruptedException, TmfTraceImportException, CoreException, InvocationTargetException {
+            SubMonitor subMonitor = SubMonitor.convert(monitor, fileSystemElements.size());
+
+            ListIterator<TraceFileSystemElement> fileSystemElementsIter = fileSystemElements.listIterator();
+
             // Map to remember already imported directory traces
             final Map<String, TraceFileSystemElement> directoryTraces = new HashMap<>();
             while (fileSystemElementsIter.hasNext()) {
-                ModalContext.checkCanceled(subMonitor);
+                ModalContext.checkCanceled(monitor);
                 fCurrentPath = null;
                 TraceFileSystemElement element = fileSystemElementsIter.next();
                 IFileSystemObject fileSystemObject = element.getFileSystemObject();
@@ -1571,23 +1578,28 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         /**
          * Extract all file system elements (File) to destination folder (typically workspace/TraceProject/.traceImport)
          */
-        private void extractAllArchiveFiles(ListIterator<TraceFileSystemElement> fileSystemElementsIter, IFolder destFolder, SubMonitor progressMonitor) throws InterruptedException, CoreException, InvocationTargetException {
+        private void extractAllArchiveFiles(List<TraceFileSystemElement> fileSystemElements, IFolder destFolder, IProgressMonitor progressMonitor) throws InterruptedException, CoreException, InvocationTargetException {
+            SubMonitor subMonitor = SubMonitor.convert(progressMonitor, fileSystemElements.size());
+            ListIterator<TraceFileSystemElement> fileSystemElementsIter = fileSystemElements.listIterator();
             while (fileSystemElementsIter.hasNext()) {
-                ModalContext.checkCanceled(progressMonitor);
+                ModalContext.checkCanceled(subMonitor);
+
+                SubMonitor elementProgress = subMonitor.newChild(1);
                 TraceFileSystemElement element = fileSystemElementsIter.next();
                 File archiveFile = (File) element.getFileSystemObject().getRawFileSystemObject();
                 boolean isArchiveFileElement = element.getFileSystemObject() instanceof FileFileSystemObject && isArchiveFile(archiveFile);
                 if (isArchiveFileElement) {
+                    elementProgress = SubMonitor.convert(elementProgress, 4);
                     IPath relativeToSourceContainer = new Path(element.getFileSystemObject().getAbsolutePath(null)).makeRelativeTo(fBaseSourceContainerPath);
-                    IFolder folder = safeCreateExtractedFolder(destFolder, relativeToSourceContainer, progressMonitor);
-                    extractArchiveToFolder(archiveFile, folder, progressMonitor);
+                    IFolder folder = safeCreateExtractedFolder(destFolder, relativeToSourceContainer, elementProgress.newChild(1));
+                    extractArchiveToFolder(archiveFile, folder, elementProgress.newChild(1));
 
                     // Delete original archive, we don't want to import this, just the extracted content
                     IFile fileRes = destFolder.getFile(relativeToSourceContainer);
-                    fileRes.delete(true, progressMonitor);
+                    fileRes.delete(true, elementProgress.newChild(1));
                     IPath newPath = destFolder.getFullPath().append(relativeToSourceContainer);
                     // Rename extracted folder (.extract) to original archive name
-                    folder.move(newPath, true, progressMonitor);
+                    folder.move(newPath, true, elementProgress.newChild(1));
 
                     // Create the new import provider and root element based on
                     // the newly extracted temporary folder
@@ -1619,6 +1631,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
          * Safely create a folder meant to receive extracted content by making sure there is no name clash.
          */
         private IFolder safeCreateExtractedFolder(IFolder destinationFolder, IPath relativeContainerRelativePath, IProgressMonitor monitor) throws CoreException {
+            SubMonitor subMonitor = SubMonitor.convert(monitor, 2);
             IFolder extractedFolder;
             String suffix = ""; //$NON-NLS-1$
             int i = 2;
@@ -1632,8 +1645,9 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 suffix = "(" + i + ")"; //$NON-NLS-1$//$NON-NLS-2$
                 i++;
             }
+            subMonitor.worked(1);
 
-            TraceUtils.createFolder(extractedFolder, monitor);
+            TraceUtils.createFolder(extractedFolder, subMonitor.newChild(1));
             return extractedFolder;
         }
 
