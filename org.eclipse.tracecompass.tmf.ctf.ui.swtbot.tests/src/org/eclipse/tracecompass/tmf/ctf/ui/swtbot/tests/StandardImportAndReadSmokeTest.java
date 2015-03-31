@@ -64,7 +64,6 @@ import org.eclipse.tracecompass.tmf.ui.swtbot.tests.shared.SWTBotUtils;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -90,159 +89,120 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
 
     /**
      * Test import from directory
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromDirectory() {
+    public void testImportFromDirectory() throws Exception {
         testImport(0, false, false);
     }
 
     /**
      * Test import from directory, create links
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromDirectoryLinks() {
+    public void testImportFromDirectoryLinks() throws Exception {
         testImport(ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE, false, false);
     }
 
     /**
      * Test import from directory, preserve folder structure
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromDirectoryPreserveFolder() {
+    public void testImportFromDirectoryPreserveFolder() throws Exception {
         testImport(ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE, false, false);
     }
 
     /**
      * Test import from directory, create links, preserve folder structure
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromDirectoryLinksPreserveFolder() {
+    public void testImportFromDirectoryLinksPreserveFolder() throws Exception {
         int options = ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE;
         testImport(options, false, false);
     }
 
     /**
      * Test import from directory, overwrite all
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromDirectoryOverwrite() {
+    public void testImportFromDirectoryOverwrite() throws Exception {
         testImport(0, false, false);
         testImport(ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES, false, false);
     }
 
     /**
      * Test import from archive
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromArchive() {
+    public void testImportFromArchive() throws Exception {
         testImport(ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE, true, true);
     }
 
     /**
      * Test import from directory, preserve folder structure
+     * @throws Exception on error
      */
     @Test
-    public void testImportFromArchivePreserveFolder() {
+    public void testImportFromArchivePreserveFolder() throws Exception {
         testImport(ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE, false, true);
     }
 
     /**
      * Test import from directory, overwrite all
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testImportFromArchiveOverwrite() {
+    public void testImportFromArchiveOverwrite() throws Exception {
         testImport(0, false, true);
         testImport(ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES, false, true);
     }
 
     /**
      * Test import from directory containing archives
+     *
+     * @throws Exception
+     *             on error
      */
     @Test
-    public void testExtractArchivesFromDirectory() {
-        createProject();
-
-        openImportWizard();
-        selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
-        selectFile(ARCHIVE_FILE_NAME, TRACE_FOLDER_PARENT_NAME);
-
-        int options = ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES;
-        setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
-        importFinish();
-
-        IPath expectedElementPath = new Path(TRACE_NAME);
-        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
-        try {
-            checkOptions(expectedOptions, false, URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator, expectedElementPath);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
-        testViews(editor);
-
-        SWTBotUtils.deleteProject(getProjectName(), fBot);
+    public void testExtractArchivesFromDirectory() throws Exception {
+        testImportAndExtractArchives(ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES, false);
     }
 
     /**
      * Test import from directory containing archives, create links
+     * @throws Exception on error
      */
     @Test
-    public void testExtractArchivesFromDirectoryLinks() {
-        createProject();
-
-        openImportWizard();
-        selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
-        selectFile(ARCHIVE_FILE_NAME, TRACE_FOLDER_PARENT_NAME);
-
-        int options = ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES;
-        setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
-        importFinish();
-
-        IPath expectedElementPath = new Path(TRACE_NAME);
-        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
-        try {
-            checkOptions(expectedOptions, false, URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator, expectedElementPath);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
-        testViews(editor);
-
-        SWTBotUtils.deleteProject(getProjectName(), fBot);
+    public void testExtractArchivesFromDirectoryLinks() throws Exception {
+        testImportAndExtractArchives(ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES, false);
     }
 
     /**
      * Test import from directory containing archives, create links, preserve folder structure
+     * @throws Exception on error
      */
     @Test
-    public void testExtractArchivesFromDirectoryLinksPreserveStruture() {
-        createProject();
-
-        openImportWizard();
-        selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
-        selectFile(ARCHIVE_FILE_NAME, TRACE_FOLDER_PARENT_NAME);
-
-        int options = ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE;
-        setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
-        importFinish();
-
-        IPath expectedElementPath = new Path(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
-        try {
-            checkOptions(expectedOptions, false, URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator, expectedElementPath);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
-        testViews(editor);
-
-        SWTBotUtils.deleteProject(getProjectName(), fBot);
+    public void testExtractArchivesFromDirectoryLinksPreserveStruture() throws Exception {
+        testImportAndExtractArchives(ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE | ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE, false);
     }
 
     /**
@@ -253,26 +213,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
      */
     @Test
     public void testExtractArchivesFromArchive() throws Exception {
-        createProject();
-        final String TEST_ARCHIVE_PATH = createArchive();
-
-        openImportWizard();
-        selectImportFromArchive(TEST_ARCHIVE_PATH);
-        selectFile(ARCHIVE_FILE_NAME, ARCHIVE_ROOT_ELEMENT_NAME, TRACE_PROJECT_NAME, TRACE_FOLDER_PARENT_NAME);
-
-        int options = ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES;
-        setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
-        importFinish();
-
-        String expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TEST_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR
-              + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-        Path expectedElementPath = new Path(TRACE_NAME);
-        checkOptions(options, true, expectedSourceLocation, expectedElementPath);
-
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
-        testViews(editor);
-
-        SWTBotUtils.deleteProject(getProjectName(), fBot);
+        testImportAndExtractArchives(ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES, true);
     }
 
     /**
@@ -283,34 +224,87 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
      */
     @Test
     public void testExtractArchivesFromArchivePreserveFolder() throws Exception {
+        testImportAndExtractArchives(ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE, true);
+    }
+
+    private void testImport(int options, boolean testViews, boolean fromArchive) throws Exception {
         createProject();
-
-        final String TEST_ARCHIVE_PATH = createArchive();
-
+        String expectedSourceLocation = null;
         openImportWizard();
+        if (fromArchive) {
+            expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TRACE_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
+            selectImportFromArchive(TRACE_ARCHIVE_PATH);
+            selectFolder(ARCHIVE_ROOT_ELEMENT_NAME);
+            SWTBotCheckBox checkBox = fBot.checkBox(Messages.ImportTraceWizard_CreateLinksInWorkspace);
+            assertFalse(checkBox.isEnabled());
+        } else {
+            String sourcePath = TRACE_FOLDER_PARENT_PATH + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME;
+            expectedSourceLocation = URI_FILE_SCHEME + new File(sourcePath).getCanonicalFile().toString() + URI_SEPARATOR;
+            selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
+            selectFolder(new String [] {TRACE_FOLDER_PARENT_NAME, TRACE_FOLDER });
+        }
 
-        selectImportFromArchive(TEST_ARCHIVE_PATH);
-        selectFile(ARCHIVE_FILE_NAME, ARCHIVE_ROOT_ELEMENT_NAME, TRACE_PROJECT_NAME, TRACE_FOLDER_PARENT_NAME);
-
-        int options = ImportTraceWizardPage.OPTION_OVERWRITE_EXISTING_RESOURCES | ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE;
         setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
         importFinish();
-        String expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TEST_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR
-                + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-        IPath expectedElementPath = new Path(TRACE_PROJECT_NAME).append(TRACE_FOLDER_PARENT_NAME).append(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-        checkOptions(options, true, expectedSourceLocation, expectedElementPath);
 
-        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
-        testViews(editor);
+        IPath expectedElementPath = new Path(TRACE_NAME);
+        if ((options & ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE) != 0) {
+            expectedElementPath = new Path(TRACE_FOLDER).append(expectedElementPath);
+        }
 
+        checkOptions(options, expectedSourceLocation, expectedElementPath);
+        TmfEventsEditor tmfEd = SWTBotUtils.openEditor(fBot, getProjectName(), expectedElementPath);
+        if (testViews) {
+            testViews(tmfEd);
+        }
+
+        fBot.closeAllEditors();
 
         SWTBotUtils.deleteProject(getProjectName(), fBot);
     }
 
-    private IProject getProjectResource() {
-        return ResourcesPlugin.getWorkspace().getRoot().getProject(getProjectName());
+    private void testImportAndExtractArchives(int options, boolean fromArchive) throws Exception {
+        createProject();
+
+        String expectedSourceLocation;
+        IPath expectedElementPath;
+        if (fromArchive) {
+            String testArchivePath = createArchive();
+            openImportWizard();
+            selectImportFromArchive(testArchivePath);
+            selectFile(ARCHIVE_FILE_NAME, ARCHIVE_ROOT_ELEMENT_NAME, TRACE_PROJECT_NAME, TRACE_FOLDER_PARENT_NAME);
+
+            expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(testArchivePath).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME
+                    + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
+            expectedElementPath = new Path(TRACE_PROJECT_NAME).append(TRACE_FOLDER_PARENT_NAME).append(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
+        } else {
+            openImportWizard();
+            selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
+            selectFile(ARCHIVE_FILE_NAME, TRACE_FOLDER_PARENT_NAME);
+            expectedElementPath = new Path(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
+            expectedSourceLocation = URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator;
+        }
+
+        if ((options & ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE) == 0) {
+            expectedElementPath = new Path(TRACE_NAME);
+        }
+
+        setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
+        importFinish();
+        // Archives should never be imported as links
+        int expectedOptions = options & ~ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE;
+        checkOptions(expectedOptions, expectedSourceLocation, expectedElementPath);
+
+        TmfEventsEditor editor = SWTBotUtils.openEditor(fBot, TRACE_PROJECT_NAME, expectedElementPath);
+        testViews(editor);
+
+        SWTBotUtils.deleteProject(getProjectName(), fBot);
     }
 
+    /**
+     * Create a temporary archive containing a nested archive. For example,
+     * testtraces.zip/synctraces.tar.gz can be used to test a nested archive.
+     */
     private String createArchive() throws URISyntaxException, CoreException, IOException {
 
         // Link to the test traces folder. We use a link so that we can safely
@@ -338,46 +332,6 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         fBot.button("&Finish").click();
         fBot.waitUntil(Conditions.shellCloses(activeShell));
         return archiveDestinationPath;
-    }
-
-    private void testImport(int options, boolean testViews, boolean fromArchive) {
-        createProject();
-        String expectedSourceLocation = null;
-        openImportWizard();
-        if (fromArchive) {
-            try {
-                expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TRACE_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
-            } catch (IOException e) {
-                Assert.fail(e.getMessage());
-            }
-            selectImportFromArchive(TRACE_ARCHIVE_PATH);
-            selectFolder(ARCHIVE_ROOT_ELEMENT_NAME);
-            SWTBotCheckBox checkBox = fBot.checkBox(Messages.ImportTraceWizard_CreateLinksInWorkspace);
-            assertFalse(checkBox.isEnabled());
-        } else {
-            String sourcePath = TRACE_FOLDER_PARENT_PATH + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME;
-            try {
-                expectedSourceLocation = URI_FILE_SCHEME + new File(sourcePath).getCanonicalFile().toString() + URI_SEPARATOR;
-            } catch (IOException e) {
-                Assert.fail(e.getMessage());
-            }
-            selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
-            selectFolder(new String [] {TRACE_FOLDER_PARENT_NAME, TRACE_FOLDER });
-        }
-
-        setOptions(options, ImportTraceWizardPage.TRACE_TYPE_AUTO_DETECT);
-        importFinish();
-
-        IPath expectedElementPath = getTraceElementPath(options);
-        checkOptions(options, fromArchive, expectedSourceLocation, expectedElementPath);
-        TmfEventsEditor tmfEd = SWTBotUtils.openEditor(fBot, getProjectName(), expectedElementPath);
-        if (testViews) {
-            testViews(tmfEd);
-        }
-
-        fBot.closeAllEditors();
-
-        SWTBotUtils.deleteProject(getProjectName(), fBot);
     }
 
     private void testViews(TmfEventsEditor editor) {
@@ -491,7 +445,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         }
     }
 
-    private void checkOptions(int optionFlags, boolean fromArchive, String expectedSourceLocation, IPath expectedElementPath) {
+    private void checkOptions(int optionFlags, String expectedSourceLocation, IPath expectedElementPath) throws CoreException {
         IProject project = getProjectResource();
         assertTrue(project.exists());
         TmfProjectElement tmfProject = TmfProjectRegistry.getProject(project, true);
@@ -513,31 +467,20 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         assertEquals((optionFlags & ImportTraceWizardPage.OPTION_CREATE_LINKS_IN_WORKSPACE) != 0, traceResource.isLinked());
 
         // i.e. /Tracing/Traces
-        IPath expectedPath = Path.ROOT.append(new Path(TRACE_PROJECT_NAME)).append(TmfTracesFolder.TRACES_FOLDER_NAME);
-        expectedPath = expectedPath.append(expectedElementPath);
+        IPath expectedPath = Path.ROOT.append(new Path(TRACE_PROJECT_NAME)).append(TmfTracesFolder.TRACES_FOLDER_NAME).append(expectedElementPath);
         assertEquals(expectedPath, traceResource.getFullPath());
 
-        String sourceLocation = null;
-        try {
-            sourceLocation = traceResource.getPersistentProperty(TmfCommonConstants.SOURCE_LOCATION);
-        } catch (CoreException e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
+        String sourceLocation = traceResource.getPersistentProperty(TmfCommonConstants.SOURCE_LOCATION);
         assertNotNull(sourceLocation);
         assertEquals(expectedSourceLocation, sourceLocation);
-    }
-
-    private static IPath getTraceElementPath(int optionFlags) {
-        IPath traceElementPath = new Path("");
-        if ((optionFlags & ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE) != 0) {
-            traceElementPath = traceElementPath.append(TRACE_FOLDER);
-        }
-        return traceElementPath.append(TRACE_NAME);
     }
 
     @Override
     protected String getProjectName() {
         return TRACE_PROJECT_NAME;
+    }
+
+    private IProject getProjectResource() {
+        return ResourcesPlugin.getWorkspace().getRoot().getProject(getProjectName());
     }
 }
