@@ -86,6 +86,8 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
     private static final String URI_SEPARATOR = "/";
     private static final String URI_FILE_SCHEME = "file:";
     private static final String URI_JAR_FILE_SCHEME = "jar:file:";
+    private static final boolean IS_WIN32 = System.getProperty("os.name").startsWith("Windows");  //$NON-NLS-1$//$NON-NLS-2$
+    private static final String URI_DEVICE_SEPARATOR = IS_WIN32 ? URI_SEPARATOR : "";
 
     /**
      * Test import from directory
@@ -232,14 +234,14 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
         String expectedSourceLocation = null;
         openImportWizard();
         if (fromArchive) {
-            expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(TRACE_ARCHIVE_PATH).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
+            expectedSourceLocation = URI_JAR_FILE_SCHEME + URI_DEVICE_SEPARATOR + new Path(new File(TRACE_ARCHIVE_PATH).getCanonicalPath()) + "!" + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
             selectImportFromArchive(TRACE_ARCHIVE_PATH);
             selectFolder(ARCHIVE_ROOT_ELEMENT_NAME);
             SWTBotCheckBox checkBox = fBot.checkBox(Messages.ImportTraceWizard_CreateLinksInWorkspace);
             assertFalse(checkBox.isEnabled());
         } else {
             String sourcePath = TRACE_FOLDER_PARENT_PATH + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME;
-            expectedSourceLocation = URI_FILE_SCHEME + new File(sourcePath).getCanonicalFile().toString() + URI_SEPARATOR;
+            expectedSourceLocation = URI_FILE_SCHEME + URI_DEVICE_SEPARATOR + new Path(new File(sourcePath).getCanonicalPath()) + URI_SEPARATOR;
             selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
             selectFolder(new String [] {TRACE_FOLDER_PARENT_NAME, TRACE_FOLDER });
         }
@@ -274,7 +276,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
             selectImportFromArchive(testArchivePath);
             selectFile(ARCHIVE_FILE_NAME, ARCHIVE_ROOT_ELEMENT_NAME, TRACE_PROJECT_NAME, TRACE_FOLDER_PARENT_NAME);
 
-            expectedSourceLocation = URI_JAR_FILE_SCHEME + new File(testArchivePath).getCanonicalFile().toString() + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME
+            expectedSourceLocation = URI_JAR_FILE_SCHEME + URI_DEVICE_SEPARATOR + new Path(new File(testArchivePath).getCanonicalPath()) + "!" + URI_SEPARATOR + TRACE_PROJECT_NAME + URI_SEPARATOR + TRACE_FOLDER_PARENT_NAME + URI_SEPARATOR + ARCHIVE_FILE_NAME
                     + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
             expectedElementPath = new Path(TRACE_PROJECT_NAME).append(TRACE_FOLDER_PARENT_NAME).append(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
         } else {
@@ -282,7 +284,7 @@ public class StandardImportAndReadSmokeTest extends AbstractImportAndReadSmokeTe
             selectImportFromDirectory(TRACE_FOLDER_PARENT_PATH);
             selectFile(ARCHIVE_FILE_NAME, TRACE_FOLDER_PARENT_NAME);
             expectedElementPath = new Path(ARCHIVE_FILE_NAME).append(TRACE_FOLDER).append(TRACE_NAME);
-            expectedSourceLocation = URI_FILE_SCHEME + new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath() + File.separator + ARCHIVE_FILE_NAME + File.separator + TRACE_FOLDER + File.separator + TRACE_NAME + File.separator;
+            expectedSourceLocation = URI_FILE_SCHEME + URI_DEVICE_SEPARATOR + new Path(new File(TRACE_FOLDER_PARENT_PATH).getCanonicalPath()) + URI_SEPARATOR + ARCHIVE_FILE_NAME + URI_SEPARATOR + TRACE_FOLDER + URI_SEPARATOR + TRACE_NAME + URI_SEPARATOR;
         }
 
         if ((options & ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE) == 0) {

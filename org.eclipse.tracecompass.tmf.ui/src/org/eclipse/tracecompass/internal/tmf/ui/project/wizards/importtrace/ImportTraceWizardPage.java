@@ -812,7 +812,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             // Import from archive
             FileSystemObjectLeveledImportStructureProvider leveledImportStructureProvider = null;
             String archivePath = sourceFile.getAbsolutePath();
-            if (ArchiveFileManipulations.isTarFile(archivePath)) {
+            if (isTarFile(archivePath)) {
                 if (ensureTarSourceIsValid(archivePath)) {
                     // We close the file when we dispose the import provider,
                     // see disposeSelectionGroupRoot
@@ -982,8 +982,25 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         return null;
     }
 
+    private static boolean isTarFile(String fileName) {
+        TarFile specifiedTarSourceFile = getSpecifiedTarSourceFile(fileName);
+        if (specifiedTarSourceFile != null) {
+            try {
+                specifiedTarSourceFile.close();
+                return true;
+            } catch (IOException e) {
+            }
+        }
+        return false;
+    }
+
     private static TarFile getSpecifiedTarSourceFile(String fileName) {
         if (fileName.length() == 0) {
+            return null;
+        }
+
+        // FIXME: Work around Bug 463633. Remove this block once fixed.
+        if (new File(fileName).length() < 512) {
             return null;
         }
 
@@ -1174,7 +1191,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
     private static boolean isArchiveFile(File sourceFile) {
         String absolutePath = sourceFile.getAbsolutePath();
-        return ArchiveFileManipulations.isTarFile(absolutePath) || ArchiveFileManipulations.isZipFile(absolutePath);
+        return isTarFile(absolutePath) || ArchiveFileManipulations.isZipFile(absolutePath);
     }
 
     @Override
