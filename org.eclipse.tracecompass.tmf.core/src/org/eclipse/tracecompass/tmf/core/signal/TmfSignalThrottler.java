@@ -96,7 +96,11 @@ public class TmfSignalThrottler {
 
         @Override
         public void run() {
-            fComponent.broadcast(signal);
+            if (fComponent != null) {
+                fComponent.broadcast(signal);
+            } else {
+                TmfSignalManager.dispatchSignal(signal);
+            }
         }
     }
 }

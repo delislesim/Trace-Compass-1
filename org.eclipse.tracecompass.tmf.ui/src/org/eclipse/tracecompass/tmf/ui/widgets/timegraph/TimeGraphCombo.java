@@ -42,6 +42,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.MouseWheelListener;
@@ -54,9 +55,11 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Slider;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -64,6 +67,8 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfImageConstants;
 import org.eclipse.tracecompass.internal.tmf.ui.Messages;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.ITimeGraphEntryActiveProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.TimeGraphFilterDialog;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ILinkEvent;
@@ -130,6 +135,11 @@ public class TimeGraphCombo extends Composite {
 
     /** List of all expanded items whose parents are also expanded */
     private List<TreeItem> fVisibleExpandedItems = null;
+
+    private Listener fSashDragListener;
+
+    private SashForm fSashForm;
+    //private final TmfSignalThrottler fTimeAlignmentThrottle = new TmfSignalThrottler(null, 200);
 
     // ------------------------------------------------------------------------
     // Classes
@@ -358,21 +368,56 @@ public class TimeGraphCombo extends Composite {
      * @param style
      *            the style of widget to construct
      * @param weights
-     *            The relative weights of each side of the sash form
+     *            The array (length 2) of relative weights of each side of the sash form
      */
     public TimeGraphCombo(Composite parent, int style, int[] weights) {
         super(parent, style);
         setLayout(new FillLayout());
 
-        final SashForm sash = new SashForm(this, SWT.NONE);
+        fSashForm = new SashForm(this, SWT.NONE);
+        fSashForm.addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e) {
+                // Sashes in a SashForm are being created on layout so add the
+                // drag listener here
+                if (fSashDragListener == null) {
+                    for (Control control : fSashForm.getChildren()) {
+                        if (control instanceof Sash) {
+                            fSashDragListener = new Listener() {
 
-        fTreeViewer = new TreeViewer(sash, SWT.FULL_SELECTION | SWT.H_SCROLL);
+                                @Override
+                                public void handleEvent(Event event) {
+                                    sendTimeViewAlignmentChanged();
+
+                                }
+                            };
+                            control.addListener(SWT.Selection, fSashDragListener);
+                            // There should be only one sash
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+        fSashForm.addControlListener(new ControlListener() {
+
+            @Override
+            public void controlResized(ControlEvent e) {
+                //sendTimeViewAlignmentChanged();
+            }
+
+            @Override
+            public void controlMoved(ControlEvent e) {
+            }
+        });
+
+        fTreeViewer = new TreeViewer(fSashForm, SWT.FULL_SELECTION | SWT.H_SCROLL);
         fTreeViewer.setAutoExpandLevel(AbstractTreeViewer.ALL_LEVELS);
         final Tree tree = fTreeViewer.getTree();
         tree.setHeaderVisible(true);
         tree.setLinesVisible(true);
 
-        fTimeGraphViewer = new TimeGraphViewer(sash, SWT.NONE);
+        fTimeGraphViewer = new TimeGraphViewer(fSashForm, SWT.NONE);
         fTimeGraphViewer.setItemHeight(getItemHeight(tree));
         fTimeGraphViewer.setHeaderHeight(tree.getHeaderHeight());
         fTimeGraphViewer.setBorderWidth(tree.getBorderWidth());
@@ -619,7 +664,14 @@ public class TimeGraphCombo extends Composite {
         // to a value that would cause blank space to be drawn at the bottom of the tree.
         fNumFillerRows = Display.getDefault().getBounds().height / getItemHeight(tree);
 
-        sash.setWeights(weights);
+        fSashForm.setWeights(weights);
+    }
+
+    private void sendTimeViewAlignmentChanged() {
+        int width = (int)((float)fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
+        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignementSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
+        //fTimeAlignmentThrottle.queue(new TmfTimeViewAlignementSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
+        System.out.println("TimeGraphCombo:" + width); //$NON-NLS-1$
     }
 
     // ------------------------------------------------------------------------
@@ -1134,4 +1186,23 @@ public class TimeGraphCombo extends Composite {
         }
     }
 
+    /**
+     * @since 1.0
+     */
+    public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
+        if (signal.getSource() != fSashForm) {
+            int total = fSashForm.getBounds().width;
+            int width1 = (int)(signal.getTimeAxisOffset() / (float)total * 1000) ;
+            int width2 = (int)((total - signal.getTimeAxisOffset()) / (float)total * 1000);
+            fSashForm.setWeights(new int[] { width1, width2 });
+            fSashForm.layout(); //nedded?
+        }
+    }
+
+    /**
+     * @since 1.0
+     */
+    public void realignTimeView() {
+        sendTimeViewAlignmentChanged();
+    }
 }

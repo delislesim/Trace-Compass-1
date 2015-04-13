@@ -58,6 +58,8 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.ui.TmfUiRefreshHandler;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
+import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphContentProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider2;
@@ -83,7 +85,7 @@ import org.eclipse.ui.IActionBars;
  * This view contains either a time graph viewer, or a time graph combo which is
  * divided between a tree viewer on the left and a time graph viewer on the right.
  */
-public abstract class AbstractTimeGraphView extends TmfView {
+public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeAligned {
 
     /** Constant indicating that all levels of the time graph should be expanded */
     protected static final int ALL_LEVELS = AbstractTreeViewer.ALL_LEVELS;
@@ -197,6 +199,10 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
         void setAutoExpandLevel(int level);
 
+        void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal);
+
+        void realignTimeView();
+
     }
 
     private class TimeGraphViewerWrapper implements ITimeGraphWrapper {
@@ -265,7 +271,19 @@ public abstract class AbstractTimeGraphView extends TmfView {
         public void setAutoExpandLevel(int level) {
             viewer.setAutoExpandLevel(level);
         }
+
+        @Override
+        public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
+            viewer.timeViewAlignementUpdated(signal);
+        }
+
+        @Override
+        public void realignTimeView() {
+            viewer.realignTimeView();
+        }
     }
+
+
 
     private class TimeGraphComboWrapper implements ITimeGraphWrapper {
         private TimeGraphCombo combo;
@@ -344,6 +362,18 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
         IAction getShowFilterAction() {
             return combo.getShowFilterAction();
+        }
+
+        @Override
+        public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
+            // TODO Auto-generated method stub
+            combo.timeViewAlignementUpdated(signal);
+        }
+
+        @Override
+        public void realignTimeView() {
+            combo.realignTimeView();
+
         }
     }
 
@@ -810,6 +840,7 @@ public abstract class AbstractTimeGraphView extends TmfView {
 
     @Override
     public void createPartControl(Composite parent) {
+        super.createPartControl(parent);
         if (fColumns == null || fLabelProvider == null) {
             fTimeGraphWrapper = new TimeGraphViewerWrapper(parent, SWT.NONE);
             TimeGraphViewer viewer = fTimeGraphWrapper.getTimeGraphViewer();
@@ -1003,6 +1034,29 @@ public abstract class AbstractTimeGraphView extends TmfView {
     @TmfSignalHandler
     public void updateTimeFormat( final TmfTimestampFormatUpdateSignal signal){
         fTimeGraphWrapper.refresh();
+    }
+
+    /**
+     * Handler for the window range signal.
+     *
+     * @param signal
+     *            The signal that's received
+     * @since 1.0
+     */
+    @TmfSignalHandler
+    public void timeViewAlignementUpdated(final TmfTimeViewAlignementSignal signal) {
+        if (!signal.isExecute()) {
+            return;
+        }
+
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (!fTimeGraphWrapper.isDisposed()) {
+                    fTimeGraphWrapper.timeViewAlignementUpdated(signal);
+                }
+            }
+        });
     }
 
     // ------------------------------------------------------------------------
@@ -1258,5 +1312,14 @@ public abstract class AbstractTimeGraphView extends TmfView {
         manager.add(fTimeGraphWrapper.getTimeGraphViewer().getZoomInAction());
         manager.add(fTimeGraphWrapper.getTimeGraphViewer().getZoomOutAction());
         manager.add(new Separator());
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public void realignTimeView() {
+        fTimeGraphWrapper.realignTimeView();
+
     }
 }

@@ -49,6 +49,7 @@ import org.eclipse.swt.widgets.Slider;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfImageConstants;
 import org.eclipse.tracecompass.internal.tmf.ui.Messages;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.TimeGraphLegend;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ILinkEvent;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeEvent;
@@ -1800,6 +1801,20 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
     public void removeFilter(ViewerFilter filter) {
         fTimeGraphCtrl.removeFilter(filter);
         refresh();
+    }
+
+    /**
+     * @since 1.0
+     */
+    public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
+        fTimeGraphCtrl.timeViewAlignementUpdated(signal);
+    }
+
+    /**
+     * @since 1.0
+     */
+    public void realignTimeView() {
+        fTimeGraphCtrl.realignTimeView();
     }
 
 }

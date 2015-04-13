@@ -46,6 +46,7 @@ Export-Package: org.eclipse.tracecompass.internal.tmf.ui;x-friends:="org.eclipse
  org.eclipse.tracecompass.tmf.ui.project.model,
  org.eclipse.tracecompass.tmf.ui.project.wizards,
  org.eclipse.tracecompass.tmf.ui.properties,
+ org.eclipse.tracecompass.tmf.ui.signal,
  org.eclipse.tracecompass.tmf.ui.viewers,
  org.eclipse.tracecompass.tmf.ui.viewers.events,
  org.eclipse.tracecompass.tmf.ui.viewers.events.columns,
