@@ -32,7 +32,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 
@@ -104,7 +104,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
 
                                 @Override
                                 public void handleEvent(Event event) {
-                                    sendTimeViewAlignmentChanged();
+                                    realignTimeView();
                                 }
                             };
                             control.addListener(SWT.Selection, fSashDragListener);
@@ -123,24 +123,6 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
             fTreeViewer.traceSelected(signal);
             fXYViewer.traceSelected(signal);
         }
-//        fSashForm.addControlListener(new ControlListener() {
-//
-//            @Override
-//            public void controlResized(ControlEvent e) {
-//                sendTimeViewAlignmentChanged();
-//            }
-//
-//            @Override
-//            public void controlMoved(ControlEvent e) {
-//            }
-//        });
-    }
-
-    private void sendTimeViewAlignmentChanged() {
-        int width = (int)((float)fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
-        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignementSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
-        //fTimeAlignmentThrottle.queue(new TmfTimeViewAlignementSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
-        System.out.println("Cpu usage:" + width); //$NON-NLS-1$
     }
 
     @Override
@@ -166,8 +148,8 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      * @since 1.0
      */
     @TmfSignalHandler
-    public void timeViewAlignementUpdated(final TmfTimeViewAlignementSignal signal) {
-        if (!signal.isExecute()) {
+    public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
+        if (!signal.isApply()) {
             return;
         }
         Display.getDefault().asyncExec(new Runnable() {
@@ -189,7 +171,8 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      */
     @Override
     public void realignTimeView() {
-        sendTimeViewAlignmentChanged();
+        int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
+        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
     }
 
 }

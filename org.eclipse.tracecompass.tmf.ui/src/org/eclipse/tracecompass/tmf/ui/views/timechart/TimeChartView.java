@@ -31,13 +31,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.signal.TmfEventFilterAppliedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfEventSearchAppliedSignal;
-import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
-import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSelectionRangeUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimestamp;
@@ -45,7 +45,7 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSetting;
@@ -63,8 +63,6 @@ import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.TimeGraphViewer;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeEvent;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeGraphEntry;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.widgets.Utils.TimeFormat;
-import org.eclipse.ui.IPartListener2;
-import org.eclipse.ui.IWorkbenchPartReference;
 
 /**
  * Generic Time Chart view, which is similar to a Gantt chart for trace analysis
@@ -128,68 +126,6 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
 
         ColorSettingsManager.addColorSettingsListener(this);
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_CHANGE);
-        getSite().getPage().addPartListener(new IPartListener2() {
-
-            @Override
-            public void partVisible(IWorkbenchPartReference partRef) {
-                if (partRef.getPart(false) == TimeChartView.this) {
-                    System.out.println("partVisible");
-                }
-            }
-
-            @Override
-            public void partOpened(IWorkbenchPartReference partRef) {
-                // TODO Auto-generated method stub
-                if (partRef.getPart(false) == TimeChartView.this) {
-                    System.out.println("partOpened");
-                }
-
-            }
-
-            @Override
-            public void partInputChanged(IWorkbenchPartReference partRef) {
-            }
-
-            @Override
-            public void partHidden(IWorkbenchPartReference partRef) {
-                if (partRef.getPart(false) == TimeChartView.this) {
-                    System.out.println("partHidden");
-                }
-            }
-
-            @Override
-            public void partDeactivated(IWorkbenchPartReference partRef) {
-                // TODO Auto-generated method stub
-                if (partRef.getPart(false) == TimeChartView.this) {
-                    System.out.println("partDeactivated");
-                }
-
-            }
-
-            @Override
-            public void partClosed(IWorkbenchPartReference partRef) {
-                // TODO Auto-generated method stub
-
-            }
-
-            @Override
-            public void partBroughtToTop(IWorkbenchPartReference partRef) {
-                // TODO Auto-generated method stub
-                if (partRef.getPart(false) == TimeChartView.this) {
-                    System.out.println("partBroughtToTop");
-                }
-
-            }
-
-            @Override
-            public void partActivated(IWorkbenchPartReference partRef) {
-                // TODO Auto-generated method stub
-                if (partRef.getPart(false) == TimeChartView.this) {
-                    System.out.println("partActivated");
-                }
-
-            }
-        });
     }
 
     @Override
@@ -825,8 +761,8 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
      * @since 1.0
      */
     @TmfSignalHandler
-    public void timeViewAlignementUpdated(final TmfTimeViewAlignementSignal signal) {
-        if (!signal.isExecute()) {
+    public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
+        if (!signal.isApply()) {
             return;
         }
 
@@ -834,7 +770,7 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
             @Override
             public void run() {
                 if (!fViewer.getControl().isDisposed()) {
-                    fViewer.timeViewAlignementUpdated(signal);
+                    fViewer.timeViewAlignmentUpdated(signal);
                 }
             }
         });

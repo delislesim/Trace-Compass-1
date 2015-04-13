@@ -37,8 +37,6 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -66,7 +64,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphColorListener;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider2;
@@ -180,19 +178,6 @@ public class TimeGraphControl extends TimeGraphBaseControl
         addKeyListener(this);
         addMenuDetectListener(this);
         addListener(SWT.MouseWheel, this);
-        addControlListener(new ControlListener() {
-
-            @Override
-            public void controlResized(ControlEvent e) {
-                //fTimeAlignmentThrottle.queue(new TmfTimeViewAlignementSignal(TimeGraphControl.this, TimeGraphControl.this.getLocation(), TimeGraphControl.this.fTimeProvider.getNameSpace()));
-            }
-
-            @Override
-            public void controlMoved(ControlEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-        });
     }
 
     @Override
@@ -2021,9 +2006,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
         } else if (DRAG_SPLIT_LINE == fDragState) {
             fDragX = e.x;
             fTimeProvider.setNameSpace(e.x);
-            //fTimeAlignmentThrottle.queue(new TmfTimeViewAlignementSignal(this, this.getLocation(), e.x, false));
-            TmfSignalManager.dispatchSignal(new TmfTimeViewAlignementSignal(this, this.getLocation(), e.x, false));
-            System.out.println("TimeGraphControl:" + e.x); //$NON-NLS-1$
+            realignTimeView();
         } else if (DRAG_SELECTION == fDragState) {
             fDragX = Math.min(Math.max(e.x, fTimeProvider.getNameSpace()), size.x - RIGHT_MARGIN);
             redraw();
@@ -2653,9 +2636,13 @@ public class TimeGraphControl extends TimeGraphBaseControl
     }
 
     /**
+     * Update the widget based on the alignment signal
+     *
+     * @param signal
+     *            the alignment signal
      * @since 1.0
      */
-    public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
+    public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
         if (signal.getSource() != this) {
             fTimeProvider.setNameSpace(signal.getTimeAxisOffset());
         }
@@ -2665,9 +2652,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
      * @since 1.0
      */
     public void realignTimeView() {
-        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignementSignal(this, this.getLocation(), fTimeProvider.getNameSpace(), false));
-        //fTimeAlignmentThrottle.queue(new TmfTimeViewAlignementSignal(this, this.getLocation(), fTimeProvider.getNameSpace(), false));
-        System.out.println("TimeGraphControl:" + fTimeProvider.getNameSpace()); //$NON-NLS-1$
+        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, this.getLocation(), fTimeProvider.getNameSpace(), false));
     }
 }
 

@@ -58,7 +58,7 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.ui.TmfUiRefreshHandler;
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignementSignal;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphContentProvider;
@@ -199,7 +199,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
 
         void setAutoExpandLevel(int level);
 
-        void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal);
+        void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal);
 
         void realignTimeView();
 
@@ -273,8 +273,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         }
 
         @Override
-        public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
-            viewer.timeViewAlignementUpdated(signal);
+        public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
+            viewer.timeViewAlignmentUpdated(signal);
         }
 
         @Override
@@ -365,9 +365,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         }
 
         @Override
-        public void timeViewAlignementUpdated(TmfTimeViewAlignementSignal signal) {
-            // TODO Auto-generated method stub
-            combo.timeViewAlignementUpdated(signal);
+        public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
+            combo.timeViewAlignmentUpdated(signal);
         }
 
         @Override
@@ -1044,8 +1043,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
      * @since 1.0
      */
     @TmfSignalHandler
-    public void timeViewAlignementUpdated(final TmfTimeViewAlignementSignal signal) {
-        if (!signal.isExecute()) {
+    public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
+        if (!signal.isApply()) {
             return;
         }
 
@@ -1053,7 +1052,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
             @Override
             public void run() {
                 if (!fTimeGraphWrapper.isDisposed()) {
-                    fTimeGraphWrapper.timeViewAlignementUpdated(signal);
+                    fTimeGraphWrapper.timeViewAlignmentUpdated(signal);
                 }
             }
         });
