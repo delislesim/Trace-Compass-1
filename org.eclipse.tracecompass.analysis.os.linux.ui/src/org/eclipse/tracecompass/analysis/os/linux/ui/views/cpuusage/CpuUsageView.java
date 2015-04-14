@@ -32,6 +32,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
@@ -104,7 +105,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
 
                                 @Override
                                 public void handleEvent(Event event) {
-                                    realignTimeView();
+                                    TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, getTimeViewAlignmentInfo()));
                                 }
                             };
                             control.addListener(SWT.Selection, fSashDragListener);
@@ -149,18 +150,19 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      */
     @TmfSignalHandler
     public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
-        if (!signal.isApply()) {
+        if (!signal.getTimeViewAlignmentInfo().isApply()) {
             return;
         }
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
                 if (signal.getSource() != fSashForm) {
+                    int sashOffset = signal.getTimeViewAlignmentInfo().getTimeAxisOffset() - fXYViewer.getPlotAreaOffset();
                     int total = fSashForm.getBounds().width;
-                    int width1 = (int)(signal.getTimeAxisOffset() / (float)total * 1000) ;
-                    int width2 = (int)((total - signal.getTimeAxisOffset()) / (float)total * 1000);
+                    int width1 = (int) (sashOffset / (float) total * 1000);
+                    int width2 = (int) ((total - sashOffset) / (float) total * 1000);
                     fSashForm.setWeights(new int[] { width1, width2 });
-                    fSashForm.layout(); //nedded?
+                    fSashForm.layout(); // nedded?
                 }
             }
         });
@@ -170,9 +172,9 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      * @since 1.0
      */
     @Override
-    public void realignTimeView() {
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
         int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
-        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
+        return new TmfTimeViewAlignmentInfo(fSashForm.getLocation(), width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset(), fXYViewer.getPlotAreaWidth(), false);
     }
 
 }

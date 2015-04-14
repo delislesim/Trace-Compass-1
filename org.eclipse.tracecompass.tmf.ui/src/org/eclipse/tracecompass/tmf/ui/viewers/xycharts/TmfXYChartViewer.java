@@ -369,4 +369,18 @@ public abstract class TmfXYChartViewer extends TmfTimeViewer implements ITmfChar
         return display;
     }
 
+    /**
+     * @since 1.0
+     */
+    public int getPlotAreaOffset() {
+        return getSwtChart().toControl(getSwtChart().getPlotArea().toDisplay(0, 0)).x;
+    }
+
+    /**
+     * @since 1.0
+     */
+    public int getPlotAreaWidth() {
+        return getSwtChart().getSize().x;
+    }
+
 }

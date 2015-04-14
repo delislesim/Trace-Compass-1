@@ -58,6 +58,7 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.ui.TmfUiRefreshHandler;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
@@ -201,8 +202,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
 
         void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal);
 
-        void realignTimeView();
-
+        TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo();
     }
 
     private class TimeGraphViewerWrapper implements ITimeGraphWrapper {
@@ -278,8 +278,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         }
 
         @Override
-        public void realignTimeView() {
-            viewer.realignTimeView();
+        public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+            return viewer.getTimeViewAlignmentInfo();
         }
     }
 
@@ -370,9 +370,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         }
 
         @Override
-        public void realignTimeView() {
-            combo.realignTimeView();
-
+        public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+            return combo.getTimeViewAlignmentInfo();
         }
     }
 
@@ -1044,7 +1043,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
      */
     @TmfSignalHandler
     public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
-        if (!signal.isApply()) {
+        if (!signal.getTimeViewAlignmentInfo().isApply()) {
             return;
         }
 
@@ -1317,8 +1316,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
      * @since 1.0
      */
     @Override
-    public void realignTimeView() {
-        fTimeGraphWrapper.realignTimeView();
-
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        return fTimeGraphWrapper.getTimeViewAlignmentInfo();
     }
 }

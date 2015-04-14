@@ -209,5 +209,4 @@ public class CpuUsageXYViewer extends TmfCommonXLineChartViewer {
         fSelectedThread = tid;
         updateContent();
     }
-
 }

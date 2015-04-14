@@ -45,6 +45,7 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
@@ -762,7 +763,7 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
      */
     @TmfSignalHandler
     public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
-        if (!signal.isApply()) {
+        if (!signal.getTimeViewAlignmentInfo().isApply()) {
             return;
         }
 
@@ -780,8 +781,8 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
      * @since 1.0
      */
     @Override
-    public void realignTimeView() {
-        fViewer.realignTimeView();
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        return fViewer.getTimeViewAlignmentInfo();
     }
 
 }

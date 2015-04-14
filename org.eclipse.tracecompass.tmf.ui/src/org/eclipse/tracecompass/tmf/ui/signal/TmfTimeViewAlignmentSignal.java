@@ -12,7 +12,6 @@
 
 package org.eclipse.tracecompass.tmf.ui.signal;
 
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
 
 /**
@@ -24,62 +23,26 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
  */
 public class TmfTimeViewAlignmentSignal extends TmfSignal {
 
-    private int fTimeAxisOffset;
-    private Point fViewLocation;
-    private boolean fApply;
+    private TmfTimeViewAlignmentInfo fTimeViewAlignmentInfo;
 
     /**
      * Creates a new TmfTimeViewAlignmentSignal
      *
      * @param source
      *            the source of the signal
-     * @param viewLocation
-     *            the location of the view
-     * @param timeAxisOffset
-     *            the offset of the time axis, typically the position of a sash
-     * @param apply
-     *            whether or not to apply this new alignment. Views emitting
-     *            this signal should set this to false. This only informs the
-     *            synchronizer of a new alignment. The synchronizer is
-     *            responsible of emitting the signal that will apply the
-     *            alignment.
+     * @param parameterObject TODO
      */
-    public TmfTimeViewAlignmentSignal(Object source, Point viewLocation, int timeAxisOffset, boolean apply) {
+    public TmfTimeViewAlignmentSignal(Object source, TmfTimeViewAlignmentInfo parameterObject) {
         super(source);
-        fViewLocation = viewLocation;
-        fTimeAxisOffset = timeAxisOffset;
-        fApply = apply;
+        fTimeViewAlignmentInfo = parameterObject;
     }
 
-    /**
-     * Get the offset of the time axis, typically the position of a sash
-     *
-     * @return the offset of the time axis
-     */
-    public int getTimeAxisOffset() {
-        return fTimeAxisOffset;
-    }
-
-    /**
-     * The location of the view emitting the signal, or null
-     *
-     * @return the view location or null
-     */
-    public Point getViewLocation() {
-        return fViewLocation;
-    }
-
-    /**
-     * Whether or not to apply the new alignment. Views should only react to the signal when this is true.
-     *
-     * @return Whether or not to apply the new alignment.
-     */
-    public boolean isApply() {
-        return fApply;
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        return fTimeViewAlignmentInfo;
     }
 
     @Override
     public String toString() {
-        return "[TmfTimeViewAlignmentSignal (" + fViewLocation + ", " + fViewLocation + ", " + fApply + ")]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return "[TmfTimeViewAlignmentSignal (" + fTimeViewAlignmentInfo.toString() + ")]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 }

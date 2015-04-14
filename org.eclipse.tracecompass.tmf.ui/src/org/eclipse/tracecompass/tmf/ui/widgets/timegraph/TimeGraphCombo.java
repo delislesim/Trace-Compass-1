@@ -67,6 +67,7 @@ import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfImageConstants;
 import org.eclipse.tracecompass.internal.tmf.ui.Messages;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.ITimeGraphEntryActiveProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.TimeGraphFilterDialog;
@@ -656,8 +657,7 @@ public class TimeGraphCombo extends Composite {
     }
 
     private void sendTimeViewAlignmentChanged() {
-        int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
-        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, fSashForm.getLocation(), width + fSashForm.getSashWidth(), false));
+        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, getTimeViewAlignmentInfo()));
     }
 
     // ------------------------------------------------------------------------
@@ -1182,7 +1182,7 @@ public class TimeGraphCombo extends Composite {
     public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
         if (signal.getSource() != fSashForm) {
             int total = fSashForm.getBounds().width;
-            int timeAxisOffset = Math.min(signal.getTimeAxisOffset(), total);
+            int timeAxisOffset = Math.min(signal.getTimeViewAlignmentInfo().getTimeAxisOffset(), total);
             int width1 = (int) (timeAxisOffset / (float) total * 1000);
             int width2 = (int) ((total - timeAxisOffset) / (float) total * 1000);
             fSashForm.setWeights(new int[] { width1, width2 });
@@ -1193,7 +1193,10 @@ public class TimeGraphCombo extends Composite {
     /**
      * @since 1.0
      */
-    public void realignTimeView() {
-        sendTimeViewAlignmentChanged();
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        int totalWidth = fSashForm.getBounds().width;
+        int leftWidth = (int) ((float) fSashForm.getWeights()[0] / 1000 * totalWidth) + fSashForm.getSashWidth();
+        int timeWidth = totalWidth - leftWidth;
+        return new TmfTimeViewAlignmentInfo(fSashForm.getLocation(), leftWidth, timeWidth, false);
     }
 }

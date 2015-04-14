@@ -89,6 +89,8 @@ import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 import org.eclipse.tracecompass.tmf.ui.editors.ITmfTraceEditor;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
+import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphRangeListener;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphTimeListener;
@@ -113,7 +115,7 @@ import org.eclipse.ui.IEditorPart;
  *
  * @author Patrick Tasse
  */
-public class CallStackView extends TmfView {
+public class CallStackView extends TmfView implements ITmfTimeAligned {
 
     // ------------------------------------------------------------------------
     // Constants
@@ -1514,6 +1516,14 @@ public class CallStackView extends TmfView {
             return address;
         }
         return ret;
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        return fTimeGraphCombo.getTimeViewAlignmentInfo();
     }
 
 }

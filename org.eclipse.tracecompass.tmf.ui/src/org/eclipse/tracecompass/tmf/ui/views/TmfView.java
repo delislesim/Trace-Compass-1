@@ -23,6 +23,7 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalThrottler;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
@@ -144,7 +145,8 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     private void realignViews(TmfView skipView) {
         ITmfTimeAligned referenceView = null;
         int numTimeAlignedView = 0;
-        for (IViewReference ref : TmfView.this.getSite().getPage().getViewReferences()) {
+        IViewReference[] viewReferences = TmfView.this.getSite().getPage().getViewReferences();
+        for (IViewReference ref : viewReferences) {
             IViewPart view = ref.getView(false);
             if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
                 TmfView tmfView = (TmfView) view;
@@ -158,7 +160,7 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
             }
         }
         if (numTimeAlignedView > 1 && referenceView != null) {
-            referenceView.realignTimeView();
+            timeViewAlignmentUpdatedInfo(referenceView.getTimeViewAlignmentInfo());
         }
     }
 
@@ -171,8 +173,14 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
      */
     @TmfSignalHandler
     public void timeViewAlignmentUpdatedInfo(@SuppressWarnings("javadoc") TmfTimeViewAlignmentSignal signal) {
-        if (signal.isApply() == false) {
-            fTimeAlignmentThrottle.queue(new TmfTimeViewAlignmentSignal(this, null, signal.getTimeAxisOffset(), true));
+        TmfTimeViewAlignmentInfo timeViewAlignmentInfo = signal.getTimeViewAlignmentInfo();
+        timeViewAlignmentUpdatedInfo(timeViewAlignmentInfo);
+    }
+
+    private void timeViewAlignmentUpdatedInfo(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
+        if (timeViewAlignmentInfo.isApply() == false) {
+            TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset(), timeViewAlignmentInfo.getWidth(), true);
+            fTimeAlignmentThrottle.queue(new TmfTimeViewAlignmentSignal(this, timeViewAlignment));
         }
     }
 }

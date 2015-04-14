@@ -64,6 +64,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
+import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphColorListener;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider;
@@ -2006,7 +2007,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
         } else if (DRAG_SPLIT_LINE == fDragState) {
             fDragX = e.x;
             fTimeProvider.setNameSpace(e.x);
-            realignTimeView();
+            TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, getTimeViewAlignmentInfo()));
         } else if (DRAG_SELECTION == fDragState) {
             fDragX = Math.min(Math.max(e.x, fTimeProvider.getNameSpace()), size.x - RIGHT_MARGIN);
             redraw();
@@ -2644,15 +2645,15 @@ public class TimeGraphControl extends TimeGraphBaseControl
      */
     public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
         if (signal.getSource() != this) {
-            fTimeProvider.setNameSpace(signal.getTimeAxisOffset());
+            fTimeProvider.setNameSpace(signal.getTimeViewAlignmentInfo().getTimeAxisOffset());
         }
     }
 
     /**
      * @since 1.0
      */
-    public void realignTimeView() {
-        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, this.getLocation(), fTimeProvider.getNameSpace(), false));
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        return new TmfTimeViewAlignmentInfo(this.getLocation(), fTimeProvider.getNameSpace(), fTimeProvider.getTimeSpace(), false);
     }
 }
 
