@@ -16,6 +16,7 @@
  *   Bernd Hufmann - Re-design of trace selection and trace validation
  *   Marc-Andre Laperle - Preserve folder structure on import
  *   Marc-Andre Laperle - Extract archives during import
+ *   Marc-Andre Laperle - Add support for Gzip (non-Tar)
  *******************************************************************************/
 
 package org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace;
@@ -55,6 +56,7 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.URIUtil;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.PixelConverter;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.operation.ModalContext;
@@ -62,6 +64,7 @@ import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.ICheckStateListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.FocusAdapter;
@@ -82,6 +85,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
 import org.eclipse.tracecompass.tmf.core.TmfProjectNature;
@@ -102,6 +106,7 @@ import org.eclipse.ui.ide.dialogs.ResourceTreeAndListGroup;
 import org.eclipse.ui.internal.ide.DialogUtil;
 import org.eclipse.ui.internal.ide.dialogs.IElementFilter;
 import org.eclipse.ui.internal.wizards.datatransfer.ArchiveFileManipulations;
+import org.eclipse.ui.internal.wizards.datatransfer.DataTransferMessages;
 import org.eclipse.ui.internal.wizards.datatransfer.ILeveledImportStructureProvider;
 import org.eclipse.ui.internal.wizards.datatransfer.TarEntry;
 import org.eclipse.ui.internal.wizards.datatransfer.TarException;
@@ -146,7 +151,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
     private static final String IMPORT_WIZARD_IMPORT_FROM_DIRECTORY_ID = ".import_from_directory"; //$NON-NLS-1$
 
     // constant from WizardArchiveFileResourceImportPage1
-    private static final String[] FILE_IMPORT_MASK = { "*.jar;*.zip;*.tar;*.tar.gz;*.tgz", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String[] FILE_IMPORT_MASK = { "*.jar;*.zip;*.tar;*.tar.gz;*.tgz;*.gz", "*.*" }; //$NON-NLS-1$ //$NON-NLS-2$
     private static final String TRACE_IMPORT_TEMP_FOLDER = ".traceImport"; //$NON-NLS-1$
 
     /**
@@ -820,6 +825,11 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 @SuppressWarnings("resource")
                 ZipFile zipFile = getSpecifiedZipSourceFile(archivePath);
                 leveledImportStructureProvider = new FileSystemObjectLeveledImportStructureProvider(new ZipLeveledStructureProvider(zipFile), archivePath);
+            } else if (ensureGzipSourceIsValid(archivePath)) {
+                // We close the file when we dispose the import provider, see
+                // disposeSelectionGroupRoot
+                GzipFile zipFile = getSpecifiedGzipSourceFile(archivePath);
+                leveledImportStructureProvider = new FileSystemObjectLeveledImportStructureProvider(new GzipLeveledStructureProvider(zipFile), archivePath);
             }
             if (leveledImportStructureProvider == null) {
                 return null;
@@ -837,7 +847,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
     /**
      * An import provider that makes use of the IFileSystemObject abstraction
-     * instead of using plain file system objects (File, TarEntry, ZipEntry)
+     * instead of using plain file system objects (File, TarEntry, ZipEntry, etc)
      */
     private static class FileSystemObjectImportStructureProvider implements IImportStructureProvider {
 
@@ -871,6 +881,8 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
                 return new TarFileSystemObject((TarEntry) o, fArchivePath);
             } else if (o instanceof ZipEntry) {
                 return new ZipFileSystemObject((ZipEntry) o, fArchivePath);
+            } else if (o instanceof GzipEntry) {
+                return new GzipFileSystemObject((GzipEntry) o, fArchivePath);
             }
 
             throw new IllegalArgumentException("Object type not handled"); //$NON-NLS-1$
@@ -1006,6 +1018,25 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         }
 
         return null;
+    }
+
+    private boolean ensureGzipSourceIsValid(String archivePath) {
+        GzipFile specifiedFile = getSpecifiedGzipSourceFile(archivePath);
+        if (specifiedFile == null) {
+            return false;
+        }
+        return closeGzipFile(specifiedFile, getShell());
+    }
+
+    private boolean closeGzipFile(GzipFile file, Shell shell) {
+        try {
+            file.close();
+        } catch (IOException e) {
+            MessageDialog.open(MessageDialog.ERROR, shell, getErrorDialogTitle(), NLS.bind(DataTransferMessages.ZipImport_couldNotClose, file.getName()), SWT.SHEET);
+            return false;
+        }
+
+        return true;
     }
 
     private TraceFileSystemElement selectFiles(final IFileSystemObject rootFileSystemObject,
@@ -1146,7 +1177,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
             return false;
         }
 
-        if (!isImportFromDirectory() && !ensureTarSourceIsValid(source.getAbsolutePath()) && !ensureZipSourceIsValid(source.getAbsolutePath())) {
+        if (!isImportFromDirectory() && !ensureTarSourceIsValid(source.getAbsolutePath()) && !ensureZipSourceIsValid(source.getAbsolutePath()) && !ensureGzipSourceIsValid(source.getAbsolutePath())) {
             setMessage(null);
             setErrorMessage(Messages.ImportTraceWizard_BadArchiveFormat);
             return false;
@@ -1186,7 +1217,33 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
     private static boolean isArchiveFile(File sourceFile) {
         String absolutePath = sourceFile.getAbsolutePath();
-        return isTarFile(absolutePath) || ArchiveFileManipulations.isZipFile(absolutePath);
+        return isTarFile(absolutePath) || ArchiveFileManipulations.isZipFile(absolutePath) || isGzipFile(absolutePath);
+    }
+
+    private static boolean isGzipFile(String fileName) {
+        GzipFile specifiedTarSourceFile = getSpecifiedGzipSourceFile(fileName);
+        if (specifiedTarSourceFile != null) {
+            try {
+                specifiedTarSourceFile.close();
+                return true;
+            } catch (IOException e) {
+            }
+        }
+        return false;
+    }
+
+    private static GzipFile getSpecifiedGzipSourceFile(String fileName) {
+        if (fileName.length() == 0) {
+            return null;
+        }
+
+        try {
+            return new GzipFile(fileName);
+        } catch (IOException e) {
+            // ignore
+        }
+
+        return null;
     }
 
     @Override
@@ -2046,7 +2103,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
 
     /**
      * This interface abstracts the differences between different kinds of
-     * FileSystemObjects such as File, TarEntry and ZipEntry. This allows
+     * FileSystemObjects such as File, TarEntry, ZipEntry, etc. This allows
      * clients (TraceFileSystemElement, TraceValidateAndImportOperation) to
      * handle all the types transparently.
      */
@@ -2134,7 +2191,7 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
     }
 
     /**
-     * The "Tar" implementation of an IFileSystemObject
+     * The "Tar" implementation of an IFileSystemObject, entries can also be Gzipped and are uncompressed transparently.
      */
     private static class TarFileSystemObject implements IFileSystemObject {
 
@@ -2142,6 +2199,60 @@ public class ImportTraceWizardPage extends WizardResourceImportPage {
         private String fArchivePath;
 
         private TarFileSystemObject(TarEntry fileSystemObject, String archivePath) {
+            fFileSystemObject = fileSystemObject;
+            fArchivePath = archivePath;
+        }
+
+        @Override
+        public String getLabel() {
+            return new Path(fFileSystemObject.getName()).lastSegment();
+        }
+
+        @Override
+        public String getName() {
+            return fFileSystemObject.getName();
+        }
+
+        @Override
+        public String getAbsolutePath(String parentContainerPath) {
+            return new Path(parentContainerPath).append(fFileSystemObject.getName()).toOSString();
+        }
+
+        @Override
+        public boolean exists() {
+            return true;
+        }
+
+        @Override
+        public String getSourceLocation() {
+            File file = new File(fArchivePath);
+            try {
+                file = file.getCanonicalFile();
+            } catch (IOException e) {
+                // Will still work but might have extra ../ in the path
+            }
+            URI uri = file.toURI();
+            IPath entryPath = new Path(fFileSystemObject.getName());
+
+            URI jarURI = entryPath.isRoot() ? URIUtil.toJarURI(uri, Path.EMPTY) : URIUtil.toJarURI(uri, entryPath);
+            return URIUtil.toUnencodedString(jarURI);
+        }
+
+        @Override
+        public Object getRawFileSystemObject() {
+            return fFileSystemObject;
+        }
+    }
+
+    /**
+     * The "GZIP" implementation of an IFileSystemObject. For a GZIP file that is not in a tar.
+     */
+    private static class GzipFileSystemObject implements IFileSystemObject {
+
+        private GzipEntry fFileSystemObject;
+        private String fArchivePath;
+
+        private GzipFileSystemObject(GzipEntry fileSystemObject, String archivePath) {
             fFileSystemObject = fileSystemObject;
             fArchivePath = archivePath;
         }
