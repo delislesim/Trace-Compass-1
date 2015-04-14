@@ -131,35 +131,38 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
 
                 @Override
                 public void controlResized(ControlEvent e) {
-                    realignViews(null);
+                    realignViews();
                 }
 
                 @Override
                 public void controlMoved(ControlEvent e) {
                 }
             });
-            realignViews(this);
+            realignViews();
         }
     }
 
-    private void realignViews(TmfView skipView) {
+    private void realignViews() {
+        // Look for a visible view that could be used as a reference to trigger the realign
         ITmfTimeAligned referenceView = null;
-        int numTimeAlignedView = 0;
         IViewReference[] viewReferences = TmfView.this.getSite().getPage().getViewReferences();
         for (IViewReference ref : viewReferences) {
             IViewPart view = ref.getView(false);
-            if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
+            // Don't use self as reference view. Otherwise, a view that was just
+            // opened might use itself as a reference but we want to
+            // keep the existing alignment. This also has the nice side
+            // effect of only aligning when there are more than one
+            // ITmfTimeAligned.
+            if (view != this && view instanceof TmfView && view instanceof ITmfTimeAligned) {
                 TmfView tmfView = (TmfView) view;
                 Composite parentComposite = tmfView.getParentComposite();
                 if (parentComposite != null && parentComposite.isVisible()) {
-                    numTimeAlignedView++;
-                    if (view != skipView) {
-                        referenceView = (ITmfTimeAligned) view;
-                    }
+                    referenceView = (ITmfTimeAligned) view;
+                    break;
                 }
             }
         }
-        if (numTimeAlignedView > 1 && referenceView != null) {
+        if (referenceView != null) {
             timeViewAlignmentUpdatedInfo(referenceView.getTimeViewAlignmentInfo());
         }
     }
