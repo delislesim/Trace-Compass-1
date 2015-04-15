@@ -10,14 +10,13 @@
  *   Marc-Andre Laperle - Initial API and implementation
  *******************************************************************************/
 
-package org.eclipse.tracecompass.tmf.ui.views;
-
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
+package org.eclipse.tracecompass.internal.tmf.ui;
 
 /**
- * @since 1.0
+ * Preferences for TMF UI
+ *
+ * @noimplement This interface is not intended to be implemented by clients.
  */
-public interface ITmfTimeAligned {
-
-    TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo();
+public interface ITmfUIPreferences {
+    String PREF_ALIGN_VIEWS = "PREF_ALIGN_VIEWS";
 }

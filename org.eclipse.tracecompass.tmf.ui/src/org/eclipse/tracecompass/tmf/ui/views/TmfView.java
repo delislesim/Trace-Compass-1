@@ -13,11 +13,17 @@
 
 package org.eclipse.tracecompass.tmf.ui.views;
 
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.tracecompass.internal.tmf.ui.Activator;
+import org.eclipse.tracecompass.internal.tmf.ui.ITmfUIPreferences;
+import org.eclipse.tracecompass.internal.tmf.ui.views.AlignViewsAction;
 import org.eclipse.tracecompass.tmf.core.component.ITmfComponent;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
@@ -49,6 +55,8 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
      * Action class for pinning of TmfView.
      */
     protected PinTmfViewAction fPinAction;
+    private static AlignViewsAction fAlignViewsAction;
+    private IPreferenceChangeListener fAlignViewPrefListener;
 
     // ------------------------------------------------------------------------
     // Constructor
@@ -72,6 +80,12 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     @Override
     public void dispose() {
         TmfSignalManager.deregister(this);
+
+        if (fAlignViewPrefListener != null) {
+            InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).removePreferenceChangeListener(fAlignViewPrefListener);
+            fAlignViewPrefListener = null;
+        }
+
         super.dispose();
     }
 
@@ -127,6 +141,30 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     public void createPartControl(Composite parent) {
         fParentComposite = parent;
         if (this instanceof ITmfTimeAligned) {
+            if (fAlignViewsAction == null) {
+                fAlignViewsAction = new AlignViewsAction();
+            }
+
+            fAlignViewPrefListener = new IPreferenceChangeListener() {
+
+                @Override
+                public void preferenceChange(PreferenceChangeEvent event) {
+                    if (event.getKey().equals(ITmfUIPreferences.PREF_ALIGN_VIEWS)) {
+                        Object oldValue = event.getOldValue();
+                        Object newValue = event.getNewValue();
+                        if (Boolean.toString(false).equals(oldValue) && Boolean.toString(true).equals(newValue)) {
+                            realignViews();
+                        }
+                    }
+                }
+            };
+            InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(fAlignViewPrefListener);
+
+            IToolBarManager toolBarManager = getViewSite().getActionBars()
+                    .getToolBarManager();
+            toolBarManager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+            toolBarManager.add(fAlignViewsAction);
+
             parent.addControlListener(new ControlListener() {
 
                 @Override
@@ -181,7 +219,7 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     }
 
     private void timeViewAlignmentUpdatedInfo(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
-        if (timeViewAlignmentInfo.isApply() == false) {
+        if (timeViewAlignmentInfo.isApply() == false && fAlignViewsAction.isChecked()) {
             TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset(), timeViewAlignmentInfo.getWidth(), true);
             fTimeAlignmentThrottle.queue(new TmfTimeViewAlignmentSignal(this, timeViewAlignment));
         }
