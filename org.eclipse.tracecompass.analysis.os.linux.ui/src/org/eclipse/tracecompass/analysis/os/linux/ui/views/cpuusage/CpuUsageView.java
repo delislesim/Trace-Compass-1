@@ -156,7 +156,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                if (signal.getSource() != fSashForm) {
+                if (signal.getSource() != fSashForm && signal.getTimeViewAlignmentInfo().isViewLocationNear(fSashForm.toDisplay(0, 0))) {
                     int sashOffset = signal.getTimeViewAlignmentInfo().getTimeAxisOffset() - fXYViewer.getPlotAreaOffset();
                     int total = fSashForm.getBounds().width;
                     int width1 = (int) (sashOffset / (float) total * 1000);
@@ -174,7 +174,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
     @Override
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
         int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
-        return new TmfTimeViewAlignmentInfo(fSashForm.getLocation(), width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset(), fXYViewer.getPlotAreaWidth(), false);
+        return new TmfTimeViewAlignmentInfo(fSashForm.toDisplay(0, 0), width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset(), fXYViewer.getPlotAreaWidth(), false);
     }
 
 }

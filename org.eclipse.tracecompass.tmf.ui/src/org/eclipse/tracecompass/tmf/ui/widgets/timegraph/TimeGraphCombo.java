@@ -1180,7 +1180,7 @@ public class TimeGraphCombo extends Composite {
      * @since 1.0
      */
     public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-        if (signal.getSource() != fSashForm) {
+        if (signal.getSource() != fSashForm && signal.getTimeViewAlignmentInfo().isViewLocationNear(fSashForm.toDisplay(0, 0))) {
             int total = fSashForm.getBounds().width;
             int timeAxisOffset = Math.min(signal.getTimeViewAlignmentInfo().getTimeAxisOffset(), total);
             int width1 = (int) (timeAxisOffset / (float) total * 1000);
@@ -1197,6 +1197,7 @@ public class TimeGraphCombo extends Composite {
         int totalWidth = fSashForm.getBounds().width;
         int leftWidth = (int) ((float) fSashForm.getWeights()[0] / 1000 * totalWidth) + fSashForm.getSashWidth();
         int timeWidth = totalWidth - leftWidth;
-        return new TmfTimeViewAlignmentInfo(fSashForm.getLocation(), leftWidth, timeWidth, false);
+        Point location = fSashForm.toDisplay(0, 0);
+        return new TmfTimeViewAlignmentInfo(location, leftWidth, timeWidth, false);
     }
 }

@@ -2644,7 +2644,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
      * @since 1.0
      */
     public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-        if (signal.getSource() != this) {
+        if (signal.getSource() != this && signal.getTimeViewAlignmentInfo().isViewLocationNear(toDisplay(0, 0))) {
             fTimeProvider.setNameSpace(signal.getTimeViewAlignmentInfo().getTimeAxisOffset());
         }
     }
@@ -2653,7 +2653,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
-        return new TmfTimeViewAlignmentInfo(this.getLocation(), fTimeProvider.getNameSpace(), fTimeProvider.getTimeSpace(), false);
+        return new TmfTimeViewAlignmentInfo(toDisplay(0, 0), fTimeProvider.getNameSpace(), fTimeProvider.getTimeSpace(), false);
     }
 }
 

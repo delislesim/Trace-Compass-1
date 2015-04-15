@@ -11,6 +11,8 @@ public class TmfTimeViewAlignmentInfo {
     private boolean fApply;
     private int fWidth;
 
+    private static final int NEAR_THRESHOLD = 10;
+
     public TmfTimeViewAlignmentInfo(Point viewLocation, int timeAxisOffset, int width, boolean apply) {
         fViewLocation = viewLocation;
         fTimeAxisOffset = timeAxisOffset;
@@ -32,5 +34,10 @@ public class TmfTimeViewAlignmentInfo {
 
     public boolean isApply() {
         return fApply;
+    }
+
+    public boolean isViewLocationNear(Point location) {
+        int distance = Math.abs(location.x - fViewLocation.x);
+        return distance < NEAR_THRESHOLD;
     }
 }
