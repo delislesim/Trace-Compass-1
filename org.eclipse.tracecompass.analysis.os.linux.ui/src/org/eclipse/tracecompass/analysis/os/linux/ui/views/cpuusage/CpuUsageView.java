@@ -173,6 +173,10 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      */
     @Override
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        if (fSashForm == null) {
+            return null;
+        }
+
         int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
         return new TmfTimeViewAlignmentInfo(fSashForm.toDisplay(0, 0), width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset(), fXYViewer.getPlotAreaWidth(), false);
     }

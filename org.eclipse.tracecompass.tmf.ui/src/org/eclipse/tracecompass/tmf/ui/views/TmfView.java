@@ -24,11 +24,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfUIPreferences;
 import org.eclipse.tracecompass.internal.tmf.ui.views.AlignViewsAction;
+import org.eclipse.tracecompass.internal.tmf.ui.views.TmfAlignThrottler;
 import org.eclipse.tracecompass.tmf.core.component.ITmfComponent;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
-import org.eclipse.tracecompass.tmf.core.signal.TmfSignalThrottler;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.ui.IViewPart;
@@ -49,7 +49,7 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     private final String fName;
     /** This allows us to keep track of the view sizes */
     private Composite fParentComposite;
-    private static final TmfSignalThrottler fTimeAlignmentThrottle = new TmfSignalThrottler(null, 200);
+    private static final TmfAlignThrottler fTimeAlignmentThrottle = new TmfAlignThrottler(null, 500);
 
     /**
      * Action class for pinning of TmfView.
@@ -181,6 +181,11 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     }
 
     private void realignViews() {
+        TmfTimeViewAlignmentInfo curInfo = ((ITmfTimeAligned) this).getTimeViewAlignmentInfo();
+        if (curInfo == null) {
+            return;
+        }
+
         // Look for a visible view that could be used as a reference to trigger the realign
         ITmfTimeAligned referenceView = null;
         IViewReference[] viewReferences = TmfView.this.getSite().getPage().getViewReferences();
@@ -193,8 +198,10 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
             // ITmfTimeAligned.
             if (view != this && view instanceof TmfView && view instanceof ITmfTimeAligned) {
                 TmfView tmfView = (TmfView) view;
+                ITmfTimeAligned alignedView = (ITmfTimeAligned) view;
                 Composite parentComposite = tmfView.getParentComposite();
-                if (parentComposite != null && parentComposite.isVisible()) {
+                TmfTimeViewAlignmentInfo timeViewAlignmentInfo = alignedView.getTimeViewAlignmentInfo();
+                if (parentComposite != null && parentComposite.isVisible() && timeViewAlignmentInfo != null && timeViewAlignmentInfo.isViewLocationNear(curInfo.getViewLocation())) {
                     referenceView = (ITmfTimeAligned) view;
                     break;
                 }
@@ -218,10 +225,10 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
         timeViewAlignmentUpdatedInfo(timeViewAlignmentInfo);
     }
 
-    private void timeViewAlignmentUpdatedInfo(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
+    private static void timeViewAlignmentUpdatedInfo(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
         if (timeViewAlignmentInfo.isApply() == false && fAlignViewsAction.isChecked()) {
             TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset(), timeViewAlignmentInfo.getWidth(), true);
-            fTimeAlignmentThrottle.queue(new TmfTimeViewAlignmentSignal(this, timeViewAlignment));
+            fTimeAlignmentThrottle.queue(timeViewAlignment);
         }
     }
 }

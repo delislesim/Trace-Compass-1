@@ -782,6 +782,9 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
      */
     @Override
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        if (fViewer == null) {
+            return null;
+        }
         return fViewer.getTimeViewAlignmentInfo();
     }
 

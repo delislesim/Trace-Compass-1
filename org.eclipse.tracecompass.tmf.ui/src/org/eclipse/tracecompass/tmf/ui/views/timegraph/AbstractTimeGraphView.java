@@ -1317,6 +1317,9 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
      */
     @Override
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        if (fTimeGraphWrapper == null) {
+            return null;
+        }
         return fTimeGraphWrapper.getTimeViewAlignmentInfo();
     }
 }

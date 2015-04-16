@@ -1523,6 +1523,9 @@ public class CallStackView extends TmfView implements ITmfTimeAligned {
      */
     @Override
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        if (fTimeGraphCombo == null) {
+            return null;
+        }
         return fTimeGraphCombo.getTimeViewAlignmentInfo();
     }
 
