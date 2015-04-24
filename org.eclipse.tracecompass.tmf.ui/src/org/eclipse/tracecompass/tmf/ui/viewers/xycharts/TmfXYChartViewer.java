@@ -16,10 +16,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
-import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSelectionRangeUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimestampFormatUpdateSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.ui.viewers.TmfTimeViewer;
 import org.swtchart.Chart;
@@ -370,17 +370,39 @@ public abstract class TmfXYChartViewer extends TmfTimeViewer implements ITmfChar
     }
 
     /**
+     * Relative to the whole XY chart viewer
+     *
      * @since 1.0
      */
     public int getPlotAreaOffset() {
-        return getSwtChart().toControl(getSwtChart().getPlotArea().toDisplay(0, 0)).x;
+        int pixelCoordinate = 0;
+        IAxis[] xAxes = getSwtChart().getAxisSet().getXAxes();
+        if (xAxes.length > 0) {
+            IAxis iAxis = xAxes[0];
+            long windowStartTime = getWindowStartTime() - getTimeOffset();
+            pixelCoordinate = iAxis.getPixelCoordinate(windowStartTime - 1);
+//            System.out.println("pixelCoordinate: " + pixelCoordinate);
+        }
+        return getSwtChart().toControl(getSwtChart().getPlotArea().toDisplay(pixelCoordinate, 0)).x;
     }
 
     /**
      * @since 1.0
      */
     public int getPlotAreaWidth() {
-        return getSwtChart().getSize().x;
+        IAxis[] xAxes = getSwtChart().getAxisSet().getXAxes();
+        if (xAxes.length > 0) {
+            IAxis iAxis = xAxes[0];
+            int x1 = getPlotAreaOffset();
+            long windowEndTime = getWindowEndTime() - getTimeOffset();
+            int x2 = iAxis.getPixelCoordinate(windowEndTime - 1);
+            x2 = getSwtChart().toControl(getSwtChart().getPlotArea().toDisplay(x2, 0)).x;
+            int width = x2 - x1;
+//            System.out.println("chart width: " + width);
+            return width;
+        }
+
+        return getSwtChart().getPlotArea().getSize().x;
     }
 
 }

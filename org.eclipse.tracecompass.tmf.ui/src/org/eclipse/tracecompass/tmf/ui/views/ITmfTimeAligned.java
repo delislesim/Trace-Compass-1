@@ -20,4 +20,5 @@ import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 public interface ITmfTimeAligned {
 
     TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo();
+    int getAvailableWidth(int requestedOffset);
 }

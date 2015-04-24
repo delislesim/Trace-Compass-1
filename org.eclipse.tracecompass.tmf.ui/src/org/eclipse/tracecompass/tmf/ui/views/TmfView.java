@@ -20,6 +20,7 @@ import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfUIPreferences;
@@ -34,6 +35,7 @@ import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.part.ViewPart;
 
 /**
@@ -154,6 +156,9 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
                         Object newValue = event.getNewValue();
                         if (Boolean.toString(false).equals(oldValue) && Boolean.toString(true).equals(newValue)) {
                             realignViews();
+                        } else if (Boolean.toString(true).equals(oldValue) && Boolean.toString(false).equals(newValue)) {
+                            // Reset views to their respective maximum widths
+                            // TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, timeViewAlignment));
                         }
                     }
                 }
@@ -169,6 +174,9 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
 
                 @Override
                 public void controlResized(ControlEvent e) {
+                    ITmfTimeAligned aligned = (ITmfTimeAligned)TmfView.this;
+                    int availableWidth = aligned.getAvailableWidth(aligned.getTimeViewAlignmentInfo().getTimeAxisOffset());
+                    System.out.println(getTitle() + " resized to " + getParentComposite().getSize().x + " available: " + availableWidth);
                     realignViews();
                 }
 
@@ -186,7 +194,9 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
             return;
         }
 
-        // Look for a visible view that could be used as a reference to trigger the realign
+        // Look for a visible view that could be used as a reference to trigger the realign. Prioritize view with lowest offset because m
+        // most of the interesting data should be in the time widget.
+        int lowestOffset = Integer.MAX_VALUE;
         ITmfTimeAligned referenceView = null;
         IViewReference[] viewReferences = TmfView.this.getSite().getPage().getViewReferences();
         for (IViewReference ref : viewReferences) {
@@ -201,18 +211,57 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
                 ITmfTimeAligned alignedView = (ITmfTimeAligned) view;
                 Composite parentComposite = tmfView.getParentComposite();
                 TmfTimeViewAlignmentInfo timeViewAlignmentInfo = alignedView.getTimeViewAlignmentInfo();
-                if (parentComposite != null && parentComposite.isVisible() && timeViewAlignmentInfo != null && timeViewAlignmentInfo.isViewLocationNear(curInfo.getViewLocation())) {
+                if (parentComposite != null && parentComposite.isVisible() && timeViewAlignmentInfo != null && timeViewAlignmentInfo.isViewLocationNear(curInfo.getViewLocation())
+                        && alignedView.getAvailableWidth(timeViewAlignmentInfo.getTimeAxisOffset()) > 0 && timeViewAlignmentInfo.getTimeAxisOffset() < lowestOffset) {
                     referenceView = (ITmfTimeAligned) view;
+                    lowestOffset = timeViewAlignmentInfo.getTimeAxisOffset();
                     break;
                 }
             }
         }
         if (referenceView != null) {
+            TmfView tmfView = (TmfView) referenceView;
+            Composite parentComposite = tmfView.getParentComposite();
+            System.out.println("TmfView.realignViews() using reference view " + tmfView.getTitle() + " at " + referenceView.getTimeViewAlignmentInfo().getTimeAxisOffset() + " width:" + parentComposite.getSize().x + " available: " + referenceView.getAvailableWidth(referenceView.getTimeViewAlignmentInfo().getTimeAxisOffset()));
             timeViewAlignmentUpdatedInfo(referenceView.getTimeViewAlignmentInfo());
+        } else {
+            System.out.println("realign canceled, not enough visible views");
         }
     }
 
-    private Composite getParentComposite() {
+    /**
+     * @since 1.0
+     */
+    public static TmfView getSmallestView(IWorkbenchPage page, Point viewLocation, int requestedOffset) {
+        int smallestWidth = Integer.MAX_VALUE;
+        TmfView smallest = null;
+        IViewReference[] viewReferences = page.getViewReferences();
+        for (IViewReference ref : viewReferences) {
+            IViewPart view = ref.getView(false);
+            if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
+                TmfView tmfView = (TmfView) view;
+                ITmfTimeAligned alignedView = (ITmfTimeAligned) view;
+                Composite parentComposite = tmfView.getParentComposite();
+                TmfTimeViewAlignmentInfo timeViewAlignmentInfo = alignedView.getTimeViewAlignmentInfo();
+                int availableWidth = alignedView.getAvailableWidth(requestedOffset);
+                if (parentComposite != null && parentComposite.isVisible() && timeViewAlignmentInfo != null && timeViewAlignmentInfo.isViewLocationNear(viewLocation) && availableWidth < smallestWidth && availableWidth > 0) {
+                    smallestWidth = availableWidth;
+                    smallest = tmfView;
+                }
+            }
+
+        }
+        if (smallest != null) {
+            System.out.println("smallest is " + smallest.getTitle() + " (" + smallestWidth + ")");
+        }
+
+        return smallest;
+    }
+
+    /**
+     * @since 1.0
+     */
+    public Composite getParentComposite() {
         return fParentComposite;
     }
 
@@ -225,10 +274,11 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
         timeViewAlignmentUpdatedInfo(timeViewAlignmentInfo);
     }
 
-    private static void timeViewAlignmentUpdatedInfo(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
+    private void timeViewAlignmentUpdatedInfo(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
         if (timeViewAlignmentInfo.isApply() == false && fAlignViewsAction.isChecked()) {
-            TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset(), timeViewAlignmentInfo.getWidth(), true);
-            fTimeAlignmentThrottle.queue(timeViewAlignment);
+            TmfView view = getSmallestView(TmfView.this.getSite().getPage(), timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset());
+            TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset(), ((ITmfTimeAligned)view).getAvailableWidth(timeViewAlignmentInfo.getTimeAxisOffset()));
+            fTimeAlignmentThrottle.queue(new TmfTimeViewAlignmentSignal(view, timeViewAlignment));
         }
     }
 }

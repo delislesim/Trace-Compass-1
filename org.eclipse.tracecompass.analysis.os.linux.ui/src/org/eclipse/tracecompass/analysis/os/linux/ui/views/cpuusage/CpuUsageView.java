@@ -18,6 +18,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.layout.FillLayout;
@@ -105,6 +107,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
 
                                 @Override
                                 public void handleEvent(Event event) {
+                                    System.out.println("CpuUsageView.createPartControl() " + getTimeViewAlignmentInfo().getTimeAxisOffset());
                                     TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, getTimeViewAlignmentInfo()));
                                 }
                             };
@@ -124,6 +127,12 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
             fTreeViewer.traceSelected(signal);
             fXYViewer.traceSelected(signal);
         }
+        fTreeViewer.getControl().addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e) {
+                super.controlResized(e);
+            }
+        });
     }
 
     @Override
@@ -157,7 +166,9 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
             @Override
             public void run() {
                 if (signal.getSource() != fSashForm && signal.getTimeViewAlignmentInfo().isViewLocationNear(fSashForm.toDisplay(0, 0))) {
-                    int sashOffset = signal.getTimeViewAlignmentInfo().getTimeAxisOffset() - fXYViewer.getPlotAreaOffset();
+                    System.out.println("CpuUsageView.timeViewAlignmentUpdated " + signal.getTimeViewAlignmentInfo().getTimeAxisOffset());
+                    int plotAreaOffset = fXYViewer.getPlotAreaOffset();
+                    int sashOffset = Math.max(1, signal.getTimeViewAlignmentInfo().getTimeAxisOffset() - plotAreaOffset);
                     int total = fSashForm.getBounds().width;
                     int width1 = (int) (sashOffset / (float) total * 1000);
                     int width2 = (int) ((total - sashOffset) / (float) total * 1000);
@@ -177,8 +188,26 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
             return null;
         }
 
-        int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
-        return new TmfTimeViewAlignmentInfo(fSashForm.toDisplay(0, 0), width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset(), fXYViewer.getPlotAreaWidth(), false);
+        return new TmfTimeViewAlignmentInfo(fSashForm.toDisplay(0, 0), getTimeAxisOffset());
     }
 
+    private int getTimeAxisOffset() {
+        int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
+        int curTimeAxisOffset = width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset();
+        return curTimeAxisOffset;
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public int getAvailableWidth(int requestedOffset) {
+        int plotAreaWidth = fXYViewer.getPlotAreaWidth();
+//        System.out.println("plotAreaWidth: " + plotAreaWidth);
+        int curTimeAxisOffset = getTimeAxisOffset();
+        int endOffset = curTimeAxisOffset + plotAreaWidth;
+        // TODO this is just an approximation that assumes that the end will be at the same position but that can change for a different data range/scaling
+        int availableWidth = endOffset - requestedOffset;
+        return availableWidth;
+    }
 }

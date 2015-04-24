@@ -2007,6 +2007,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
         } else if (DRAG_SPLIT_LINE == fDragState) {
             fDragX = e.x;
             fTimeProvider.setNameSpace(e.x);
+            System.out.println("TimeGraphControl.mouseMove() " + getTimeViewAlignmentInfo().getTimeAxisOffset());
             TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, getTimeViewAlignmentInfo()));
         } else if (DRAG_SELECTION == fDragState) {
             fDragX = Math.min(Math.max(e.x, fTimeProvider.getNameSpace()), size.x - RIGHT_MARGIN);
@@ -2653,7 +2654,7 @@ public class TimeGraphControl extends TimeGraphBaseControl
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
-        return new TmfTimeViewAlignmentInfo(toDisplay(0, 0), fTimeProvider.getNameSpace(), fTimeProvider.getTimeSpace(), false);
+        return new TmfTimeViewAlignmentInfo(toDisplay(0, 0), fTimeProvider.getNameSpace());
     }
 }
 

@@ -139,6 +139,8 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
     private ListenerNotifier fListenerNotifier;
     private final Object fListenerNotifierLock = new Object();
 
+    private Composite fTimeBasedControls;
+
     private class ListenerNotifier extends Thread {
         private static final long DELAY = 400L;
         private static final long POLLING_INTERVAL = 10L;
@@ -367,7 +369,22 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
         gl.horizontalSpacing = 0;
         fDataViewer.setLayout(gl);
 
-        fTimeScaleCtrl = new TimeGraphScale(fDataViewer, fColorScheme);
+        fTimeBasedControls = new Composite(fDataViewer, style) {
+            @Override
+            public void redraw() {
+                fDataViewer.redraw();
+                super.redraw();
+            }
+        };
+        GridLayout gl2 = new GridLayout(1, false);
+        gl2.marginHeight = fBorderWidth;
+        gl2.marginWidth = 0;
+        gl2.verticalSpacing = 0;
+        gl2.horizontalSpacing = 0;
+        fTimeBasedControls.setLayout(gl2);
+        fTimeBasedControls.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+        fTimeScaleCtrl = new TimeGraphScale(fTimeBasedControls, fColorScheme);
         fTimeScaleCtrl.setTimeProvider(fTimeDataProvider);
         fTimeScaleCtrl.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false));
         fTimeScaleCtrl.setHeight(fTimeScaleHeight);
@@ -378,16 +395,7 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
             }
         });
 
-        fVerticalScrollBar = new Slider(fDataViewer, SWT.VERTICAL | SWT.NO_FOCUS);
-        fVerticalScrollBar.setLayoutData(new GridData(SWT.DEFAULT, SWT.FILL, false, true, 1, 2));
-        fVerticalScrollBar.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                setTopIndex(fVerticalScrollBar.getSelection());
-            }
-        });
-
-        fTimeGraphCtrl = createTimeGraphControl(fDataViewer, fColorScheme);
+        fTimeGraphCtrl = createTimeGraphControl(fTimeBasedControls, fColorScheme);
 
         fTimeGraphCtrl.setTimeProvider(this);
         fTimeGraphCtrl.setTimeGraphScale(fTimeScaleCtrl);
@@ -410,6 +418,18 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
                 adjustVerticalScrollBar();
             }
         });
+
+        fVerticalScrollBar = new Slider(fDataViewer, SWT.VERTICAL | SWT.NO_FOCUS);
+        fVerticalScrollBar.setLayoutData(new GridData(SWT.DEFAULT, SWT.FILL, false, true, 1, 1));
+        fVerticalScrollBar.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                setTopIndex(fVerticalScrollBar.getSelection());
+            }
+        });
+
+        //fRightPadding = new Composite(fDataViewer, style);
+        //fRightPadding.setSize(0, 0);
 
         fHorizontalScrollBar = new Slider(fDataViewer, SWT.HORIZONTAL | SWT.NO_FOCUS);
         fHorizontalScrollBar.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false));
@@ -1809,13 +1829,33 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
      */
     public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
         fTimeGraphCtrl.timeViewAlignmentUpdated(signal);
+        TmfTimeViewAlignmentInfo timeViewAlignmentInfo = signal.getTimeViewAlignmentInfo();
+        int alignmentWidth = timeViewAlignmentInfo.getWidth();
+        int offset = timeViewAlignmentInfo.getTimeAxisOffset();
+        int size = fTimeBasedControls.getSize().x;
+        GridLayout layout = (GridLayout) fTimeBasedControls.getLayout();
+        int marginSize = size - alignmentWidth - offset;
+        layout.marginRight = marginSize;
+        fTimeBasedControls.layout();
+        System.out.println("TimeGraphViewer applied: " + alignmentWidth);
+        //System.out.println("expected: " + alignmentWidth + ", got: " + fTimeGraphCtrl.getTimeViewAlignmentInfo().getWidth());
+    }
+
+    /**
+     * @param requestedOffset
+     * @since 1.0
+     */
+    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
+        return fTimeGraphCtrl.getTimeViewAlignmentInfo();
     }
 
     /**
      * @since 1.0
      */
-    public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
-        return fTimeGraphCtrl.getTimeViewAlignmentInfo();
+    public int getAvailableWidth(int requestedOffset) {
+        int totalWidth = fTimeBasedControls.getSize().x;
+        int availableWidth = totalWidth - requestedOffset;
+        return availableWidth;
     }
 
 }

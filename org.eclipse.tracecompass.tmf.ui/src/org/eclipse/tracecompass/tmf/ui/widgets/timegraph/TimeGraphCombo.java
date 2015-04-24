@@ -53,6 +53,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -1181,12 +1182,22 @@ public class TimeGraphCombo extends Composite {
      */
     public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
         if (signal.getSource() != fSashForm && signal.getTimeViewAlignmentInfo().isViewLocationNear(fSashForm.toDisplay(0, 0))) {
+            int alignmentWidth = signal.getTimeViewAlignmentInfo().getWidth();
             int total = fSashForm.getBounds().width;
             int timeAxisOffset = Math.min(signal.getTimeViewAlignmentInfo().getTimeAxisOffset(), total);
             int width1 = (int) (timeAxisOffset / (float) total * 1000);
             int width2 = (int) ((total - timeAxisOffset) / (float) total * 1000);
             fSashForm.setWeights(new int[] { width1, width2 });
             fSashForm.layout(); // nedded?
+
+            // Get fTimeBasedControls, TODO: add a new getter?
+            Composite composite = fTimeGraphViewer.getTimeGraphControl().getParent();
+            GridLayout layout = (GridLayout) composite.getLayout();
+            int timeBasedControlsWidth = composite.getSize().x;
+            int marginSize = timeBasedControlsWidth - alignmentWidth;
+            layout.marginRight = Math.max(0, marginSize);
+            composite.layout();
+            System.out.println("TimeGraphCombo applied: " + alignmentWidth);
         }
     }
 
@@ -1194,10 +1205,22 @@ public class TimeGraphCombo extends Composite {
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
-        int totalWidth = fSashForm.getBounds().width;
-        int leftWidth = (int) ((float) fSashForm.getWeights()[0] / 1000 * totalWidth) + fSashForm.getSashWidth();
-        int timeWidth = totalWidth - leftWidth;
+        int leftWidth = getSashPos();
         Point location = fSashForm.toDisplay(0, 0);
-        return new TmfTimeViewAlignmentInfo(location, leftWidth, timeWidth, false);
+        return new TmfTimeViewAlignmentInfo(location, leftWidth);
+    }
+
+    private int getSashPos() {
+        int leftWidth = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width) + fSashForm.getSashWidth();
+        return leftWidth;
+    }
+
+    /**
+     * @since 1.0
+     */
+    public int getAvailableWidth(int requestedOffset) {
+        int totalWidth = fSashForm.getBounds().width;
+        int timeWidth = totalWidth - requestedOffset;
+        return timeWidth;
     }
 }

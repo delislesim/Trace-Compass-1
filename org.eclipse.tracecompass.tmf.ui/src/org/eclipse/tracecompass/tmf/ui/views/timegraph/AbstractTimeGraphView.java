@@ -203,6 +203,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal);
 
         TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo();
+
+        int getAvailableWidth(int requestedOffset);
     }
 
     private class TimeGraphViewerWrapper implements ITimeGraphWrapper {
@@ -280,6 +282,11 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         @Override
         public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
             return viewer.getTimeViewAlignmentInfo();
+        }
+
+        @Override
+        public int getAvailableWidth(int requestedOffset) {
+            return viewer.getAvailableWidth(requestedOffset);
         }
     }
 
@@ -372,6 +379,11 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         @Override
         public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
             return combo.getTimeViewAlignmentInfo();
+        }
+
+        @Override
+        public int getAvailableWidth(int requestedOffset) {
+            return combo.getAvailableWidth(requestedOffset);
         }
     }
 
@@ -1321,5 +1333,16 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
             return null;
         }
         return fTimeGraphWrapper.getTimeViewAlignmentInfo();
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public int getAvailableWidth(int requestedOffset) {
+        if (fTimeGraphWrapper == null) {
+            return 0;
+        }
+        return fTimeGraphWrapper.getAvailableWidth(requestedOffset);
     }
 }

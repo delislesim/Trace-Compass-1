@@ -18,24 +18,47 @@ import org.eclipse.swt.graphics.Point;
  * @since 1.0
  */
 public class TmfTimeViewAlignmentInfo {
-    private Point fViewLocation;
-    private int fTimeAxisOffset;
-    private boolean fApply;
-    private int fWidth;
+    final private Point fViewLocation;
+    final private int fTimeAxisOffset;
+    final private boolean fApply;
+    final private int fWidth;
 
     private static final int NEAR_THRESHOLD = 10;
 
-    public TmfTimeViewAlignmentInfo(Point viewLocation, int timeAxisOffset, int width, boolean apply) {
+    /**
+     * @param viewLocation location of the view
+     * @param timeAxisOffset Offset relative to the view
+     * @param width available width at the specified offset
+     */
+    public TmfTimeViewAlignmentInfo(Point viewLocation, int timeAxisOffset, int width) {
         fViewLocation = viewLocation;
         fTimeAxisOffset = timeAxisOffset;
         fWidth = width;
-        fApply = apply;
+        fApply = true;
+    }
+
+    /**
+     * @param viewLocation location of the view
+     * @param timeAxisOffset Offset relative to the view
+     * @param width available width at the specified offset
+     * @param apply
+     */
+    public TmfTimeViewAlignmentInfo(Point viewLocation, int timeAxisOffset) {
+        fViewLocation = viewLocation;
+        fTimeAxisOffset = timeAxisOffset;
+        fWidth = -1;
+        fApply = false;
     }
 
     public Point getViewLocation() {
         return fViewLocation;
     }
 
+    /**
+     * Offset relative to the view
+     *
+     * @return
+     */
     public int getTimeAxisOffset() {
         return fTimeAxisOffset;
     }

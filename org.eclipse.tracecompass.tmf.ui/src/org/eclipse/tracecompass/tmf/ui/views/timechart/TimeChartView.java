@@ -788,4 +788,11 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
         return fViewer.getTimeViewAlignmentInfo();
     }
 
+    /**
+     * @since 1.0
+     */
+    @Override
+    public int getAvailableWidth(int requestedOffset) {
+        return fViewer.getAvailableWidth(requestedOffset);
+    }
 }
