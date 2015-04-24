@@ -376,30 +376,6 @@ public class TimeGraphCombo extends Composite {
         setLayout(new FillLayout());
 
         fSashForm = new SashForm(this, SWT.NONE);
-        fSashForm.addPaintListener(new PaintListener() {
-            @Override
-            public void paintControl(PaintEvent e) {
-                // Sashes in a SashForm are being created on layout so add the
-                // drag listener here
-                if (fSashDragListener == null) {
-                    for (Control control : fSashForm.getChildren()) {
-                        if (control instanceof Sash) {
-                            fSashDragListener = new Listener() {
-
-                                @Override
-                                public void handleEvent(Event event) {
-                                    sendTimeViewAlignmentChanged();
-
-                                }
-                            };
-                            control.addListener(SWT.Selection, fSashDragListener);
-                            // There should be only one sash
-                            break;
-                        }
-                    }
-                }
-            }
-        });
 
         fTreeViewer = new TreeViewer(fSashForm, SWT.FULL_SELECTION | SWT.H_SCROLL);
         fTreeViewer.setAutoExpandLevel(AbstractTreeViewer.ALL_LEVELS);
@@ -655,6 +631,31 @@ public class TimeGraphCombo extends Composite {
         fNumFillerRows = Display.getDefault().getBounds().height / getItemHeight(tree);
 
         fSashForm.setWeights(weights);
+
+        fTimeGraphViewer.getTimeGraphControl().addPaintListener(new PaintListener() {
+            @Override
+            public void paintControl(PaintEvent e) {
+                // Sashes in a SashForm are being created on layout so add the
+                // drag listener here
+                if (fSashDragListener == null) {
+                    for (Control control : fSashForm.getChildren()) {
+                        if (control instanceof Sash) {
+                            fSashDragListener = new Listener() {
+
+                                @Override
+                                public void handleEvent(Event event) {
+                                    sendTimeViewAlignmentChanged();
+
+                                }
+                            };
+                            control.addListener(SWT.Selection, fSashDragListener);
+                            // There should be only one sash
+                            break;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     private void sendTimeViewAlignmentChanged() {

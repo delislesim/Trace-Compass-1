@@ -95,7 +95,22 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
         });
 
         fSashForm.setLayout(new FillLayout());
-        fSashForm.addPaintListener(new PaintListener() {
+
+        /* Initialize the viewers with the currently selected trace */
+        ITmfTrace trace = TmfTraceManager.getInstance().getActiveTrace();
+        if (trace != null) {
+            TmfTraceSelectedSignal signal = new TmfTraceSelectedSignal(this, trace);
+            fTreeViewer.traceSelected(signal);
+            fXYViewer.traceSelected(signal);
+        }
+        fTreeViewer.getControl().addControlListener(new ControlAdapter() {
+            @Override
+            public void controlResized(ControlEvent e) {
+                super.controlResized(e);
+            }
+        });
+
+        fXYViewer.getControl().addPaintListener(new PaintListener() {
             @Override
             public void paintControl(PaintEvent e) {
                 // Sashes in a SashForm are being created on layout so add the
@@ -117,20 +132,6 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
                         }
                     }
                 }
-            }
-        });
-
-        /* Initialize the viewers with the currently selected trace */
-        ITmfTrace trace = TmfTraceManager.getInstance().getActiveTrace();
-        if (trace != null) {
-            TmfTraceSelectedSignal signal = new TmfTraceSelectedSignal(this, trace);
-            fTreeViewer.traceSelected(signal);
-            fXYViewer.traceSelected(signal);
-        }
-        fTreeViewer.getControl().addControlListener(new ControlAdapter() {
-            @Override
-            public void controlResized(ControlEvent e) {
-                super.controlResized(e);
             }
         });
     }
