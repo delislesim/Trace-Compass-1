@@ -2042,6 +2042,8 @@ public class TimeGraphControl extends TimeGraphBaseControl
                     redraw();
                 }
                 fMouseOverSplitLine = mouseOverSplitLine;
+                System.out.println("TimeGraphControl.mouseDoubleClick() " + getTimeViewAlignmentInfo().getTimeAxisOffset());
+                TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, getTimeViewAlignmentInfo()));
                 return;
             }
             int idx = getItemIndexAtY(e.y);
