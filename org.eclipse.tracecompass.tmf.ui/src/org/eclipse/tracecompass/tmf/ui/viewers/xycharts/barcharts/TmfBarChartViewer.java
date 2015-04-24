@@ -172,8 +172,7 @@ public abstract class TmfBarChartViewer extends TmfXYChartViewer {
      *            Number of steps. This will be the size of the returned array.
      * @return The time values (converted to double) that match every step
      */
-    protected final double[] getXAxis(long start, long end, int nb) {
-        setTimeOffset(start - 1);
+    protected final static double[] getXAxis(long start, long end, int nb) {
         double timestamps[] = new double[nb];
         long steps = (end - start);
         double step = steps / (double) nb;

@@ -39,11 +39,6 @@ public abstract class TmfXYChartViewer extends TmfTimeViewer implements ITmfChar
     // ------------------------------------------------------------------------
     // Attributes
     // ------------------------------------------------------------------------
-    /**
-     * The offset to apply to any x position. This offset ensures better
-     * precision when converting long to double and back.
-     */
-    private long fTimeOffset;
     /** The SWT Chart reference */
     private Chart fSwtChart;
     /** The mouse selection provider */
@@ -107,16 +102,6 @@ public abstract class TmfXYChartViewer extends TmfTimeViewer implements ITmfChar
     // ------------------------------------------------------------------------
     // Getter/Setters
     // ------------------------------------------------------------------------
-    /**
-     * Sets the time offset to apply.
-     * @see ITmfChartTimeProvider#getTimeOffset()
-     *
-     * @param timeOffset
-     *            The time offset to apply
-     */
-    protected void setTimeOffset(long timeOffset) {
-        fTimeOffset = timeOffset;
-    }
 
     /**
      * Sets the SWT Chart reference
@@ -214,7 +199,7 @@ public abstract class TmfXYChartViewer extends TmfTimeViewer implements ITmfChar
 
     @Override
     public long getTimeOffset() {
-        return fTimeOffset;
+        return getWindowStartTime() - 1;
     }
 
     // ------------------------------------------------------------------------
