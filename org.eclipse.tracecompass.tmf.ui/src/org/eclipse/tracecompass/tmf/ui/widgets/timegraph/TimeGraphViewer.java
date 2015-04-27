@@ -1835,7 +1835,7 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
         int size = fTimeBasedControls.getSize().x;
         GridLayout layout = (GridLayout) fTimeBasedControls.getLayout();
         int marginSize = size - alignmentWidth - offset;
-        layout.marginRight = marginSize;
+        layout.marginRight = Math.max(0, marginSize);
         fTimeBasedControls.layout();
         System.out.println("TimeGraphViewer applied: " + alignmentWidth);
         //System.out.println("expected: " + alignmentWidth + ", got: " + fTimeGraphCtrl.getTimeViewAlignmentInfo().getWidth());

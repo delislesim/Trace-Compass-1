@@ -157,8 +157,12 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
                         if (Boolean.toString(false).equals(oldValue) && Boolean.toString(true).equals(newValue)) {
                             realignViews();
                         } else if (Boolean.toString(true).equals(oldValue) && Boolean.toString(false).equals(newValue)) {
-                            // Reset views to their respective maximum widths
-                            // TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, timeViewAlignment));
+                            // Reset views to their respective maximum widths.
+                            // We set the width to Integer.MAX_VALUE so that the
+                            // views remove any "filler" space they might have.
+                            TmfTimeViewAlignmentInfo currentAlignmentInfo = ((ITmfTimeAligned) TmfView.this).getTimeViewAlignmentInfo();
+                            TmfTimeViewAlignmentInfo newTimeViewAlignment = new TmfTimeViewAlignmentInfo(currentAlignmentInfo.getViewLocation(), currentAlignmentInfo.getTimeAxisOffset(), Integer.MAX_VALUE);
+                            TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(this, newTimeViewAlignment));
                         }
                     }
                 }
