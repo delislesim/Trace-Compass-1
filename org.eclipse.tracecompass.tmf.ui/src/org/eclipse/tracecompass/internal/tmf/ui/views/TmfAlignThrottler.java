@@ -74,46 +74,31 @@ public class TmfAlignThrottler {
     }
 
     private class AlignRequest extends TimerTask {
-        private static final boolean DO_XY_CHART_HACK = true;
 
         @Override
         public void run() {
-            final List<TmfTimeViewAlignmentSignal> copy;
+            final List<TmfTimeViewAlignmentSignal> fcopy;
             synchronized (TmfAlignThrottler.this) {
-                copy = new ArrayList<>(pendingAlignments);
+                fcopy = new ArrayList<>(pendingAlignments);
                 pendingAlignments.clear();
             }
-            System.out.println("Dispatching " + copy.size());
-            if (DO_XY_CHART_HACK) {
+            System.out.println("Dispatching " + fcopy.size());
                 // FIXME HACK: recomputes the available width because some views
                 // like CPU usage don't have their widgets resized on a
                 // SWT.Resize. I.e. we don't know the new width of the chart
                 // just after a SWT.Resize.
-                Display.getDefault().syncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        Display.getDefault().timerExec(50, new Runnable() {
-
-                            @Override
-                            public void run() {
-                                for (final TmfTimeViewAlignmentSignal info : copy) {
-                                    TmfView view = TmfView.getSmallestView(((TmfView)info.getSource()).getSite().getPage(), info.getTimeViewAlignmentInfo().getViewLocation(), info.getTimeViewAlignmentInfo().getTimeAxisOffset());
-                                    TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(info.getTimeViewAlignmentInfo().getViewLocation(), info.getTimeViewAlignmentInfo().getTimeAxisOffset(), ((ITmfTimeAligned)view).getAvailableWidth(info.getTimeViewAlignmentInfo().getTimeAxisOffset()));
-                                    System.out.println("dispatchSignal offset: " + timeViewAlignment.getTimeAxisOffset()  + " width: " + timeViewAlignment.getWidth());
-                                    TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(view, timeViewAlignment));
-                                }
-
-                            }
-                        });
+            Display.getDefault().syncExec(new Runnable() {
+                @Override
+                public void run() {
+                    for (final TmfTimeViewAlignmentSignal info : fcopy) {
+                        TmfView view = TmfView.getSmallestView(((TmfView) info.getSource()).getSite().getPage(), info.getTimeViewAlignmentInfo().getViewLocation(), info.getTimeViewAlignmentInfo().getTimeAxisOffset());
+                        TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(info.getTimeViewAlignmentInfo().getViewLocation(), info.getTimeViewAlignmentInfo().getTimeAxisOffset(),
+                                ((ITmfTimeAligned) view).getAvailableWidth(info.getTimeViewAlignmentInfo().getTimeAxisOffset()));
+                        System.out.println("dispatchSignal offset: " + timeViewAlignment.getTimeAxisOffset() + " width: " + timeViewAlignment.getWidth());
+                        TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(view, timeViewAlignment));
                     }
-                });
-
-            } else {
-                for (final TmfTimeViewAlignmentSignal info : copy) {
-                    System.out.println("dispatchSignal offset: " + info.getTimeViewAlignmentInfo().getTimeAxisOffset()  + " width: " + info.getTimeViewAlignmentInfo().getWidth());
-                    TmfSignalManager.dispatchSignal(info);
                 }
-            }
+            });
         }
     }
     private static final int NEAR_THRESHOLD = 10;
