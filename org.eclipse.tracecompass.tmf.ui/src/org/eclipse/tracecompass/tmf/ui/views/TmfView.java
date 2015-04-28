@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 Ericsson
+ * Copyright (c) 2009, 2015 Ericsson
  *
  * All rights reserved. This program and the accompanying materials are
  * made available under the terms of the Eclipse Public License v1.0 which
@@ -9,6 +9,7 @@
  * Contributors:
  *   Francois Chouinard - Initial API and implementation
  *   Bernd Hufmann - Added possibility to pin view
+ *   Marc-Andre Laperle - Support for view alignment
  *******************************************************************************/
 
 package org.eclipse.tracecompass.tmf.ui.views;
@@ -125,14 +126,7 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     public void createPartControl(Composite parent) {
         fParentComposite = parent;
         if (this instanceof ITmfTimeAligned) {
-            if (fAlignViewsAction == null) {
-                fAlignViewsAction = new AlignViewsAction();
-            }
-
-            IToolBarManager toolBarManager = getViewSite().getActionBars()
-                    .getToolBarManager();
-            toolBarManager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-            toolBarManager.add(fAlignViewsAction);
+            contributeAlignViewsActionToToolbar();
 
             parent.addControlListener(new ControlListener() {
                 @Override
@@ -144,12 +138,27 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
                 public void controlMoved(ControlEvent e) {
                 }
             });
+
             fTimeAlignmentSynchronizer.realignViews(TmfView.this);
         }
     }
 
+    private void contributeAlignViewsActionToToolbar() {
+        if (fAlignViewsAction == null) {
+            fAlignViewsAction = new AlignViewsAction();
+        }
+
+        IToolBarManager toolBarManager = getViewSite().getActionBars()
+                .getToolBarManager();
+        toolBarManager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+        toolBarManager.add(fAlignViewsAction);
+    }
 
     /**
+     * Returns the parent control of the view
+     *
+     * @return the parent control
+     *
      * @since 1.0
      */
     public Composite getParentComposite() {

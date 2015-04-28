@@ -16,6 +16,9 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 
 /**
+ * Information necessary to perform proper alignment of view.
+ * @see TmfTimeViewAlignmentSignal
+ *
  * @since 1.0
  */
 public class TmfTimeViewAlignmentInfo {
@@ -24,9 +27,11 @@ public class TmfTimeViewAlignmentInfo {
     private final Shell fShell;
 
     /**
-     * @param shell the shell
-     * @param viewLocation location of the view
-     * @param timeAxisOffset Offset relative to the view
+     * Constructs a new TmfTimeViewAlignmentInfo
+     *
+     * @param shell used to determine whether or not views should be aligned together
+     * @param viewLocation location of the view, used to determine whether or not views should be aligned together
+     * @param timeAxisOffset offset relative to the view. This offset will be communicated to the other views
      */
     public TmfTimeViewAlignmentInfo(Shell shell, Point viewLocation, int timeAxisOffset) {
         fViewLocation = viewLocation;
@@ -34,6 +39,10 @@ public class TmfTimeViewAlignmentInfo {
         fShell = shell;
     }
 
+    /**
+     *
+     * @return
+     */
     public Point getViewLocation() {
         return fViewLocation;
     }
