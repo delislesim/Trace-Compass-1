@@ -13,41 +13,25 @@
 package org.eclipse.tracecompass.tmf.ui.signal;
 
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * @since 1.0
  */
 public class TmfTimeViewAlignmentInfo {
-    final private Point fViewLocation;
-    final private int fTimeAxisOffset;
-    final private boolean fApply;
-    final private int fWidth;
-
-    private static final int NEAR_THRESHOLD = 10;
+    private final Point fViewLocation;
+    private final int fTimeAxisOffset;
+    private final Shell fShell;
 
     /**
+     * @param shell the shell
      * @param viewLocation location of the view
      * @param timeAxisOffset Offset relative to the view
-     * @param width available width at the specified offset
      */
-    public TmfTimeViewAlignmentInfo(Point viewLocation, int timeAxisOffset, int width) {
+    public TmfTimeViewAlignmentInfo(Shell shell, Point viewLocation, int timeAxisOffset) {
         fViewLocation = viewLocation;
         fTimeAxisOffset = timeAxisOffset;
-        fWidth = width;
-        fApply = true;
-    }
-
-    /**
-     * @param viewLocation location of the view
-     * @param timeAxisOffset Offset relative to the view
-     * @param width available width at the specified offset
-     * @param apply
-     */
-    public TmfTimeViewAlignmentInfo(Point viewLocation, int timeAxisOffset) {
-        fViewLocation = viewLocation;
-        fTimeAxisOffset = timeAxisOffset;
-        fWidth = -1;
-        fApply = false;
+        fShell = shell;
     }
 
     public Point getViewLocation() {
@@ -63,16 +47,7 @@ public class TmfTimeViewAlignmentInfo {
         return fTimeAxisOffset;
     }
 
-    public int getWidth() {
-        return fWidth;
-    }
-
-    public boolean isApply() {
-        return fApply;
-    }
-
-    public boolean isViewLocationNear(Point location) {
-        int distance = Math.abs(location.x - fViewLocation.x);
-        return distance < NEAR_THRESHOLD;
+    public Shell getShell() {
+        return fShell;
     }
 }

@@ -46,7 +46,6 @@ import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSetting;
@@ -755,29 +754,6 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
     }
 
     /**
-     * Handler for the window range signal.
-     *
-     * @param signal
-     *            The signal that's received
-     * @since 1.0
-     */
-    @TmfSignalHandler
-    public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
-        if (!signal.getTimeViewAlignmentInfo().isApply()) {
-            return;
-        }
-
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (!fViewer.getControl().isDisposed()) {
-                    fViewer.timeViewAlignmentUpdated(signal);
-                }
-            }
-        });
-    }
-
-    /**
      * @since 1.0
      */
     @Override
@@ -794,5 +770,13 @@ public class TimeChartView extends TmfView implements ITimeGraphRangeListener, I
     @Override
     public int getAvailableWidth(int requestedOffset) {
         return fViewer.getAvailableWidth(requestedOffset);
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public void performAlign(int offset, int width) {
+        fViewer.performAlign(offset, width);
     }
 }

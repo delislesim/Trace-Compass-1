@@ -1175,40 +1175,12 @@ public class TimeGraphCombo extends Composite {
     }
 
     /**
-     * Update the widget based on the alignment signal
-     *
-     * @param signal
-     *            the alignment signal
-     * @since 1.0
-     */
-    public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-        if (signal.getSource() != fSashForm && signal.getTimeViewAlignmentInfo().isViewLocationNear(fSashForm.toDisplay(0, 0))) {
-            int alignmentWidth = signal.getTimeViewAlignmentInfo().getWidth();
-            int total = fSashForm.getBounds().width;
-            int timeAxisOffset = Math.min(signal.getTimeViewAlignmentInfo().getTimeAxisOffset(), total);
-            int width1 = (int) (timeAxisOffset / (float) total * 1000);
-            int width2 = (int) ((total - timeAxisOffset) / (float) total * 1000);
-            fSashForm.setWeights(new int[] { width1, width2 });
-            fSashForm.layout(); // nedded?
-
-            // Get fTimeBasedControls, TODO: add a new getter?
-            Composite composite = fTimeGraphViewer.getTimeGraphControl().getParent();
-            GridLayout layout = (GridLayout) composite.getLayout();
-            int timeBasedControlsWidth = composite.getSize().x;
-            int marginSize = timeBasedControlsWidth - alignmentWidth;
-            layout.marginRight = Math.max(0, marginSize);
-            composite.layout();
-            System.out.println("TimeGraphCombo applied: " + alignmentWidth);
-        }
-    }
-
-    /**
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
         int leftWidth = getSashPos();
         Point location = fSashForm.toDisplay(0, 0);
-        return new TmfTimeViewAlignmentInfo(location, leftWidth);
+        return new TmfTimeViewAlignmentInfo(fSashForm.getShell(), location, leftWidth);
     }
 
     private int getSashPos() {
@@ -1223,5 +1195,27 @@ public class TimeGraphCombo extends Composite {
         int totalWidth = fSashForm.getBounds().width;
         int timeWidth = totalWidth - requestedOffset;
         return timeWidth;
+    }
+
+    /**
+     * @since 1.0
+     */
+    public void performAlign(int offset, int width) {
+        int alignmentWidth = width;
+        int total = fSashForm.getBounds().width;
+        int timeAxisOffset = Math.min(offset, total);
+        int width1 = (int) (timeAxisOffset / (float) total * 1000);
+        int width2 = (int) ((total - timeAxisOffset) / (float) total * 1000);
+        fSashForm.setWeights(new int[] { width1, width2 });
+        fSashForm.layout(); // nedded?
+
+        // Get fTimeBasedControls, TODO: add a new getter?
+        Composite composite = fTimeGraphViewer.getTimeGraphControl().getParent();
+        GridLayout layout = (GridLayout) composite.getLayout();
+        int timeBasedControlsWidth = composite.getSize().x;
+        int marginSize = timeBasedControlsWidth - alignmentWidth;
+        layout.marginRight = Math.max(0, marginSize);
+        composite.layout();
+        System.out.println("TimeGraphCombo applied: " + alignmentWidth);
     }
 }

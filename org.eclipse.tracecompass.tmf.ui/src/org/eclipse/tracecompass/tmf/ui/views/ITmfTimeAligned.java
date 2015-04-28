@@ -21,4 +21,5 @@ public interface ITmfTimeAligned {
 
     TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo();
     int getAvailableWidth(int requestedOffset);
+    void performAlign(int offset, int width);
 }

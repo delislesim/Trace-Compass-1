@@ -25,11 +25,9 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Sash;
-import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
@@ -152,35 +150,6 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
     }
 
     /**
-     * Handler for the window range signal.
-     *
-     * @param signal
-     *            The signal that's received
-     * @since 1.0
-     */
-    @TmfSignalHandler
-    public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
-        if (!signal.getTimeViewAlignmentInfo().isApply()) {
-            return;
-        }
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (signal.getSource() != fSashForm && signal.getTimeViewAlignmentInfo().isViewLocationNear(fSashForm.toDisplay(0, 0))) {
-                    System.out.println("CpuUsageView.timeViewAlignmentUpdated " + signal.getTimeViewAlignmentInfo().getTimeAxisOffset());
-                    int plotAreaOffset = fXYViewer.getPlotAreaOffset();
-                    int sashOffset = Math.max(1, signal.getTimeViewAlignmentInfo().getTimeAxisOffset() - plotAreaOffset);
-                    int total = fSashForm.getBounds().width;
-                    int width1 = (int) (sashOffset / (float) total * 1000);
-                    int width2 = (int) ((total - sashOffset) / (float) total * 1000);
-                    fSashForm.setWeights(new int[] { width1, width2 });
-                    fSashForm.layout(); // nedded?
-                }
-            }
-        });
-    }
-
-    /**
      * @since 1.0
      */
     @Override
@@ -189,7 +158,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
             return null;
         }
 
-        return new TmfTimeViewAlignmentInfo(fSashForm.toDisplay(0, 0), getTimeAxisOffset());
+        return new TmfTimeViewAlignmentInfo(fSashForm.getShell(), fSashForm.toDisplay(0, 0), getTimeAxisOffset());
     }
 
     private int getTimeAxisOffset() {
@@ -210,5 +179,20 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
         // TODO this is just an approximation that assumes that the end will be at the same position but that can change for a different data range/scaling
         int availableWidth = endOffset - requestedOffset;
         return availableWidth;
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public void performAlign(int offset, int width) {
+        System.out.println("CpuUsageView.performAlign " + offset);
+        int plotAreaOffset = fXYViewer.getPlotAreaOffset();
+        int sashOffset = Math.max(1, offset - plotAreaOffset);
+        int total = fSashForm.getBounds().width;
+        int width1 = (int) (sashOffset / (float) total * 1000);
+        int width2 = (int) ((total - sashOffset) / (float) total * 1000);
+        fSashForm.setWeights(new int[] { width1, width2 });
+        fSashForm.layout(); // nedded?
     }
 }

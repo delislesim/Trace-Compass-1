@@ -44,13 +44,13 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
-import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSelectionRangeUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimestampFormatUpdateSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfNanoTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
@@ -59,7 +59,6 @@ import org.eclipse.tracecompass.tmf.core.trace.TmfTraceContext;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.ui.TmfUiRefreshHandler;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
-import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
 import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphContentProvider;
@@ -200,7 +199,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
 
         void setAutoExpandLevel(int level);
 
-        void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal);
+        void performAlign(int offset, int width);
 
         TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo();
 
@@ -275,8 +274,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         }
 
         @Override
-        public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-            viewer.timeViewAlignmentUpdated(signal);
+        public void performAlign(int offset, int width) {
+            viewer.performAlign(offset, width);
         }
 
         @Override
@@ -372,8 +371,8 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         }
 
         @Override
-        public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-            combo.timeViewAlignmentUpdated(signal);
+        public void performAlign(int offset, int width) {
+            combo.performAlign(offset, width);
         }
 
         @Override
@@ -1046,29 +1045,6 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         fTimeGraphWrapper.refresh();
     }
 
-    /**
-     * Handler for the window range signal.
-     *
-     * @param signal
-     *            The signal that's received
-     * @since 1.0
-     */
-    @TmfSignalHandler
-    public void timeViewAlignmentUpdated(final TmfTimeViewAlignmentSignal signal) {
-        if (!signal.getTimeViewAlignmentInfo().isApply()) {
-            return;
-        }
-
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (!fTimeGraphWrapper.isDisposed()) {
-                    fTimeGraphWrapper.timeViewAlignmentUpdated(signal);
-                }
-            }
-        });
-    }
-
     // ------------------------------------------------------------------------
     // Internal
     // ------------------------------------------------------------------------
@@ -1344,5 +1320,15 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
             return 0;
         }
         return fTimeGraphWrapper.getAvailableWidth(requestedOffset);
+    }
+
+    /**
+     * @since 1.0
+     */
+    @Override
+    public void performAlign(int offset, int width) {
+        if (fTimeGraphWrapper != null) {
+            fTimeGraphWrapper.performAlign(offset, width);
+        }
     }
 }

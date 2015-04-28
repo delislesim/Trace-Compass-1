@@ -2646,17 +2646,15 @@ public class TimeGraphControl extends TimeGraphBaseControl
      *            the alignment signal
      * @since 1.0
      */
-    public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-        if (signal.getSource() != this && signal.getTimeViewAlignmentInfo().isViewLocationNear(toDisplay(0, 0))) {
-            fTimeProvider.setNameSpace(signal.getTimeViewAlignmentInfo().getTimeAxisOffset());
-        }
+    public void performAlign(int offset) {
+        fTimeProvider.setNameSpace(offset);
     }
 
     /**
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
-        return new TmfTimeViewAlignmentInfo(toDisplay(0, 0), fTimeProvider.getNameSpace());
+        return new TmfTimeViewAlignmentInfo(getShell(), toDisplay(0, 0), fTimeProvider.getNameSpace());
     }
 }
 

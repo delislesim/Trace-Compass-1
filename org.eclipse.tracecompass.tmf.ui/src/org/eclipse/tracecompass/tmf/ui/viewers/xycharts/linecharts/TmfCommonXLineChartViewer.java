@@ -359,7 +359,7 @@ public abstract class TmfCommonXLineChartViewer extends TmfXYChartViewer {
                     Point viewPos = TmfCommonXLineChartViewer.this.getParent().toDisplay(0, 0);
                     int axisPos = getSwtChart().toDisplay(0, 0).x + getPlotAreaOffset();
                     int timeAxisOffset = axisPos - viewPos.x;
-                    TmfTimeViewAlignmentInfo timeAlignmentInfo = new TmfTimeViewAlignmentInfo(viewPos, timeAxisOffset);
+                    TmfTimeViewAlignmentInfo timeAlignmentInfo = new TmfTimeViewAlignmentInfo(getControl().getShell(), viewPos, timeAxisOffset);
                     System.out.println("Chart content changed, sending align signal, timeAxisOffset: " + timeAxisOffset);
                     TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(TmfCommonXLineChartViewer.this, timeAlignmentInfo));
                 }
