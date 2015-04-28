@@ -19,6 +19,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
+import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -46,6 +48,7 @@ public class TmfAlignmentSynchronizer {
     private final Timer fTimer;
     private TimerTask fCurrentTask;
     private List<TmfTimeViewAlignmentSignal> pendingAlignments = Collections.synchronizedList(new ArrayList<TmfTimeViewAlignmentSignal>());
+    private IPreferenceChangeListener fAlignViewPrefListener;
 
     /**
      * Constructor
@@ -54,6 +57,33 @@ public class TmfAlignmentSynchronizer {
     public TmfAlignmentSynchronizer() {
         TmfSignalManager.register(this);
         fTimer = new Timer();
+        fAlignViewPrefListener = new IPreferenceChangeListener() {
+
+            @Override
+            public void preferenceChange(PreferenceChangeEvent event) {
+                if (event.getKey().equals(ITmfUIPreferences.PREF_ALIGN_VIEWS)) {
+                    Object oldValue = event.getOldValue();
+                    Object newValue = event.getNewValue();
+                    if (Boolean.toString(false).equals(oldValue) && Boolean.toString(true).equals(newValue)) {
+                        for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+                            for (IWorkbenchPage page : window.getPages()) {
+                                IViewReference[] viewReferences = page.getViewReferences();
+                                for (IViewReference ref : viewReferences) {
+                                    IViewPart view = ref.getView(false);
+                                    if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
+                                        realignViews((TmfView) view);
+                                    }
+                                }
+                            }
+                        }
+                    } else if (Boolean.toString(true).equals(oldValue) && Boolean.toString(false).equals(newValue)) {
+                        restoreViews();
+                    }
+                }
+            }
+        };
+        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(fAlignViewPrefListener);
+
         fCurrentTask = new TimerTask() { @Override public void run() {} };
     }
 

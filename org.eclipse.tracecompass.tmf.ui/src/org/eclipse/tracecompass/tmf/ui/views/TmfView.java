@@ -13,16 +13,11 @@
 
 package org.eclipse.tracecompass.tmf.ui.views;
 
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.IPreferenceChangeListener;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences.PreferenceChangeEvent;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.tracecompass.internal.tmf.ui.Activator;
-import org.eclipse.tracecompass.internal.tmf.ui.ITmfUIPreferences;
 import org.eclipse.tracecompass.internal.tmf.ui.views.AlignViewsAction;
 import org.eclipse.tracecompass.internal.tmf.ui.views.TmfAlignmentSynchronizer;
 import org.eclipse.tracecompass.tmf.core.component.ITmfComponent;
@@ -51,7 +46,6 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
      */
     protected PinTmfViewAction fPinAction;
     private static AlignViewsAction fAlignViewsAction;
-    private IPreferenceChangeListener fAlignViewPrefListener;
 
     // ------------------------------------------------------------------------
     // Constructor
@@ -75,11 +69,6 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
     @Override
     public void dispose() {
         TmfSignalManager.deregister(this);
-
-        if (fAlignViewPrefListener != null) {
-            InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).removePreferenceChangeListener(fAlignViewPrefListener);
-            fAlignViewPrefListener = null;
-        }
 
         super.dispose();
     }
@@ -139,23 +128,6 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
             if (fAlignViewsAction == null) {
                 fAlignViewsAction = new AlignViewsAction();
             }
-
-            fAlignViewPrefListener = new IPreferenceChangeListener() {
-
-                @Override
-                public void preferenceChange(PreferenceChangeEvent event) {
-                    if (event.getKey().equals(ITmfUIPreferences.PREF_ALIGN_VIEWS)) {
-                        Object oldValue = event.getOldValue();
-                        Object newValue = event.getNewValue();
-                        if (Boolean.toString(false).equals(oldValue) && Boolean.toString(true).equals(newValue)) {
-                            fTimeAlignmentSynchronizer.realignViews(TmfView.this);
-                        } else if (Boolean.toString(true).equals(oldValue) && Boolean.toString(false).equals(newValue)) {
-                            fTimeAlignmentSynchronizer.restoreViews();
-                        }
-                    }
-                }
-            };
-            InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(fAlignViewPrefListener);
 
             IToolBarManager toolBarManager = getViewSite().getActionBars()
                     .getToolBarManager();
