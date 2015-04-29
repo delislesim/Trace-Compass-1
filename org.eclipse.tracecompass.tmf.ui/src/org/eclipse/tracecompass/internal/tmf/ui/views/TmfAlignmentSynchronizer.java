@@ -94,55 +94,6 @@ public class TmfAlignmentSynchronizer {
         }
     }
 
-    /**
-     * Queue the operation for processing. If an operation is considered the
-     * same alignment (shell, location) as a previously queued one, it will
-     * replace the old one. This way, only one up-to-date alignment operation is
-     * kept per set of time-axis aligned views. The processing of the operation
-     * is also throttled (TimerTask).
-     *
-     * @param operation
-     *            the operation to queue
-     */
-    private void queue(AlignmentOperation operation) {
-        synchronized(fPendingOperations) {
-            fCurrentTask.cancel();
-            for (AlignmentOperation pendingOperation : fPendingOperations) {
-                if (isSameAlignment(operation, pendingOperation)) {
-                    fPendingOperations.remove(pendingOperation);
-                    break;
-                }
-            }
-            fPendingOperations.add(operation);
-            fCurrentTask = new AlignTask();
-            fTimer.schedule(fCurrentTask, THROTTLE_DELAY);
-        }
-    }
-
-    /**
-     * Two operations are considered to be for the same set of time-axis aligned
-     * views if they are on the same Shell and near the same location.
-     */
-    private static boolean isSameAlignment(AlignmentOperation operation1, AlignmentOperation operation2) {
-        if (operation1.fView == operation2.fView) {
-            return true;
-        }
-
-        if (operation1.fAlignmentInfo.getShell() != operation2.fAlignmentInfo.getShell()) {
-            return false;
-        }
-
-        if (isViewLocationNear(getViewLocation(operation1.fView), getViewLocation(operation2.fView))) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private static Point getViewLocation(TmfView view) {
-        return view.getParentComposite().toDisplay(0, 0);
-    }
-
     private class AlignTask extends TimerTask {
 
         @Override
@@ -159,6 +110,48 @@ public class TmfAlignmentSynchronizer {
                 }
             });
         }
+    }
+
+    /**
+     * Handle a view that was just created.
+     *
+     * @param view
+     *            the view that was created
+     */
+    public void handleViewCreated(TmfView view) {
+        TmfTimeViewAlignmentInfo alignmentInfo = ((ITmfTimeAligned) view).getTimeViewAlignmentInfo();
+        if (alignmentInfo == null) {
+            return;
+        }
+
+        // Don't use a view that was just created as a reference view.
+        // Otherwise, a view that was just
+        // created might use itself as a reference but we want to
+        // keep the existing alignment from the other views.
+        ITmfTimeAligned referenceView = getReferenceView(alignmentInfo, view);
+        if (referenceView != null) {
+            queueAlignment(referenceView.getTimeViewAlignmentInfo());
+        }
+    }
+
+    /**
+     * Handle a view that was just resized.
+     *
+     * @param view
+     *            the view that was resized
+     */
+    public void handleViewResized(TmfView view) {
+        realignViews(view.getSite().getPage());
+    }
+
+    /**
+     * Process signal for alignment.
+     *
+     * @param signal the alignment signal
+     */
+    @TmfSignalHandler
+    public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
+        queueAlignment(signal.getTimeViewAlignmentInfo());
     }
 
     /**
@@ -201,42 +194,6 @@ public class TmfAlignmentSynchronizer {
         }
     }
 
-    private static boolean isViewLocationNear(Point location1, Point location2) {
-        return Math.abs(location1.x - location2.x) < NEAR_THRESHOLD;
-    }
-
-    /**
-     * Handle a view that was just created.
-     *
-     * @param view
-     *            the view that was created
-     */
-    public void handleViewCreated(TmfView view) {
-        TmfTimeViewAlignmentInfo alignmentInfo = ((ITmfTimeAligned) view).getTimeViewAlignmentInfo();
-        if (alignmentInfo == null) {
-            return;
-        }
-
-        // Don't use a view that was just created as a reference view.
-        // Otherwise, a view that was just
-        // created might use itself as a reference but we want to
-        // keep the existing alignment from the other views.
-        ITmfTimeAligned referenceView = getReferenceView(alignmentInfo, view);
-        if (referenceView != null) {
-            queueAlignment(referenceView.getTimeViewAlignmentInfo());
-        }
-    }
-
-    /**
-     * Handle a view that was just resized.
-     *
-     * @param view
-     *            the view that was resized
-     */
-    public void handleViewResized(TmfView view) {
-        realignViews(view.getSite().getPage());
-    }
-
     /**
      * Realign all views
      */
@@ -262,6 +219,103 @@ public class TmfAlignmentSynchronizer {
                 queueAlignment(((ITmfTimeAligned) view).getTimeViewAlignmentInfo());
             }
         }
+    }
+
+    /**
+     * Restore the views to their respective maximum widths
+     */
+    private static void restoreViews() {
+        // We set the width to Integer.MAX_VALUE so that the
+        // views remove any "filler" space they might have.
+        for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+            for (IWorkbenchPage page : window.getPages()) {
+                for (IViewReference ref : page.getViewReferences()) {
+                    IViewPart view = ref.getView(false);
+                    if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
+                        ITmfTimeAligned alignedView = (ITmfTimeAligned) view;
+                        alignedView.performAlign(alignedView.getTimeViewAlignmentInfo().getTimeAxisOffset(), Integer.MAX_VALUE);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Queue the operation for processing. If an operation is considered the
+     * same alignment (shell, location) as a previously queued one, it will
+     * replace the old one. This way, only one up-to-date alignment operation is
+     * kept per set of time-axis aligned views. The processing of the operation
+     * is also throttled (TimerTask).
+     *
+     * @param operation
+     *            the operation to queue
+     */
+    private void queue(AlignmentOperation operation) {
+        synchronized(fPendingOperations) {
+            fCurrentTask.cancel();
+            for (AlignmentOperation pendingOperation : fPendingOperations) {
+                if (isSameAlignment(operation, pendingOperation)) {
+                    fPendingOperations.remove(pendingOperation);
+                    break;
+                }
+            }
+            fPendingOperations.add(operation);
+            fCurrentTask = new AlignTask();
+            fTimer.schedule(fCurrentTask, THROTTLE_DELAY);
+        }
+    }
+
+    /**
+     * Two operations are considered to be for the same set of time-axis aligned
+     * views if they are on the same Shell and near the same location.
+     */
+    private static boolean isSameAlignment(AlignmentOperation operation1, AlignmentOperation operation2) {
+        if (operation1.fView == operation2.fView) {
+            return true;
+        }
+    
+        if (operation1.fAlignmentInfo.getShell() != operation2.fAlignmentInfo.getShell()) {
+            return false;
+        }
+    
+        if (isViewLocationNear(getViewLocation(operation1.fView), getViewLocation(operation2.fView))) {
+            return true;
+        }
+    
+        return false;
+    }
+
+    private static boolean isViewLocationNear(Point location1, Point location2) {
+        return Math.abs(location1.x - location2.x) < NEAR_THRESHOLD;
+    }
+
+    private static Point getViewLocation(TmfView view) {
+        return view.getParentComposite().toDisplay(0, 0);
+    }
+
+    private void queueAlignment(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
+        if (isAlignViewsPreferenceEnabled()) {
+            IWorkbenchWindow workbenchWindow = getWorkbenchWindow(timeViewAlignmentInfo.getShell());
+            if (workbenchWindow == null || workbenchWindow.getActivePage() == null) {
+                // Only time aligned views that are part of a workbench window are supported
+                return;
+            }
+    
+            // We need a view so that we can compute position right as we are
+            // about to realign the views. The view could have been resized,
+            // moved, etc.
+            TmfView view = (TmfView) getReferenceView(timeViewAlignmentInfo, null);
+            if (view == null) {
+                // No valid view found for this alignment
+                return;
+            }
+    
+            queue(new AlignmentOperation(view, timeViewAlignmentInfo));
+        }
+    }
+
+    private static boolean isAlignViewsPreferenceEnabled() {
+        return InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).getBoolean(ITmfUIPreferences.PREF_ALIGN_VIEWS, true);
     }
 
     /**
@@ -327,16 +381,6 @@ public class TmfAlignmentSynchronizer {
         return smallest;
     }
 
-    /**
-     * Process signal for alignment
-     *
-     * @param signal the alignment signal
-     */
-    @TmfSignalHandler
-    public void timeViewAlignmentUpdated(TmfTimeViewAlignmentSignal signal) {
-        queueAlignment(signal.getTimeViewAlignmentInfo());
-    }
-
     private static IWorkbenchWindow getWorkbenchWindow(Shell shell) {
         for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
             if (window.getShell().equals(shell)) {
@@ -345,49 +389,5 @@ public class TmfAlignmentSynchronizer {
         }
 
         return null;
-    }
-
-    private static boolean isAlignViewsPreferenceEnabled() {
-        return InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).getBoolean(ITmfUIPreferences.PREF_ALIGN_VIEWS, true);
-    }
-
-    private void queueAlignment(TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
-        if (isAlignViewsPreferenceEnabled()) {
-            IWorkbenchWindow workbenchWindow = getWorkbenchWindow(timeViewAlignmentInfo.getShell());
-            if (workbenchWindow == null || workbenchWindow.getActivePage() == null) {
-                // Only time aligned views that are part of a workbench window are supported
-                return;
-            }
-
-            // We need a view so that we can compute position right as we are
-            // about to realign the views. The view could have been resized,
-            // moved, etc.
-            TmfView view = (TmfView) getReferenceView(timeViewAlignmentInfo, null);
-            if (view == null) {
-                // No valid view found for this alignment
-                return;
-            }
-
-            queue(new AlignmentOperation(view, timeViewAlignmentInfo));
-        }
-    }
-
-    /**
-     * Restore the views to their respective maximum widths
-     */
-    private static void restoreViews() {
-        // We set the width to Integer.MAX_VALUE so that the
-        // views remove any "filler" space they might have.
-        for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
-            for (IWorkbenchPage page : window.getPages()) {
-                for (IViewReference ref : page.getViewReferences()) {
-                    IViewPart view = ref.getView(false);
-                    if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
-                        ITmfTimeAligned alignedView = (ITmfTimeAligned) view;
-                        alignedView.performAlign(alignedView.getTimeViewAlignmentInfo().getTimeAxisOffset(), Integer.MAX_VALUE);
-                    }
-                }
-            }
-        }
     }
 }
