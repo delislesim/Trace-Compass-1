@@ -16,7 +16,10 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * Information necessary to perform proper alignment of view.
+ * The responsibility of this class is to provide information necessary to
+ * decide whether or not views should be time-aligned with each other and at
+ * what offset.
+ *
  * @see TmfTimeViewAlignmentSignal
  *
  * @since 1.0
@@ -27,36 +30,50 @@ public class TmfTimeViewAlignmentInfo {
     private final Shell fShell;
 
     /**
-     * Constructs a new TmfTimeViewAlignmentInfo
+     * Constructs a new TmfTimeViewAlignmentInfo.
      *
-     * @param shell used to determine whether or not views should be aligned together
-     * @param viewLocation location of the view, used to determine whether or not views should be aligned together
-     * @param timeAxisOffset offset relative to the view. This offset will be communicated to the other views
+     * @param shell
+     *            used to determine whether or not views should be aligned
+     *            together
+     * @param viewLocation
+     *            location of the view, used to determine whether or not views
+     *            should be aligned together
+     * @param timeAxisOffset
+     *            offset relative to the view. This offset will be communicated
+     *            to the other views
      */
     public TmfTimeViewAlignmentInfo(Shell shell, Point viewLocation, int timeAxisOffset) {
+        fShell = shell;
         fViewLocation = viewLocation;
         fTimeAxisOffset = timeAxisOffset;
-        fShell = shell;
     }
 
     /**
+     * Get the shell containing this alignment.
      *
-     * @return
+     * @return the shell
+     */
+    public Shell getShell() {
+        return fShell;
+    }
+
+    /**
+     * Get the absolute view location. This value is only valid at the time of
+     * the TmfTimeViewAlignmentInfo creation so extra care must be given in
+     * cases where the particular view might have been resized, moved, etc.
+     *
+     * @return the absolute view location
      */
     public Point getViewLocation() {
         return fViewLocation;
     }
 
     /**
-     * Offset relative to the view
+     * Offset relative to the view corresponding to the start of the time axis.
      *
-     * @return
+     * @return the offset in pixels
      */
     public int getTimeAxisOffset() {
         return fTimeAxisOffset;
-    }
-
-    public Shell getShell() {
-        return fShell;
     }
 }

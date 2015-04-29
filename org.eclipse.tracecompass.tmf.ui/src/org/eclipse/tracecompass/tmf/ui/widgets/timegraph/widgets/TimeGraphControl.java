@@ -66,6 +66,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
+import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphColorListener;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.ITimeGraphPresentationProvider2;
@@ -2638,10 +2639,13 @@ public class TimeGraphControl extends TimeGraphBaseControl
     }
 
     /**
-     * Update the widget based on the alignment signal
+     * Perform the alignment operation.
      *
-     * @param signal
-     *            the alignment signal
+     * @param offset
+     *            the alignment offset
+     *
+     * @see ITmfTimeAligned
+     *
      * @since 1.0
      */
     public void performAlign(int offset) {
@@ -2649,11 +2653,15 @@ public class TimeGraphControl extends TimeGraphBaseControl
     }
 
     /**
+     * Return the time alignment information
+     *
+     * @return the time alignment information
+     *
+     * @see ITmfTimeAligned
+     *
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
         return new TmfTimeViewAlignmentInfo(getShell(), toDisplay(0, 0), fTimeProvider.getNameSpace());
     }
 }
-
-

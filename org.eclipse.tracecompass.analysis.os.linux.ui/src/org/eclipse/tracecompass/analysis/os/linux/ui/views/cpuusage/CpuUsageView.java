@@ -120,7 +120,6 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
 
                                 @Override
                                 public void handleEvent(Event event) {
-                                    System.out.println("CpuUsageView.createPartControl() " + getTimeViewAlignmentInfo().getTimeAxisOffset());
                                     TmfSignalManager.dispatchSignal(new TmfTimeViewAlignmentSignal(fSashForm, getTimeViewAlignmentInfo()));
                                 }
                             };
@@ -163,7 +162,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
 
     private int getTimeAxisOffset() {
         int width = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width);
-        int curTimeAxisOffset = width + fSashForm.getSashWidth() + fXYViewer.getPlotAreaOffset();
+        int curTimeAxisOffset = width + fSashForm.getSashWidth() + fXYViewer.getPointAreaOffset();
         return curTimeAxisOffset;
     }
 
@@ -172,7 +171,7 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      */
     @Override
     public int getAvailableWidth(int requestedOffset) {
-        int plotAreaWidth = fXYViewer.getPlotAreaWidth();
+        int plotAreaWidth = fXYViewer.getPointAreaWidth();
 //        System.out.println("plotAreaWidth: " + plotAreaWidth);
         int curTimeAxisOffset = getTimeAxisOffset();
         int endOffset = curTimeAxisOffset + plotAreaWidth;
@@ -186,13 +185,12 @@ public class CpuUsageView extends TmfView implements ITmfTimeAligned {
      */
     @Override
     public void performAlign(int offset, int width) {
-        System.out.println("CpuUsageView.performAlign " + offset);
-        int plotAreaOffset = fXYViewer.getPlotAreaOffset();
+        int plotAreaOffset = fXYViewer.getPointAreaOffset();
         int sashOffset = Math.max(1, offset - plotAreaOffset);
         int total = fSashForm.getBounds().width;
         int width1 = (int) (sashOffset / (float) total * 1000);
         int width2 = (int) ((total - sashOffset) / (float) total * 1000);
         fSashForm.setWeights(new int[] { width1, width2 });
-        fSashForm.layout(); // nedded?
+        fSashForm.layout();
     }
 }

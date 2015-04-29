@@ -355,35 +355,45 @@ public abstract class TmfXYChartViewer extends TmfTimeViewer implements ITmfChar
     }
 
     /**
-     * Relative to the whole XY chart viewer
+     * Get the offset of the point area, relative to the XY chart viewer
+     * control. We consider the point area to be from where the first point
+     * could be drawn to where the last point could be drawn.
+     *
+     * @return the offset in pixels
      *
      * @since 1.0
      */
-    public int getPlotAreaOffset() {
+    public int getPointAreaOffset() {
         int pixelCoordinate = 0;
         IAxis[] xAxes = getSwtChart().getAxisSet().getXAxes();
         if (xAxes.length > 0) {
-            IAxis iAxis = xAxes[0];
+            IAxis axis = xAxes[0];
             long windowStartTime = getWindowStartTime() - getTimeOffset();
-            pixelCoordinate = iAxis.getPixelCoordinate(windowStartTime - 1);
-//            System.out.println("pixelCoordinate: " + pixelCoordinate);
+            pixelCoordinate = axis.getPixelCoordinate(windowStartTime - 1);
         }
         return getSwtChart().toControl(getSwtChart().getPlotArea().toDisplay(pixelCoordinate, 0)).x;
     }
 
     /**
+     * Get the width of the point area. We consider the point area to be from
+     * where the first point could be drawn to where the last point could be
+     * drawn. The point area differs from the plot area because there might be a
+     * gap between where the plot area start and where the fist point is drawn.
+     * This also matches the width that the use can select.
+     *
+     * @return the width in pixels
+     *
      * @since 1.0
      */
-    public int getPlotAreaWidth() {
+    public int getPointAreaWidth() {
         IAxis[] xAxes = getSwtChart().getAxisSet().getXAxes();
         if (xAxes.length > 0) {
             IAxis iAxis = xAxes[0];
-            int x1 = getPlotAreaOffset();
+            int x1 = getPointAreaOffset();
             long windowEndTime = getWindowEndTime() - getTimeOffset();
             int x2 = iAxis.getPixelCoordinate(windowEndTime - 1);
             x2 = getSwtChart().toControl(getSwtChart().getPlotArea().toDisplay(x2, 0)).x;
             int width = x2 - x1;
-//            System.out.println("chart width: " + width);
             return width;
         }
 

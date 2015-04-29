@@ -50,6 +50,7 @@ import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfImageConstants;
 import org.eclipse.tracecompass.internal.tmf.ui.Messages;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
+import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.TimeGraphLegend;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ILinkEvent;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ITimeEvent;
@@ -138,7 +139,7 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
     private ListenerNotifier fListenerNotifier;
     private final Object fListenerNotifierLock = new Object();
 
-    private Composite fTimeBasedControls;
+    private Composite fTimeAlignedComposite;
 
     private class ListenerNotifier extends Thread {
         private static final long DELAY = 400L;
@@ -368,7 +369,7 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
         gl.horizontalSpacing = 0;
         fDataViewer.setLayout(gl);
 
-        fTimeBasedControls = new Composite(fDataViewer, style) {
+        fTimeAlignedComposite = new Composite(fDataViewer, style) {
             @Override
             public void redraw() {
                 fDataViewer.redraw();
@@ -380,10 +381,10 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
         gl2.marginWidth = 0;
         gl2.verticalSpacing = 0;
         gl2.horizontalSpacing = 0;
-        fTimeBasedControls.setLayout(gl2);
-        fTimeBasedControls.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        fTimeAlignedComposite.setLayout(gl2);
+        fTimeAlignedComposite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
-        fTimeScaleCtrl = new TimeGraphScale(fTimeBasedControls, fColorScheme);
+        fTimeScaleCtrl = new TimeGraphScale(fTimeAlignedComposite, fColorScheme);
         fTimeScaleCtrl.setTimeProvider(fTimeDataProvider);
         fTimeScaleCtrl.setLayoutData(new GridData(SWT.FILL, SWT.DEFAULT, true, false));
         fTimeScaleCtrl.setHeight(fTimeScaleHeight);
@@ -394,7 +395,7 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
             }
         });
 
-        fTimeGraphCtrl = createTimeGraphControl(fTimeBasedControls, fColorScheme);
+        fTimeGraphCtrl = createTimeGraphControl(fTimeAlignedComposite, fColorScheme);
 
         fTimeGraphCtrl.setTimeProvider(this);
         fTimeGraphCtrl.setTimeGraphScale(fTimeScaleCtrl);
@@ -1299,6 +1300,17 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
     }
 
     /**
+     * Returns the composite containing all the controls that are time aligned,
+     * i.e. TimeGraphScale, TimeGraphControl.
+     *
+     * @return the time based composite
+     * @since 1.0
+     */
+    public Composite getTimeAlignedComposite() {
+        return fTimeAlignedComposite;
+    }
+
+    /**
      * Return the x coordinate corresponding to a time
      *
      * @param time
@@ -1824,7 +1836,12 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
     }
 
     /**
-     * @param requestedOffset
+     * Return the time alignment information
+     *
+     * @return the time alignment information
+     *
+     * @see ITmfTimeAligned
+     *
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
@@ -1832,27 +1849,42 @@ public class TimeGraphViewer implements ITimeDataProvider, SelectionListener {
     }
 
     /**
+     * Return the available width for the time-axis.
+     *
+     * @see ITmfTimeAligned
+     *
+     * @param requestedOffset
+     *            the requested offset
+     * @return the available width for the time-axis
+     *
      * @since 1.0
      */
     public int getAvailableWidth(int requestedOffset) {
-        int totalWidth = fTimeBasedControls.getSize().x;
+        int totalWidth = fTimeAlignedComposite.getSize().x;
         int availableWidth = totalWidth - requestedOffset;
         return availableWidth;
     }
 
     /**
+     * Perform the alignment operation.
+     *
+     * @param offset
+     *            the alignment offset
+     * @param width
+     *            the alignment width
+     *
+     * @see ITmfTimeAligned
+     *
      * @since 1.0
      */
     public void performAlign(int offset, int width) {
         fTimeGraphCtrl.performAlign(offset);
         int alignmentWidth = width;
-        int size = fTimeBasedControls.getSize().x;
-        GridLayout layout = (GridLayout) fTimeBasedControls.getLayout();
+        int size = fTimeAlignedComposite.getSize().x;
+        GridLayout layout = (GridLayout) fTimeAlignedComposite.getLayout();
         int marginSize = size - alignmentWidth - offset;
         layout.marginRight = Math.max(0, marginSize);
-        fTimeBasedControls.layout();
-        System.out.println("TimeGraphViewer applied: " + alignmentWidth);
-        //System.out.println("expected: " + alignmentWidth + ", got: " + fTimeGraphCtrl.getTimeViewAlignmentInfo().getWidth());
+        fTimeAlignedComposite.layout();
     }
 
 }

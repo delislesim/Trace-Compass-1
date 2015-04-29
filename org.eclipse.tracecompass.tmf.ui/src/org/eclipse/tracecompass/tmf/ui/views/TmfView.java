@@ -19,7 +19,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.tracecompass.internal.tmf.ui.views.AlignViewsAction;
+import org.eclipse.tracecompass.internal.tmf.ui.views.TimeAlignViewsAction;
 import org.eclipse.tracecompass.internal.tmf.ui.views.TmfAlignmentSynchronizer;
 import org.eclipse.tracecompass.tmf.core.component.ITmfComponent;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
@@ -46,7 +46,7 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
      * Action class for pinning of TmfView.
      */
     protected PinTmfViewAction fPinAction;
-    private static AlignViewsAction fAlignViewsAction;
+    private static TimeAlignViewsAction fAlignViewsAction;
 
     // ------------------------------------------------------------------------
     // Constructor
@@ -145,7 +145,7 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
 
     private void contributeAlignViewsActionToToolbar() {
         if (fAlignViewsAction == null) {
-            fAlignViewsAction = new AlignViewsAction();
+            fAlignViewsAction = new TimeAlignViewsAction();
         }
 
         IToolBarManager toolBarManager = getViewSite().getActionBars()

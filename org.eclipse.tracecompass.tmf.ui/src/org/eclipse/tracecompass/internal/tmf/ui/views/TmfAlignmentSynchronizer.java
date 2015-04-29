@@ -51,7 +51,6 @@ public class TmfAlignmentSynchronizer {
     private static final int NEAR_THRESHOLD = 10;
     private final Timer fTimer;
     private final List<TmfTimeViewAlignmentSignal> fPendingAlignments = Collections.synchronizedList(new ArrayList<TmfTimeViewAlignmentSignal>());
-    private final IPreferenceChangeListener fAlignViewPrefListener;
 
     private TimerTask fCurrentTask;
 
@@ -61,7 +60,12 @@ public class TmfAlignmentSynchronizer {
     public TmfAlignmentSynchronizer() {
         TmfSignalManager.register(this);
         fTimer = new Timer();
-        fAlignViewPrefListener = new IPreferenceChangeListener() {
+        createPreferenceListener();
+        fCurrentTask = new TimerTask() { @Override public void run() {} };
+    }
+
+    private IPreferenceChangeListener createPreferenceListener() {
+        IPreferenceChangeListener listener = new IPreferenceChangeListener() {
 
             @Override
             public void preferenceChange(PreferenceChangeEvent event) {
@@ -86,11 +90,19 @@ public class TmfAlignmentSynchronizer {
                 }
             }
         };
-        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(fAlignViewPrefListener);
-
-        fCurrentTask = new TimerTask() { @Override public void run() {} };
+        InstanceScope.INSTANCE.getNode(Activator.PLUGIN_ID).addPreferenceChangeListener(listener);
+        return listener;
     }
 
+    /**
+     * Queue the signal for processing. If a signal is considered the same
+     * alignment (shell, location) as a previously queued one, it will replace
+     * the old one. This way, only one up-to-date alignment signal is kept per
+     * set of time-axis aligned views and the signals. The processing of the
+     * signals is also throttled (TimerTask).
+     *
+     * @param signal the signal to queue
+     */
     private void queue(TmfTimeViewAlignmentSignal signal) {
         synchronized(fPendingAlignments) {
             fCurrentTask.cancel();
@@ -101,17 +113,25 @@ public class TmfAlignmentSynchronizer {
                 }
             }
             fPendingAlignments.add(signal);
-            fCurrentTask = new AlignRequest();
+            fCurrentTask = new AlignTask();
             fTimer.schedule(fCurrentTask, THROTTLE_DELAY);
         }
     }
 
+    /**
+     * Two signals are considered to be for the same set of time-axis aligned
+     * views if they are on the same Shell and near the same location.
+     */
     private static boolean isSameAlignment(TmfTimeViewAlignmentSignal signal, TmfTimeViewAlignmentSignal pendingInfo) {
         if (signal.getSource() == pendingInfo.getSource()) {
             return true;
         }
 
         if (!(signal.getSource() instanceof TmfView) || !(pendingInfo.getSource() instanceof TmfView)) {
+            return false;
+        }
+
+        if (signal.getTimeViewAlignmentInfo().getShell() != pendingInfo.getTimeViewAlignmentInfo().getShell()) {
             return false;
         }
 
@@ -127,7 +147,7 @@ public class TmfAlignmentSynchronizer {
         return pendingLocation;
     }
 
-    private class AlignRequest extends TimerTask {
+    private class AlignTask extends TimerTask {
 
         @Override
         public void run() {
@@ -145,6 +165,16 @@ public class TmfAlignmentSynchronizer {
         }
     }
 
+    /**
+     * Perform all alignment operations for the specified alignment
+     * informations.
+     *
+     * <pre>
+     * - The alignment algorithm chooses the narrowest width to accommodate all views.
+     * - View positions are recomputed for extra accuracy since the views could have been moved or resized.
+     * - Based on the up-to-date view positions, only views that are near and aligned with each other
+     * </pre>
+     */
     private static void performAllAlignments(final List<TmfTimeViewAlignmentSignal> alignments) {
         for (final TmfTimeViewAlignmentSignal info : alignments) {
 
@@ -167,7 +197,7 @@ public class TmfAlignmentSynchronizer {
                 if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
                     TmfView tmfView = (TmfView) view;
                     ITmfTimeAligned alignedView = (ITmfTimeAligned) view;
-                    if (isViewLocationNear(getCurrentViewLocation(tmfView), getCurrentViewLocation(narrowestView))) {
+                    if (isViewLocationNear(getCurrentViewLocation(tmfView), timeViewAlignmentInfo.getViewLocation())) {
                         alignedView.performAlign(timeViewAlignmentInfo.getTimeAxisOffset(), narrowestWidth);
                     }
                 }
@@ -176,10 +206,10 @@ public class TmfAlignmentSynchronizer {
     }
 
     private static boolean isViewLocationNear(Point location1, Point location2) {
-        int distance = Math.abs(location1.x - location2.x);
-        return distance < NEAR_THRESHOLD;
+        return Math.abs(location1.x - location2.x) < NEAR_THRESHOLD;
     }
 
+    //FIXME: Remove or clarify sementics
     public void realignViews(TmfView triggerView) {
         TmfTimeViewAlignmentInfo alignmentInfo = ((ITmfTimeAligned) triggerView).getTimeViewAlignmentInfo();
         if (alignmentInfo == null) {
@@ -200,8 +230,8 @@ public class TmfAlignmentSynchronizer {
      * Get a view that corresponds to the alignment information. The view is
      * meant to be used as a "reference" for other views to align on. Heuristics
      * are applied to choose the best view. For example, the view has to be
-     * visible. It will prioritize the view with lowest time axis offset because
-     * most of the interesting data should be in the time widget.
+     * visible. It also will prioritize the view with lowest time axis offset
+     * because most of the interesting data should be in the time widget.
      *
      * @param alignmentInfo
      *            alignment information
@@ -241,8 +271,7 @@ public class TmfAlignmentSynchronizer {
 
         int smallestWidth = Integer.MAX_VALUE;
         TmfView smallest = null;
-        IViewReference[] viewReferences = page.getViewReferences();
-        for (IViewReference ref : viewReferences) {
+        for (IViewReference ref : page.getViewReferences()) {
             IViewPart view = ref.getView(false);
             if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
                 TmfView tmfView = (TmfView) view;
@@ -255,7 +284,6 @@ public class TmfAlignmentSynchronizer {
                     smallest = tmfView;
                 }
             }
-
         }
 
         return smallest;
@@ -292,13 +320,17 @@ public class TmfAlignmentSynchronizer {
                 // Only time aligned views that are part of a workbench window are supported
                 return;
             }
+
+            // We need a view so that we can compute position right as we are
+            // about to realign the views. The view could have been resized,
+            // moved, etc.
             TmfView view = (TmfView) getReferenceView(timeViewAlignmentInfo, null);
             if (view == null) {
                 // No valid view found for this alignment
                 return;
             }
-            TmfTimeViewAlignmentInfo timeViewAlignment = new TmfTimeViewAlignmentInfo(timeViewAlignmentInfo.getShell(), timeViewAlignmentInfo.getViewLocation(), timeViewAlignmentInfo.getTimeAxisOffset());
-            queue(new TmfTimeViewAlignmentSignal(view, timeViewAlignment));
+
+            queue(new TmfTimeViewAlignmentSignal(view, timeViewAlignmentInfo));
         }
     }
 
@@ -310,8 +342,7 @@ public class TmfAlignmentSynchronizer {
         // views remove any "filler" space they might have.
         for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
             for (IWorkbenchPage page : window.getPages()) {
-                IViewReference[] viewReferences = page.getViewReferences();
-                for (IViewReference ref : viewReferences) {
+                for (IViewReference ref : page.getViewReferences()) {
                     IViewPart view = ref.getView(false);
                     if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
                         ITmfTimeAligned alignedView = (ITmfTimeAligned) view;

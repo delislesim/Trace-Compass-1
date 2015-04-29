@@ -17,7 +17,9 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignal;
 /**
  * A signal to inform about the state of time alignment. Typically, the emitter
  * will inform the receivers about the position of a sash that separates the
- * time axis on right side extra information on the left side.
+ * time axis on right side and extra information on the left side.
+ *
+ * @see TmfTimeViewAlignmentInfo
  *
  * @since 1.0
  */
@@ -30,13 +32,19 @@ public class TmfTimeViewAlignmentSignal extends TmfSignal {
      *
      * @param source
      *            the source of the signal
-     * @param parameterObject TODO
+     * @param alignmentInfo
+     *            information about the time alignment
      */
-    public TmfTimeViewAlignmentSignal(Object source, TmfTimeViewAlignmentInfo parameterObject) {
+    public TmfTimeViewAlignmentSignal(Object source, TmfTimeViewAlignmentInfo alignmentInfo) {
         super(source);
-        fTimeViewAlignmentInfo = parameterObject;
+        fTimeViewAlignmentInfo = alignmentInfo;
     }
 
+    /**
+     * Get the time alignment information.
+     *
+     * @return the time alignment information
+     */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
         return fTimeViewAlignmentInfo;
     }

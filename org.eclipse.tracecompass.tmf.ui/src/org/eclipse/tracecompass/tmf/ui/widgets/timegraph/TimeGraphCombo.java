@@ -70,6 +70,7 @@ import org.eclipse.tracecompass.internal.tmf.ui.Messages;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentInfo;
 import org.eclipse.tracecompass.tmf.ui.signal.TmfTimeViewAlignmentSignal;
+import org.eclipse.tracecompass.tmf.ui.views.ITmfTimeAligned;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.ITimeGraphEntryActiveProvider;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.dialogs.TimeGraphFilterDialog;
 import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.model.ILinkEvent;
@@ -1175,20 +1176,29 @@ public class TimeGraphCombo extends Composite {
     }
 
     /**
+     * Return the time alignment information
+     *
+     * @return the time alignment information
+     *
+     * @see ITmfTimeAligned
+     *
      * @since 1.0
      */
     public TmfTimeViewAlignmentInfo getTimeViewAlignmentInfo() {
-        int leftWidth = getSashPos();
+        int leftWidth = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width) + fSashForm.getSashWidth();
         Point location = fSashForm.toDisplay(0, 0);
         return new TmfTimeViewAlignmentInfo(fSashForm.getShell(), location, leftWidth);
     }
 
-    private int getSashPos() {
-        int leftWidth = (int) ((float) fSashForm.getWeights()[0] / 1000 * fSashForm.getBounds().width) + fSashForm.getSashWidth();
-        return leftWidth;
-    }
-
     /**
+     * Return the available width for the time-axis.
+     *
+     * @see ITmfTimeAligned
+     *
+     * @param requestedOffset
+     *            the requested offset
+     * @return the available width for the time-axis
+     *
      * @since 1.0
      */
     public int getAvailableWidth(int requestedOffset) {
@@ -1198,24 +1208,30 @@ public class TimeGraphCombo extends Composite {
     }
 
     /**
+     * Perform the alignment operation.
+     *
+     * @param offset
+     *            the alignment offset
+     * @param width
+     *            the alignment width
+     *
+     * @see ITmfTimeAligned
+     *
      * @since 1.0
      */
     public void performAlign(int offset, int width) {
-        int alignmentWidth = width;
         int total = fSashForm.getBounds().width;
         int timeAxisOffset = Math.min(offset, total);
-        int width1 = (int) (timeAxisOffset / (float) total * 1000);
-        int width2 = (int) ((total - timeAxisOffset) / (float) total * 1000);
-        fSashForm.setWeights(new int[] { width1, width2 });
-        fSashForm.layout(); // nedded?
+        int sash1Width = (int) (timeAxisOffset / (float) total * 1000);
+        int sash2Width = (int) ((total - timeAxisOffset) / (float) total * 1000);
+        fSashForm.setWeights(new int[] { sash1Width, sash2Width });
+        fSashForm.layout();
 
-        // Get fTimeBasedControls, TODO: add a new getter?
-        Composite composite = fTimeGraphViewer.getTimeGraphControl().getParent();
+        Composite composite = fTimeGraphViewer.getTimeAlignedComposite();
         GridLayout layout = (GridLayout) composite.getLayout();
         int timeBasedControlsWidth = composite.getSize().x;
-        int marginSize = timeBasedControlsWidth - alignmentWidth;
+        int marginSize = timeBasedControlsWidth - width;
         layout.marginRight = Math.max(0, marginSize);
         composite.layout();
-        System.out.println("TimeGraphCombo applied: " + alignmentWidth);
     }
 }

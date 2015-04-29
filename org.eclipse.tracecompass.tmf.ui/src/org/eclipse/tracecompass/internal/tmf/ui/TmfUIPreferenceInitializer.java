@@ -16,6 +16,9 @@ import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.core.runtime.preferences.DefaultScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 
+/**
+ * Initializes TMF UI preferences
+ */
 public class TmfUIPreferenceInitializer extends AbstractPreferenceInitializer {
 
     @Override
