@@ -15,19 +15,21 @@ package org.eclipse.tracecompass.internal.ctf.core.trace;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.tracecompass.ctf.core.CTFStrings;
 import org.eclipse.tracecompass.ctf.core.event.types.EnumDefinition;
 import org.eclipse.tracecompass.ctf.core.event.types.FloatDefinition;
 import org.eclipse.tracecompass.ctf.core.event.types.IDefinition;
 import org.eclipse.tracecompass.ctf.core.event.types.IntegerDefinition;
 import org.eclipse.tracecompass.ctf.core.event.types.StringDefinition;
 import org.eclipse.tracecompass.ctf.core.event.types.StructDefinition;
+import org.eclipse.tracecompass.ctf.core.trace.ICTFPacketDescriptor;
 
 /**
  * <b><u>StreamInputPacketIndexEntry</u></b>
  * <p>
  * Represents an entry in the index of event packets.
  */
-public class StreamInputPacketIndexEntry {
+public class StreamInputPacketIndexEntry implements ICTFPacketDescriptor {
 
     private static final int UNKNOWN = -1;
 
@@ -122,24 +124,24 @@ public class StreamInputPacketIndexEntry {
         for (String field : streamPacketContextDef.getDeclaration().getFieldsList()) {
             IDefinition id = streamPacketContextDef.lookupDefinition(field);
             if (id instanceof IntegerDefinition) {
-                addAttribute(field, ((IntegerDefinition) id).getValue());
+                fAttributes.put(field, ((IntegerDefinition) id).getValue());
             } else if (id instanceof FloatDefinition) {
-                addAttribute(field, ((FloatDefinition) id).getValue());
+                fAttributes.put(field, ((FloatDefinition) id).getValue());
             } else if (id instanceof EnumDefinition) {
-                addAttribute(field, ((EnumDefinition) id).getValue());
+                fAttributes.put(field, ((EnumDefinition) id).getValue());
             } else if (id instanceof StringDefinition) {
-                addAttribute(field, ((StringDefinition) id).getValue());
+                fAttributes.put(field, ((StringDefinition) id).getValue());
             }
         }
 
-        Long contentSize = (Long) this.lookupAttribute("content_size"); //$NON-NLS-1$
-        Long packetSize = (Long) this.lookupAttribute("packet_size"); //$NON-NLS-1$
-        Long tsBegin = (Long) this.lookupAttribute("timestamp_begin"); //$NON-NLS-1$
-        Long tsEnd = (Long) this.lookupAttribute("timestamp_end"); //$NON-NLS-1$
-        String device = (String) this.lookupAttribute("device"); //$NON-NLS-1$
+        Long contentSize = (Long) fAttributes.get(CTFStrings.CONTENT_SIZE);
+        Long packetSize = (Long) fAttributes.get(CTFStrings.PACKET_SIZE);
+        Long tsBegin = (Long) fAttributes.get(CTFStrings.TIMESTAMP_BEGIN);
+        Long tsEnd = (Long) fAttributes.get(CTFStrings.TIMESTAMP_END);
+        String device = (String) fAttributes.get(CTFStrings.DEVICE);
         // LTTng Specific
-        Long cpuId = (Long) this.lookupAttribute("cpu_id"); //$NON-NLS-1$
-        Long lostEvents = (Long) this.lookupAttribute("events_discarded"); //$NON-NLS-1$
+        Long cpuId = (Long) fAttributes.get(CTFStrings.CPU_ID);
+        Long lostEvents = (Long) fAttributes.get(CTFStrings.EVENTS_DISCARDED);
 
         /* Read the content size in bits */
         if (contentSize != null) {
@@ -154,7 +156,7 @@ public class StreamInputPacketIndexEntry {
         if (packetSize != null) {
             fPacketSizeBits = (packetSize.longValue());
         } else if (this.getContentSizeBits() != 0) {
-            fPacketSizeBits = (getContentSizeBits());
+            fPacketSizeBits = fContentSizeBits;
         } else {
             fPacketSizeBits = (fileSizeBytes * Byte.SIZE);
         }
@@ -202,14 +204,7 @@ public class StreamInputPacketIndexEntry {
     // Operations
     // ------------------------------------------------------------------------
 
-    /**
-     * Returns whether the packet includes (inclusively) the given timestamp in
-     * the begin-end timestamp range.
-     *
-     * @param ts
-     *            The timestamp to check.
-     * @return True if the packet includes the timestamp.
-     */
+    @Override
     public boolean includes(long ts) {
         return (ts >= fTimestampBegin) && (ts <= fTimestampEnd);
     }
@@ -225,44 +220,32 @@ public class StreamInputPacketIndexEntry {
     // Getters and Setters
     // ------------------------------------------------------------------------
 
-    /**
-     * @return the offsetBytes
-     */
+    @Override
     public long getOffsetBits() {
         return fOffsetBits;
     }
 
-    /**
-     * @return the packetSizeBits
-     */
+    @Override
     public long getPacketSizeBits() {
         return fPacketSizeBits;
     }
 
-    /**
-     * @return the contentSizeBits
-     */
+    @Override
     public long getContentSizeBits() {
         return fContentSizeBits;
     }
 
-    /**
-     * @return the timestampBegin
-     */
+    @Override
     public long getTimestampBegin() {
         return fTimestampBegin;
     }
 
-    /**
-     * @return the timestampEnd
-     */
+    @Override
     public long getTimestampEnd() {
         return fTimestampEnd;
     }
 
-    /**
-     * @return the lostEvents in this packet
-     */
+    @Override
     public long getLostEvents() {
         return fLostEvents;
     }
@@ -279,35 +262,22 @@ public class StreamInputPacketIndexEntry {
         fAttributes.put(field, value);
     }
 
-    /**
-     * Retrieve the value of an existing attribute
-     *
-     * @param field
-     *            The name of the attribute
-     * @return The value that was stored, or null if it wasn't found
-     */
+    @Override
     public Object lookupAttribute(String field) {
         return fAttributes.get(field);
     }
 
-    /**
-     * @return The target that is being traced
-     */
+    @Override
     public String getTarget() {
         return fTarget;
     }
 
-    /**
-     * @return The ID of the target
-     */
+    @Override
     public long getTargetId() {
         return fTargetID;
     }
 
-    /**
-     * Get the offset of the packet in bytes
-     * @return The offset of the packet in bytes
-     */
+    @Override
     public long getOffsetBytes() {
         return fOffsetBytes;
     }

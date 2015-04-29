@@ -234,9 +234,9 @@ To import a set of traces to a trace folder, right-click on the target folder an
 
 [[Image:images/ProjectImportTraceAction.png]]
 
-At this point, the '''Import Trace Wizard''' will show for selecting traces to import. By default, it shows the correct destination directory where the traces will be imported to. Now, specify the location of the traces in the '''Root directory'''. For that click on the button '''Browse''', browse the media to the location of the traces and click on '''OK'''. Then select the traces to import in the list of files and folders.
+At this point, the '''Import Trace Wizard''' will show for selecting traces to import. By default, it shows the correct destination directory where the traces will be imported to. Now, specify the location of the traces in the '''Root directory'''. For that click on the button '''Browse''', browse the media to the location of the traces and click on '''OK'''. Then select the traces to import in the list of files and folders. If the selected files include archive files (tar, zip), they will be extracted automatically and imported as well.
 
-Traces can also be imported from an archive file such as a zip or a tar file by selecting the '''Select archive file''' option then by clicking '''Browse'''. Then select the traces to import in the list of files and folders as usual.
+Traces can also be imported directly from an archive file such as a zip or a tar file by selecting the '''Select archive file''' option then by clicking '''Browse'''. Then select the traces to import in the list of files and folders as usual.
 
 Optionally, select the '''Trace Type''' from the drop-down menu. If '''Trace Type''' is set to '''<Automatic Detection>''', the wizard will attempt to detect the trace types of the selected files. The automatic detection algorithm validates a trace against all known trace types. If multiple trace types are valid, a trace type is chosen based on a confidence criteria. The validation process and the computation of the confidence level are trace type specific. Optionally, '''Import unrecognized traces''' can be selected to import trace files that could not be automatically detected by '''<Automatic Detection>'''.
 
@@ -600,9 +600,9 @@ To clear all matching conditions in the header row, press the '''DEL''' key.
 
 When a searching condition is applied to the header row, the table will select the next matching event starting from the top currently displayed event. Wrapping will occur if there is no match until the end of the trace.
 
-All matching events will have a 'search match' icon in their left margin. Non-matching events will be dimmed.
+All matching events will have a 'search match' icon in their left margin. Non-matching events will be dimmed. The characters in each column which match the regular expression will be highlighted.
 
-[[Image:images/DefaultTmfEvents-Search.png]]
+[[Image:images/TraceEditor-Search.png]]
 
 Pressing the '''ENTER''' key will search and select the next matching event. Pressing the '''SHIFT-ENTER''' key will search and select the previous matching event. Wrapping will occur in both directions.
 
@@ -612,11 +612,11 @@ Press '''DEL''' to clear the header row and reset all events to normal.
 
 ==== Filtering ====
 
-When a filtering condition is entered in the head row, the table will clear all events and fill itself with matching events as they are found from the beginning of the trace.
+When a filtering condition is entered in the head row, the table will clear all events and fill itself with matching events as they are found from the beginning of the trace. The characters in each column which match the regular expression will be highlighted.
 
 A status row will be displayed before and after the matching events, dynamically showing how many matching events were found and how many events were processed so far. Once the filtering is completed, the status row icon in the left margin will change from a 'stop' to a 'filter' icon.
 
-[[Image:images/DefaultTmfEvents-Filter.png]]
+[[Image:images/TraceEditor-Filter.png]]
 
 Press '''ESC''' to stop an ongoing filtering. In this case the status row icon will remain as a 'stop' icon to indicate that not all events were processed.
 
@@ -667,6 +667,14 @@ A status row will be displayed before and after the events, dynamically showing 
 [[Image:images/TablePostCollapse.png]]
 
 To clear collapsing, press the right mouse button in the table and select menu item '''Clear Filters''' in the context sensitive menu. ''Note'' that collapsing is also removed when another filter is applied to the table.
+
+=== Customization ===
+
+The table columns can be reordered by the user by dragging the column headers. This column order is saved when the editor is closed. The setting applies to all traces of the same trace type.
+
+The table font can be customized by the user by changing the preference in '''Window''' > '''Preferences''' > '''General''' > '''Appearance''' > '''Colors and Fonts''' > '''Tracing''' > '''Trace event table font'''.
+
+The search and filter highlight color can be customized by the user by changing the preference in '''Window''' > '''Preferences''' > '''General''' > '''Appearance''' > '''Colors and Fonts''' > '''Tracing''' > '''Trace event table highlight color'''.
 
 == Histogram View ==
 

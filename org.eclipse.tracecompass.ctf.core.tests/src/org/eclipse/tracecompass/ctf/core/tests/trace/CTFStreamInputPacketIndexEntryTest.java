@@ -20,7 +20,7 @@ import static org.junit.Assert.assertTrue;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import org.eclipse.tracecompass.ctf.core.CTFReaderException;
+import org.eclipse.tracecompass.ctf.core.CTFException;
 import org.eclipse.tracecompass.ctf.core.event.io.BitBuffer;
 import org.eclipse.tracecompass.ctf.core.event.scope.ILexicalScope;
 import org.eclipse.tracecompass.ctf.core.event.types.Encoding;
@@ -30,6 +30,7 @@ import org.eclipse.tracecompass.ctf.core.event.types.IntegerDeclaration;
 import org.eclipse.tracecompass.ctf.core.event.types.StringDeclaration;
 import org.eclipse.tracecompass.ctf.core.event.types.StructDeclaration;
 import org.eclipse.tracecompass.ctf.core.event.types.StructDefinition;
+import org.eclipse.tracecompass.ctf.core.trace.ICTFPacketDescriptor;
 import org.eclipse.tracecompass.internal.ctf.core.trace.StreamInputPacketIndexEntry;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +44,7 @@ import org.junit.Test;
  */
 public class CTFStreamInputPacketIndexEntryTest {
 
-    private StreamInputPacketIndexEntry fixture;
+    private ICTFPacketDescriptor fixture;
 
     /**
      * Perform pre-test initialization.
@@ -72,11 +73,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Test the constructor
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             exception
      */
     @Test
-    public void testStreamInputPacketIndexEntryConstructor1() throws CTFReaderException {
+    public void testStreamInputPacketIndexEntryConstructor1() throws CTFException {
         StructDeclaration sd = new StructDeclaration(8);
         sd.addField("timestamp_begin", IntegerDeclaration.INT_32B_DECL);
         sd.addField("timestamp_end", IntegerDeclaration.INT_32B_DECL);
@@ -92,7 +93,7 @@ public class CTFStreamInputPacketIndexEntryTest {
         bb.getByteBuffer().put((byte) 0);
         bb.getByteBuffer().put((byte) 0);
         StructDefinition sdef = sd.createDefinition(null, ILexicalScope.PACKET_HEADER, bb);
-        StreamInputPacketIndexEntry sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
+        ICTFPacketDescriptor sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
         assertNull(sipie.getTarget());
         assertEquals(100, sipie.getTimestampBegin());
         assertEquals(200, sipie.getTimestampEnd());
@@ -101,11 +102,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Test the constructor
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             exception
      */
     @Test
-    public void testStreamInputPacketIndexEntryConstructor2() throws CTFReaderException {
+    public void testStreamInputPacketIndexEntryConstructor2() throws CTFException {
         StructDeclaration sd = new StructDeclaration(8);
         sd.addField("timestamp_begin", IntegerDeclaration.INT_32B_DECL);
         sd.addField("timestamp_end", IntegerDeclaration.INT_32B_DECL);
@@ -121,7 +122,7 @@ public class CTFStreamInputPacketIndexEntryTest {
         bb.getByteBuffer().put((byte) 0);
         bb.getByteBuffer().put((byte) 0);
         StructDefinition sdef = sd.createDefinition(null, ILexicalScope.PACKET_HEADER, bb);
-        StreamInputPacketIndexEntry sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
+        ICTFPacketDescriptor sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
         assertNull(sipie.getTarget());
         assertEquals(100, sipie.getTimestampBegin());
         assertEquals(200, sipie.getTimestampEnd());
@@ -130,11 +131,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Test the constructor
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             exception
      */
     @Test
-    public void testStreamInputPacketIndexEntryConstructor3() throws CTFReaderException {
+    public void testStreamInputPacketIndexEntryConstructor3() throws CTFException {
         StructDeclaration sd = new StructDeclaration(8);
         sd.addField("timestamp_begin", IntegerDeclaration.INT_32B_DECL);
         sd.addField("timestamp_end", IntegerDeclaration.INT_32B_DECL);
@@ -151,7 +152,7 @@ public class CTFStreamInputPacketIndexEntryTest {
         bb.getByteBuffer().put((byte) 0);
         bb.getByteBuffer().put((byte) 0);
         StructDefinition sdef = sd.createDefinition(null, ILexicalScope.PACKET_HEADER, bb);
-        StreamInputPacketIndexEntry sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
+        ICTFPacketDescriptor sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
         assertNull(sipie.getTarget());
         assertEquals(100, sipie.getTimestampBegin());
         assertEquals(200, sipie.getTimestampEnd());
@@ -163,11 +164,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Test the constructor
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             exception
      */
     @Test
-    public void testStreamInputPacketIndexEntryConstructor4() throws CTFReaderException {
+    public void testStreamInputPacketIndexEntryConstructor4() throws CTFException {
         StructDeclaration sd = new StructDeclaration(8);
         sd.addField("content_size", IntegerDeclaration.INT_32B_DECL);
         sd.addField("target", StringDeclaration.getStringDeclaration(Encoding.ASCII));
@@ -179,7 +180,7 @@ public class CTFStreamInputPacketIndexEntryTest {
         bb.getByteBuffer().put((byte) 0);
         bb.getByteBuffer().put((byte) 0);
         StructDefinition sdef = sd.createDefinition(null, ILexicalScope.PACKET_HEADER, bb);
-        StreamInputPacketIndexEntry sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
+        ICTFPacketDescriptor sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
         assertNull(sipie.getTarget());
         assertEquals(Long.MIN_VALUE, sipie.getTimestampBegin());
         assertEquals(Long.MAX_VALUE, sipie.getTimestampEnd());
@@ -188,11 +189,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Test the constructor
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             exception
      */
     @Test
-    public void testStreamInputPacketIndexEntryConstructor5() throws CTFReaderException {
+    public void testStreamInputPacketIndexEntryConstructor5() throws CTFException {
         StructDeclaration sd = new StructDeclaration(8);
         sd.addField("timestamp_end", IntegerDeclaration.INT_32B_DECL);
         sd.addField("content_size", IntegerDeclaration.INT_32B_DECL);
@@ -206,7 +207,7 @@ public class CTFStreamInputPacketIndexEntryTest {
         bb.getByteBuffer().put((byte) 0);
         bb.getByteBuffer().put((byte) 0);
         StructDefinition sdef = sd.createDefinition(null, ILexicalScope.PACKET_HEADER, bb);
-        StreamInputPacketIndexEntry sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
+        ICTFPacketDescriptor sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 0);
         assertEquals(Long.MIN_VALUE, sipie.getTimestampBegin());
         assertEquals(Long.MAX_VALUE, sipie.getTimestampEnd());
         assertEquals("Test66", sipie.getTarget());
@@ -216,11 +217,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Test the constructor
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             exception
      */
     @Test
-    public void testStreamInputPacketIndexEntryConstructor6() throws CTFReaderException {
+    public void testStreamInputPacketIndexEntryConstructor6() throws CTFException {
         StructDeclaration sd = new StructDeclaration(8);
         sd.addField("timestamp_end", IntegerDeclaration.INT_32B_DECL);
         sd.addField("content_size", IntegerDeclaration.INT_32B_DECL);
@@ -233,7 +234,7 @@ public class CTFStreamInputPacketIndexEntryTest {
         bb.getByteBuffer().putInt(66);
         bb.getByteBuffer().putInt(300);
         StructDefinition sdef = sd.createDefinition(null, ILexicalScope.PACKET_HEADER, bb);
-        StreamInputPacketIndexEntry sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 100);
+        ICTFPacketDescriptor sipie = new StreamInputPacketIndexEntry(0, sdef, 128, 100);
         assertEquals(Long.MIN_VALUE, sipie.getTimestampBegin());
         assertEquals(Long.MAX_VALUE, sipie.getTimestampEnd());
         assertEquals("CPU66", sipie.getTarget());
@@ -246,11 +247,11 @@ public class CTFStreamInputPacketIndexEntryTest {
     /**
      * Run the String toString() method test.
      *
-     * @throws CTFReaderException
+     * @throws CTFException
      *             won't happen
      */
     @Test
-    public void testToString() throws CTFReaderException {
+    public void testToString() throws CTFException {
 
         String expectedResult = "StreamInputPacketIndexEntry [offsetBits=0, timestampBegin=0, timestampEnd=0]";
         StructDeclaration sd = new StructDeclaration(8);

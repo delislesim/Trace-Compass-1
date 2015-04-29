@@ -29,12 +29,14 @@ import org.junit.runners.Suite;
     CTFTraceGrowingTest.class,
     IOstructgenTest.class,
     MetadataTest.class,
+    MetadataPrevalidationTests.class,
     CTFStreamInputPacketIndexEntryTest.class,
     CTFStreamInputPacketIndexTest.class,
     CTFStreamInputReaderTest.class,
     CTFStreamInputReaderTimestampComparatorTest.class,
     CTFStreamInputTest.class,
     CTFStreamTest.class,
+    CTFTraceWriterTest.class,
     TraceReadAllTracesTest.class,
     UtilsTest.class
 })

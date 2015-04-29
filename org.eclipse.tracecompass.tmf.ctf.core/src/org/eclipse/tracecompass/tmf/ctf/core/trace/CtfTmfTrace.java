@@ -33,12 +33,13 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.tracecompass.ctf.core.CTFReaderException;
+import org.eclipse.tracecompass.ctf.core.CTFException;
 import org.eclipse.tracecompass.ctf.core.event.CTFCallsite;
 import org.eclipse.tracecompass.ctf.core.event.CTFClock;
 import org.eclipse.tracecompass.ctf.core.event.IEventDeclaration;
 import org.eclipse.tracecompass.ctf.core.trace.CTFTrace;
 import org.eclipse.tracecompass.ctf.core.trace.CTFTraceReader;
+import org.eclipse.tracecompass.ctf.core.trace.Metadata;
 import org.eclipse.tracecompass.internal.tmf.ctf.core.Activator;
 import org.eclipse.tracecompass.internal.tmf.ctf.core.trace.iterator.CtfIterator;
 import org.eclipse.tracecompass.internal.tmf.ctf.core.trace.iterator.CtfIteratorManager;
@@ -111,6 +112,7 @@ public class CtfTmfTrace extends TmfTrace
      */
     private static final String CLOCK_HOST_PROPERTY = "uuid"; //$NON-NLS-1$
     private static final int CONFIDENCE = 10;
+    private static final int MIN_CONFIDENCE = 1;
 
     // -------------------------------------------
     // Fields
@@ -189,7 +191,7 @@ public class CtfTmfTrace extends TmfTrace
                     }
                 }
             }
-        } catch (final CTFReaderException e) {
+        } catch (final CTFException e) {
             /*
              * If it failed at the init(), we can assume it's because the file
              * was not found or was not recognized as a CTF trace. Throw into
@@ -216,33 +218,52 @@ public class CtfTmfTrace extends TmfTrace
     /**
      * {@inheritDoc}
      * <p>
-     * The default implementation sets the confidence to 10 if the trace is a
-     * valid CTF trace.
+     * The default implementation of a CTF trace.
+     *
+     * Firstly a weak validation of the metadata is done to determine if the
+     * path is actually for a CTF trace. After that a full validation is done.
+     *
+     * If the weak and full validation are successful the confidence is set
+     * to 10.
+     *
+     * If the weak validation was successful, but the full validation fails
+     * a TraceValidationStatus with severity warning and confidence of 1 is
+     * returned.
+     *
+     * If both weak and full validation fails an error status is returned.
      */
     @Override
     public IStatus validate(final IProject project, final String path) {
-        IStatus status = new TraceValidationStatus(CONFIDENCE, Activator.PLUGIN_ID);
+        boolean isMetadataFile = false;
         try {
-            final CTFTrace temp = new CTFTrace(path);
-            if (!temp.majorIsSet()) {
-                status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_MajorNotSet);
-            } else {
-                try (CTFTraceReader ctfTraceReader = new CTFTraceReader(temp);) {
-                    if (!ctfTraceReader.hasMoreEvents()) {
-                        // TODO: This will need an additional check when we
-                        // support live traces
-                        // because having no event is valid for a live trace
-                        status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_NoEvent);
-                    }
-                }
-            }
-        } catch (final CTFReaderException e) {
-            status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_ReadingError + ": " + e.toString()); //$NON-NLS-1$
-        } catch (final BufferOverflowException e) {
-            status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_ReadingError + ": " + Messages.CtfTmfTrace_BufferOverflowErrorMessage); //$NON-NLS-1$
+            isMetadataFile = Metadata.preValidate(path);
+        } catch (final CTFException e) {
+            return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_ReadingError + ": " + e.toString(), e); //$NON-NLS-1$
         }
 
-        return status;
+        if (isMetadataFile) {
+            // Trace is pre-validated, continue will full validation
+            try {
+                final CTFTrace trace = new CTFTrace(path);
+                if (!trace.majorIsSet()) {
+                    if (isMetadataFile) {
+                        return new TraceValidationStatus(MIN_CONFIDENCE, IStatus.WARNING, Activator.PLUGIN_ID, Messages.CtfTmfTrace_MajorNotSet, null);
+                    }
+                    return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_MajorNotSet);
+                }
+
+                // Validate using reader initialization
+                try (CTFTraceReader ctfTraceReader = new CTFTraceReader(trace)) {}
+
+                // Trace is validated, return with confidence
+                return new CtfTraceValidationStatus(CONFIDENCE, Activator.PLUGIN_ID, trace.getEnvironment());
+
+            } catch (final CTFException | BufferOverflowException e ) {
+                // return warning since it's a CTF trace but with errors in it
+                return new TraceValidationStatus(MIN_CONFIDENCE, IStatus.WARNING, Activator.PLUGIN_ID, Messages.CtfTmfTrace_ReadingError + ": " + e.toString(), e); //$NON-NLS-1$
+            }
+        }
+        return new Status(IStatus.ERROR, Activator.PLUGIN_ID, Messages.CtfTmfTrace_ReadingError);
     }
 
     @Override
@@ -529,7 +550,7 @@ public class CtfTmfTrace extends TmfTrace
     public ITmfContext createIterator() {
         try {
             return new CtfIterator(fTrace, this);
-        } catch (CTFReaderException e) {
+        } catch (CTFException e) {
             Activator.getDefault().logError(e.getMessage(), e);
         }
         return null;
@@ -548,7 +569,7 @@ public class CtfTmfTrace extends TmfTrace
     public ITmfContext createIterator(CtfLocationInfo ctfLocationData, long rank) {
         try {
             return new CtfIterator(fTrace, this, ctfLocationData, rank);
-        } catch (CTFReaderException e) {
+        } catch (CTFException e) {
             Activator.getDefault().logError(e.getMessage(), e);
         }
         return null;
