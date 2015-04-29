@@ -73,17 +73,7 @@ public class TmfAlignmentSynchronizer {
                     Object oldValue = event.getOldValue();
                     Object newValue = event.getNewValue();
                     if (Boolean.toString(false).equals(oldValue) && Boolean.toString(true).equals(newValue)) {
-                        for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
-                            for (IWorkbenchPage page : window.getPages()) {
-                                IViewReference[] viewReferences = page.getViewReferences();
-                                for (IViewReference ref : viewReferences) {
-                                    IViewPart view = ref.getView(false);
-                                    if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
-                                        queueAlignment(((ITmfTimeAligned) view).getTimeViewAlignmentInfo());
-                                    }
-                                }
-                            }
-                        }
+                        realignViews();
                     } else if (Boolean.toString(true).equals(oldValue) && Boolean.toString(false).equals(newValue)) {
                         restoreViews();
                     }
@@ -97,6 +87,7 @@ public class TmfAlignmentSynchronizer {
     private class AlignmentOperation {
         final TmfView fView;
         final TmfTimeViewAlignmentInfo fAlignmentInfo;
+
         public AlignmentOperation(TmfView view, TmfTimeViewAlignmentInfo timeViewAlignmentInfo) {
             fView = view;
             fAlignmentInfo = timeViewAlignmentInfo;
@@ -214,20 +205,62 @@ public class TmfAlignmentSynchronizer {
         return Math.abs(location1.x - location2.x) < NEAR_THRESHOLD;
     }
 
-    //FIXME: Remove or clarify sementics
-    public void realignViews(TmfView triggerView) {
-        TmfTimeViewAlignmentInfo alignmentInfo = ((ITmfTimeAligned) triggerView).getTimeViewAlignmentInfo();
+    /**
+     * Handle a view that was just created.
+     *
+     * @param view
+     *            the view that was created
+     */
+    public void handleViewCreated(TmfView view) {
+        TmfTimeViewAlignmentInfo alignmentInfo = ((ITmfTimeAligned) view).getTimeViewAlignmentInfo();
         if (alignmentInfo == null) {
             return;
         }
-        // Don't use self as reference view. Otherwise, a view that was just
-        // opened might use itself as a reference but we want to
-        // keep the existing alignment. This also has the nice side
-        // effect of only aligning when there are more than one
-        // ITmfTimeAligned.
-        ITmfTimeAligned referenceView = getReferenceView(alignmentInfo, triggerView);
+
+        // Don't use a view that was just created as a reference view.
+        // Otherwise, a view that was just
+        // created might use itself as a reference but we want to
+        // keep the existing alignment from the other views.
+        ITmfTimeAligned referenceView = getReferenceView(alignmentInfo, view);
         if (referenceView != null) {
             queueAlignment(referenceView.getTimeViewAlignmentInfo());
+        }
+    }
+
+    /**
+     * Handle a view that was just resized.
+     *
+     * @param view
+     *            the view that was resized
+     */
+    public void handleViewResized(TmfView view) {
+        realignViews(view.getSite().getPage());
+    }
+
+    /**
+     * Realign all views
+     */
+    private void realignViews() {
+        for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {
+            for (IWorkbenchPage page : window.getPages()) {
+                realignViews(page);
+            }
+        }
+    }
+
+    /**
+     * Realign views inside a given page
+     *
+     * @param page
+     *            the workbench page
+     */
+    private void realignViews(IWorkbenchPage page) {
+        IViewReference[] viewReferences = page.getViewReferences();
+        for (IViewReference ref : viewReferences) {
+            IViewPart view = ref.getView(false);
+            if (view instanceof TmfView && view instanceof ITmfTimeAligned) {
+                queueAlignment(((ITmfTimeAligned) view).getTimeViewAlignmentInfo());
+            }
         }
     }
 
@@ -342,7 +375,7 @@ public class TmfAlignmentSynchronizer {
     /**
      * Restore the views to their respective maximum widths
      */
-    public void restoreViews() {
+    private static void restoreViews() {
         // We set the width to Integer.MAX_VALUE so that the
         // views remove any "filler" space they might have.
         for (IWorkbenchWindow window : PlatformUI.getWorkbench().getWorkbenchWindows()) {

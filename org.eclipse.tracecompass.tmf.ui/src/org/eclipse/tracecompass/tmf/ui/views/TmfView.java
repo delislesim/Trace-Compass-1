@@ -16,8 +16,8 @@ package org.eclipse.tracecompass.tmf.ui.views;
 
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.tracecompass.internal.tmf.ui.views.TimeAlignViewsAction;
 import org.eclipse.tracecompass.internal.tmf.ui.views.TmfAlignmentSynchronizer;
@@ -128,18 +128,14 @@ public abstract class TmfView extends ViewPart implements ITmfComponent {
         if (this instanceof ITmfTimeAligned) {
             contributeAlignViewsActionToToolbar();
 
-            parent.addControlListener(new ControlListener() {
+            parent.addControlListener(new ControlAdapter() {
                 @Override
                 public void controlResized(ControlEvent e) {
-                    fTimeAlignmentSynchronizer.realignViews(TmfView.this);
-                }
-
-                @Override
-                public void controlMoved(ControlEvent e) {
+                    fTimeAlignmentSynchronizer.handleViewResized(TmfView.this);
                 }
             });
 
-            fTimeAlignmentSynchronizer.realignViews(TmfView.this);
+            fTimeAlignmentSynchronizer.handleViewCreated(TmfView.this);
         }
     }
 
