@@ -22,6 +22,17 @@
               after="org.eclipse.debug.ui.commonTab">
         </placement>
       </tab>
+      <!-- Core file launch tabs-->
+      <tab
+            id="org.eclipse.tracecompass.dsf.ui.coreApplicationLaunch.coreTraceTab"
+            group="org.eclipse.cdt.launch.postmortemLaunchTabGroup"
+            name="Tracing"
+            class="org.eclipse.tracecompass.internal.dsf.ui.CoreTracingTab">
+        <associatedDelegate delegate="org.eclipse.cdt.dsf.gdb.launch.coreCLaunch"/>
+        <placement
+              after="org.eclipse.debug.ui.commonTab">
+        </placement>
+      </tab>
    </extension>   
 
 </plugin>

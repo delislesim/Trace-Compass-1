@@ -321,7 +321,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
      */
     @TmfSignalHandler
     public void timeSelected(TmfTimeSynchSignal signal) {
-        setLoadMetersEnabled(true);
+        enableLoadMeters(true);
         // Refresh the data model
         update();
     }
@@ -332,7 +332,7 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
      */
     @TmfSignalHandler
     public void timeRangeSelected(TmfRangeSynchSignal signal) {
-        setLoadMetersEnabled(true);
+        enableLoadMeters(true);
         // Refresh the data model
         update();
     }
@@ -342,18 +342,18 @@ public class TraceMulticoreVisualizer extends MulticoreVisualizer {
      */
     @TmfSignalHandler
     public void timeTraceSelected(TmfTraceSelectedSignal signal) {
-        setLoadMetersEnabled(false);
+        enableLoadMeters(false);
     }
 
     @Override
-    public void setLoadMetersEnabled(boolean enabled) {
+    public void enableLoadMeters(boolean enabled) {
         if (fDataModel != null) {
-            if (m_loadMetersEnabled == enabled) {
+            if (getLoadMetersEnabled() == enabled) {
                 return;
             }
-            m_loadMetersEnabled = enabled;
+            setLoadMetersEnabled(enabled);
             // save load meter enablement in model
-            fDataModel.setLoadMetersEnabled(m_loadMetersEnabled);
+            fDataModel.setLoadMetersEnabled(getLoadMetersEnabled());
             disposeLoadMeterTimer();
             // No polling timers for Tracing
             // initializeLoadMeterTimer();
