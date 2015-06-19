@@ -14,12 +14,17 @@
 package org.eclipse.tracecompass.internal.tmf.ui.commands;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.viewers.ISelection;
@@ -28,10 +33,18 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.ITmfUIPreferences;
+import org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace.FileSystemObjectImportStructureProvider;
+import org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace.IFileSystemObject;
+import org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace.ImportTraceWizardPage;
+import org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace.TraceFileSystemElement;
+import org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace.TraceValidateAndImportOperation;
+import org.eclipse.tracecompass.internal.tmf.ui.project.wizards.importtrace.Util;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
+import org.eclipse.tracecompass.tmf.core.util.Pair;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfOpenTraceHelper;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectRegistry;
+import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -83,7 +96,35 @@ public class OpenFileHandler extends AbstractHandler {
                 destinationFolder = projectElement.getTracesFolder();
             }
 
-            TmfOpenTraceHelper.openTraceFromPath(destinationFolder, filePath, shell);
+            File sourceFile = new File(filePath);
+            if (sourceFile.exists() && Util.isArchiveFile(sourceFile)) {
+
+                final TraceValidateAndImportOperation operation = new TraceValidateAndImportOperation(shell, null, new Path(sourceFile.getParentFile().getAbsolutePath()),
+                        destinationFolder.getResource().getFullPath(), true,
+                        ImportTraceWizardPage.OPTION_PRESERVE_FOLDER_STRUCTURE, destinationFolder);
+                Pair<IFileSystemObject, FileSystemObjectImportStructureProvider> rootObjectAndProvider = Util.getRootObjectAndProvider(sourceFile, shell);
+                TraceFileSystemElement createRootTraceFileElement = Util.createRootTraceFileElement(rootObjectAndProvider.getFirst(), rootObjectAndProvider.getSecond());
+                List<TraceFileSystemElement> list = new ArrayList<>();
+                Util.getAllChildren(list, createRootTraceFileElement);
+                operation.setSelectedElements(list);
+                try {
+                    PlatformUI.getWorkbench().getProgressService().busyCursorWhile(operation);
+                    List<TmfTraceElement> traces = destinationFolder.getTraces();
+                    for (IResource r : operation.getImportedResources()) {
+                        for (TmfTraceElement e : traces) {
+                            if (e.getResource().equals(r)) {
+                                TmfOpenTraceHelper.openTraceFromElement(e);
+                            }
+                        }
+                    }
+                } catch (InvocationTargetException | InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            } else {
+                TmfOpenTraceHelper.openTraceFromPath(destinationFolder, filePath, shell);
+            }
+
         } catch (CoreException e) {
             Activator.getDefault().logError(e.getMessage(), e);
         }
