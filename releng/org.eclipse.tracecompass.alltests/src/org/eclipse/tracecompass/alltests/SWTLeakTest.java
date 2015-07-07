@@ -62,6 +62,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.hamcrest.Matcher;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -111,6 +112,19 @@ public class SWTLeakTest {
         SWTBotUtils.switchToPerspective(KERNEL_PERSPECTIVE_ID);
         /* Finish waiting for eclipse to load */
         SWTBotUtils.waitForJobs();
+    }
+
+    /**
+     * Tear down class
+     */
+    @AfterClass
+    public static void afterClass() {
+        // Print used memory. To help track if we're close to running out since
+        // this test might run many times during soak testing.
+        Runtime runtime = Runtime.getRuntime();
+        final int mb = 1024 * 1024;
+        long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / mb;
+        System.out.println("Used Memory:" + usedMemory);
     }
 
     /**
