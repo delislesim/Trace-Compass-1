@@ -24,15 +24,25 @@ import org.junit.runner.notification.RunListener;
  */
 public class DebugListener extends RunListener {
 
+    final boolean SILENT;
+    {
+        String property = System.getProperty("org.eclipse.tracecompass.tests.silent");
+        SILENT = property!= null && property.equals(Boolean.toString(true));
+    }
+
     @Override
     public void testStarted(Description description) {
-        System.out.println("Running " + getTestName(description));
+        if (!SILENT) {
+            System.out.println("Running " + getTestName(description));
+        }
     }
 
     @Override
     public void testAssumptionFailure(Failure failure) {
-        System.out.println("SKIPPING TEST: " + getTestName(failure.getDescription()));
-        System.out.println(failure.getMessage());
+        if (!SILENT) {
+            System.out.println("SKIPPING TEST: " + getTestName(failure.getDescription()));
+            System.out.println(failure.getMessage());
+        }
     }
 
     /**
