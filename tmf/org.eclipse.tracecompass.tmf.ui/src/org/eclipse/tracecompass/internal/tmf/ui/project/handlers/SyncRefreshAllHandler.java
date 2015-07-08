@@ -5,21 +5,12 @@ import java.util.Iterator;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.IResource;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.tracecompass.internal.tmf.ui.project.handlers.DeleteTraceSupplementaryFilesHandler.ElementComparator;
-import org.eclipse.tracecompass.internal.tmf.ui.project.handlers.DeleteTraceSupplementaryFilesHandler.ResourceComparator;
-import org.eclipse.tracecompass.tmf.ui.project.model.TmfCommonProjectElement;
-import org.eclipse.tracecompass.tmf.ui.project.model.TmfExperimentElement;
+import org.eclipse.tracecompass.tmf.ui.project.model.TmfOpenTraceHelper;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
-
-import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
 
 public class SyncRefreshAllHandler extends AbstractHandler {
 
@@ -37,15 +28,23 @@ public class SyncRefreshAllHandler extends AbstractHandler {
             Object element = iterator.next();
             if (element instanceof TmfTraceElement) {
                 TmfTraceElement trace = (TmfTraceElement) element;
-                // If trace is under an experiment, use the original trace from the traces folder
-                trace = trace.getElementUnderTraceFolder();
-                trace.deleteSupplementaryFolder();
+                refreshTrace(trace);
 
             } else if (element instanceof TmfTraceFolder) {
-
+                TmfTraceFolder tmfTraceFolder = (TmfTraceFolder) element;
+                for (TmfTraceElement e : tmfTraceFolder.getTraces()) {
+                    refreshTrace(e);
+                }
             }
         }
         return null;
+    }
+
+    private static void refreshTrace(TmfTraceElement t) {
+        final TmfTraceElement trace = t.getElementUnderTraceFolder();
+        trace.closeEditors();
+        trace.deleteSupplementaryFolder();
+        TmfOpenTraceHelper.openTraceFromElement(trace);
     }
 
 }
