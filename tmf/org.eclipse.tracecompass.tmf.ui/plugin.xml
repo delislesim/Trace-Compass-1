@@ -994,6 +994,52 @@
                </or>
            </visibleWhen>
         </command>
+<!--=======
+         <menu
+               id="org.eclipse.tracecompass.ui.menus.syncfiles"
+               label="%menu.sync.files"
+               mnemonic="%menu.sync.files.mnemonic">
+            <command
+                  commandId="org.eclipse.ui.file.refresh"
+                  label="%commands.sync.refreshall"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="org.eclipse.tracecompass.tmf.ui.command2"
+                  label="Load Increasing"
+                  style="push">
+            </command>
+            <command
+                  commandId="org.eclipse.tracecompass.tmf.ui.command3"
+                  label="Timer Loading"
+                  style="push">
+            </command>
+            <visibleWhen
+                  checkEnabled="false">
+               <iterate>
+                  <or>
+                     <instanceof
+                           value="org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder">
+                     </instanceof>
+                     <and>
+                        <instanceof
+                              value="org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement">
+                        </instanceof>
+                        <not>
+                           <test
+                                 forcePluginActivation="true"
+                                 property="org.eclipse.linuxtools.tmf.ui.isExperimentTrace">
+                           </test>
+                        </not>
+                     </and>
+                  </or>
+               </iterate>
+            </visibleWhen>
+         </menu>
+>>>>>>> Add Sync menu, Refresh All handler-->
       </menuContribution>
       <menuContribution
             allPopups="false"
