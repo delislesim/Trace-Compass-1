@@ -21,7 +21,10 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.tracecompass.internal.tmf.ui.project.dialogs.SyncTimeLoadingSelectionDialog;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
+import org.eclipse.tracecompass.tmf.core.trace.ITmfTraceCompleteness;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -46,7 +49,7 @@ public class SyncTimerLoadingHandler extends AbstractHandler {
         }
         final Iterator<Object> iterator = ((IStructuredSelection) selection).iterator();
 
-        List<TmfTraceElement> elements = new ArrayList<>();
+        final List<TmfTraceElement> elements = new ArrayList<>();
         while (iterator.hasNext()) {
             Object element = iterator.next();
             if (element instanceof TmfTraceElement) {
@@ -61,11 +64,46 @@ public class SyncTimerLoadingHandler extends AbstractHandler {
             }
         }
 
+        if (elements.isEmpty()) {
+            return null;
+        }
+
         SyncTimeLoadingSelectionDialog dialog = new SyncTimeLoadingSelectionDialog(window.getShell());
         dialog.open();
         if (dialog.getReturnCode() == Window.OK) {
             // TODO: do stuff with dialog.getResult();
+            // new Object[] { fTimerText.getText(), fRefreshAllButton.getSelection() }
+            Object[] result = dialog.getResult();
+            final int timer = (int) result[0];
+            boolean refreshAll = (boolean) result[1];
+            if (!refreshAll) {
+                throw new UnsupportedOperationException();
+            }
+
+            Display.getDefault().timerExec(timer, new TimerLoading(elements, timer));
         }
         return null;
+    }
+
+    private static class TimerLoading implements Runnable {
+
+        private List<TmfTraceElement> fElements;
+        private int fTimer;
+
+        private TimerLoading(List<TmfTraceElement> elements, int timer) {
+            fElements = elements;
+            fTimer = timer;
+
+        }
+
+        @Override
+        public void run() {
+            ITmfTrace trace = fElements.get(0).getTrace();
+            if (trace instanceof ITmfTraceCompleteness) {
+                ITmfTraceCompleteness complete = (ITmfTraceCompleteness) trace;
+                complete.setComplete(false);
+                Display.getDefault().timerExec(fTimer, this);
+            }
+        }
     }
 }

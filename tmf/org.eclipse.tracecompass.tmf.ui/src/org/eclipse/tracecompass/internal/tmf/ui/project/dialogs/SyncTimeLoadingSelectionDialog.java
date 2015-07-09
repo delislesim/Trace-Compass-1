@@ -48,6 +48,8 @@ public class SyncTimeLoadingSelectionDialog extends SelectionStatusDialog {
     private static final String DIALOG_SETTINGS_LOAD_FREQUENCY = "loadFrequency"; //$NON-NLS-1$
     private static final String DIALOG_SETTINGS_LOADING_MODE = "loadingMode"; //$NON-NLS-1$
     private Button fLoadIncreasingButton;
+    private int fTimer;
+    private boolean fLoadMode;
 
     /**
      * Constructor.
@@ -140,6 +142,9 @@ public class SyncTimeLoadingSelectionDialog extends SelectionStatusDialog {
 
     @Override
     protected void computeResult() {
+        String timerStr = fTimerText.getText();
+        fTimer = Integer.parseInt(timerStr);
+        fLoadMode = fRefreshAllButton.getSelection();
     }
 
     @Override
@@ -157,7 +162,7 @@ public class SyncTimeLoadingSelectionDialog extends SelectionStatusDialog {
 
     @Override
     public Object[] getResult() {
-        return new Object[] { fTimerText.getText(), fRefreshAllButton.getSelection() };
+        return new Object[] { fTimer, fLoadMode };
     }
 
 }
