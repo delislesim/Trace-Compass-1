@@ -25,6 +25,16 @@ public class Messages extends NLS {
 
     public static String SelectSpplementaryResources_DialogTitle;
     public static String SelectSpplementaryResources_ResourcesGroupTitle;
+    public static String SyncTimeLoadingSelectionDialog_ErrorInvalidLoadFrequency;
+
+    public static String SyncTimeLoadingSelectionDialog_LoadFrequency;
+
+    public static String SyncTimeLoadingSelectionDialog_LoadIncreasing;
+
+    public static String SyncTimeLoadingSelectionDialog_LoadingMode;
+
+    public static String SyncTimeLoadingSelectionDialog_RefreshAll;
+
     public static String Dialog_SelectAll;
     public static String Dialog_DeselectAll;
 

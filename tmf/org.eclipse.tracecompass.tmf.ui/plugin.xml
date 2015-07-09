@@ -1008,17 +1008,23 @@
                </visibleWhen>
             </command>
             <command
-                  commandId="org.eclipse.tracecompass.tmf.ui.command2"
-                  label="Load Increasing"
+                  commandId="org.eclipse.tracecompass.ui.sync.loadincreasing"
+                  label="%commands.sync.loadincreasing"
                   style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
             </command>
             <command
-                  commandId="org.eclipse.tracecompass.tmf.ui.command3"
-                  label="Timer Loading"
+                  commandId="org.eclipse.tracecompass.ui.sync.timerloading"
+                  label="%commands.sync.timerloading"
                   style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
             </command>
             <visibleWhen
-                  checkEnabled="false">
+                  checkEnabled="true">
                <iterate>
                   <or>
                      <instanceof
@@ -1272,6 +1278,17 @@
             description="%command.clear_offset.description"
             id="org.eclipse.linuxtools.tmf.ui.command.clear_offset"
             name="%command.clear_offset">
+      </command>
+      <command
+            categoryId="org.eclipse.linuxtools.tmf.ui.commands.category"
+            description="%commands.sync.loadincreasing.description"
+            id="org.eclipse.tracecompass.ui.sync.loadincreasing"
+            name="%commands.sync.loadincreasing">
+      </command>
+      <command
+            description="%commands.sync.timerloading.description"
+            id="org.eclipse.tracecompass.ui.sync.timerloading"
+            name="%commands.sync.timerloading">
       </command>
    </extension>
    <extension
@@ -1784,6 +1801,54 @@
                   </instanceof>
                </with>
             </or>
+         </activeWhen>
+      </handler>
+      <handler
+            class="org.eclipse.tracecompass.internal.tmf.ui.project.handlers.SyncLoadIncreasingHandler"
+            commandId="org.eclipse.tracecompass.ui.sync.loadincreasing">
+         <activeWhen>
+            <iterate>
+               <or>
+                  <instanceof
+                        value="org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder">
+                  </instanceof>
+                  <and>
+                     <instanceof
+                           value="org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement">
+                     </instanceof>
+                     <not>
+                        <test
+                              forcePluginActivation="true"
+                              property="org.eclipse.linuxtools.tmf.ui.isExperimentTrace">
+                        </test>
+                     </not>
+                  </and>
+               </or>
+            </iterate>
+         </activeWhen>
+      </handler>
+      <handler
+            class="org.eclipse.tracecompass.internal.tmf.ui.project.handlers.SyncTimerLoadingHandler"
+            commandId="org.eclipse.tracecompass.ui.sync.timerloading">
+         <activeWhen>
+            <iterate>
+               <or>
+                  <instanceof
+                        value="org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder">
+                  </instanceof>
+                  <and>
+                     <instanceof
+                           value="org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement">
+                     </instanceof>
+                     <not>
+                        <test
+                              forcePluginActivation="true"
+                              property="org.eclipse.linuxtools.tmf.ui.isExperimentTrace">
+                        </test>
+                     </not>
+                  </and>
+               </or>
+            </iterate>
          </activeWhen>
       </handler>
    </extension>
