@@ -20,7 +20,6 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.varia.NullAppender;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -98,7 +97,7 @@ public class SWTLeakTest {
 
         /* set up for swtbot */
         SWTBotPreferences.TIMEOUT = 20000; /* 20 second timeout */
-        fLogger.addAppender(new NullAppender());
+        SWTBotUtils.configureLogger(fLogger);
         fBot = new SWTWorkbenchBot();
 
         final List<SWTBotView> openViews = fBot.views();

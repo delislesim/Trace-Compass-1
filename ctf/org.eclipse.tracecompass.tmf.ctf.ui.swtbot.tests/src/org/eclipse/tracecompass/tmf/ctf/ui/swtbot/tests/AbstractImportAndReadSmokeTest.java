@@ -19,7 +19,6 @@ import static org.junit.Assume.assumeTrue;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.varia.NullAppender;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -83,8 +82,7 @@ public abstract class AbstractImportAndReadSmokeTest {
 
         /* set up for swtbot */
         SWTBotPreferences.TIMEOUT = 50000; /* 50 second timeout */
-        fLogger.removeAllAppenders();
-        fLogger.addAppender(new NullAppender());
+        SWTBotUtils.configureLogger(fLogger);
         fBot = new SWTWorkbenchBot();
 
         SWTBotUtils.closeView("welcome", fBot);

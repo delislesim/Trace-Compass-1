@@ -24,8 +24,8 @@ import org.junit.runner.notification.RunListener;
  */
 public class DebugListener extends RunListener {
 
-    final boolean SILENT;
-    {
+    static final boolean SILENT;
+    static {
         String property = System.getProperty("org.eclipse.tracecompass.tests.silent");
         SILENT = property!= null && property.equals(Boolean.toString(true));
     }

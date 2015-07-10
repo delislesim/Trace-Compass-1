@@ -18,6 +18,11 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Logger;
+import org.apache.log4j.SimpleLayout;
+import org.apache.log4j.varia.NullAppender;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -76,6 +81,11 @@ public final class SWTBotUtils {
     }
 
     private static final String TRACING_PERSPECTIVE_ID = TracingPerspectiveFactory.ID;
+    static final boolean SILENT;
+    static {
+        String property = System.getProperty("org.eclipse.tracecompass.tests.silent");
+        SILENT = property!= null && property.equals(Boolean.toString(true));
+    }
 
     /**
      * Waits for all Eclipse jobs to finish
@@ -84,6 +94,17 @@ public final class SWTBotUtils {
         while (!Job.getJobManager().isIdle()) {
             delay(100);
         }
+    }
+
+    public static void configureLogger(Logger logger) {
+        logger.removeAllAppenders();
+        Appender appender;
+        if (SILENT) {
+            appender = new NullAppender();
+        } else {
+            appender = new ConsoleAppender(new SimpleLayout());
+        }
+        logger.addAppender(appender);
     }
 
     /**
