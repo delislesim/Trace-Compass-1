@@ -18,13 +18,18 @@ import java.util.List;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.tracecompass.internal.tmf.ui.project.dialogs.SyncTimeLoadingSelectionDialog;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceRangeUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
-import org.eclipse.tracecompass.tmf.core.trace.ITmfTraceCompleteness;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -80,30 +85,31 @@ public class SyncTimerLoadingHandler extends AbstractHandler {
                 throw new UnsupportedOperationException();
             }
 
-            Display.getDefault().timerExec(timer, new TimerLoading(elements, timer));
+            final Job jinner = new Job("Timer loading job") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    ITmfTrace trace = elements.get(0).getTrace();
+                    TmfTimeRange range = new TmfTimeRange(TmfTimestamp.BIG_BANG, TmfTimestamp.BIG_CRUNCH);
+                    TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(trace, trace, range);
+                    trace.broadcastAsync(signal);
+
+                    return Status.OK_STATUS;
+                }
+            };
+            jinner.setSystem(true);
+            Job j = new Job("Timer loading job") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    ITmfTrace trace = elements.get(0).getTrace();
+                    while (trace != null && !monitor.isCanceled()) {
+                        jinner.schedule(timer);
+                    }
+
+                    return Status.OK_STATUS;
+                }
+            };
+            j.schedule();
         }
         return null;
-    }
-
-    private static class TimerLoading implements Runnable {
-
-        private List<TmfTraceElement> fElements;
-        private int fTimer;
-
-        private TimerLoading(List<TmfTraceElement> elements, int timer) {
-            fElements = elements;
-            fTimer = timer;
-
-        }
-
-        @Override
-        public void run() {
-            ITmfTrace trace = fElements.get(0).getTrace();
-            if (trace instanceof ITmfTraceCompleteness) {
-                ITmfTraceCompleteness complete = (ITmfTraceCompleteness) trace;
-                complete.setComplete(false);
-                Display.getDefault().timerExec(fTimer, this);
-            }
-        }
     }
 }

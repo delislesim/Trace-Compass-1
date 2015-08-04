@@ -75,15 +75,13 @@ public final class LttngRelaydConnectionManager {
     private static LttngRelaydConnectionInfo getEntry(final ITmfTrace trace) throws CoreException {
         if (trace instanceof CtfTmfTrace) {
             CtfTmfTrace ctfTmfTrace = (CtfTmfTrace) trace;
-            if (!ctfTmfTrace.isComplete()) {
-                IResource resource = ctfTmfTrace.getResource();
-                String host = resource.getPersistentProperty(CtfConstants.LIVE_HOST);
-                String port = resource.getPersistentProperty(CtfConstants.LIVE_PORT);
-                String sessionName = resource.getPersistentProperty(CtfConstants.LIVE_SESSION_NAME);
-                if (host != null && port != null && sessionName != null && !sessionName.isEmpty()) {
-                    LttngRelaydConnectionInfo entry = new LttngRelaydConnectionInfo(host, Integer.parseInt(port), sessionName);
-                    return entry;
-                }
+            IResource resource = ctfTmfTrace.getResource();
+            String host = resource.getPersistentProperty(CtfConstants.LIVE_HOST);
+            String port = resource.getPersistentProperty(CtfConstants.LIVE_PORT);
+            String sessionName = resource.getPersistentProperty(CtfConstants.LIVE_SESSION_NAME);
+            if (host != null && port != null && sessionName != null && !sessionName.isEmpty()) {
+                LttngRelaydConnectionInfo entry = new LttngRelaydConnectionInfo(host, Integer.parseInt(port), sessionName);
+                return entry;
             }
         }
 

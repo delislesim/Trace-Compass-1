@@ -15,6 +15,8 @@ package org.eclipse.tracecompass.tmf.ui.editors;
 
 import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -27,28 +29,55 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.InvalidRegistryObjectException;
 import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jface.action.IStatusLineManager;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.util.SafeRunnable;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.editors.ITmfEventsEditorConstants;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
+import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
+import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterTreeNode;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimestampFormatUpdateSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceOpenedSignal;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceSelectedSignal;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
@@ -60,6 +89,8 @@ import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectRegistry;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceTypeUIUtils;
 import org.eclipse.tracecompass.tmf.ui.viewers.events.TmfEventsTable;
+import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSetting;
+import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSettingsManager;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
@@ -70,6 +101,7 @@ import org.eclipse.ui.IReusableEditor;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.SelectionStatusDialog;
 import org.eclipse.ui.ide.IGotoMarker;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.views.properties.IPropertySheetPage;
@@ -84,6 +116,8 @@ import com.google.common.collect.Iterables;
  */
 public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReusableEditor, IPropertyListener, IResourceChangeListener, ISelectionProvider, ISelectionChangedListener, IPartListener, IGotoMarker {
 
+    private static final Image REFRESH_IMAGE = Activator.getDefault().getImageFromPath("/icons/elcl16/refresh.gif");
+
     /** ID for this class */
     public static final String ID = "org.eclipse.linuxtools.tmf.ui.editors.events"; //$NON-NLS-1$
 
@@ -94,6 +128,14 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
     private ListenerList fSelectionChangedListeners = new ListenerList();
     private boolean fTraceSelected;
     private IMarker fPendingGotoMarker;
+
+    private Composite fViewComposite;
+
+    private int fReloadFrequency = 0;
+
+    private Job fRefreshJob;
+
+    private Button fReloadButton;
 
     @Override
     public void doSave(final IProgressMonitor monitor) {
@@ -202,18 +244,22 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
                 TmfTraceColumnManager.saveColumnOrder(fTrace.getTraceTypeId(), fEventsTable.getColumnOrder());
             }
             fEventsTable.dispose();
+            fViewComposite.dispose();
+
             fTraceSelected = false;
             fFile = ((TmfEditorInput) getEditorInput()).getFile();
             fTrace = ((TmfEditorInput) getEditorInput()).getTrace();
             /* change the input to a FileEditorInput to allow open handlers to find this editor */
             super.setInput(new FileEditorInput(fFile));
-            createAndInitializeTable();
+
+            createViewComposite(fParent);
             // The table was swapped for a new one, make sure it gets focus if
             // the editor is active. Otherwise, the new table will not get focus
             // because the editor already had focus.
             if (!PlatformUI.getWorkbench().isClosing() && PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart() == getSite().getPart()) {
                 fEventsTable.setFocus();
             }
+
             fParent.layout();
         }
     }
@@ -221,7 +267,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
     @Override
     public void createPartControl(final Composite parent) {
         fParent = parent;
-        createAndInitializeTable();
+        createViewComposite(parent);
         addPropertyListener(this);
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this, IResourceChangeEvent.POST_CHANGE);
         // we need to wrap the ISelectionProvider interface in the editor because
@@ -231,7 +277,327 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
         getSite().getPage().addPartListener(this);
     }
 
-    private void createAndInitializeTable() {
+    private void createViewComposite(final Composite parent) {
+        fViewComposite = new Composite(parent, SWT.NONE);
+        GridLayout layout = new GridLayout(1, false);
+        layout.horizontalSpacing = 0;
+        layout.verticalSpacing = 0;
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
+        fViewComposite.setLayout(layout);
+
+        Composite editorToolbar = createEditorToolbar(fViewComposite);
+        editorToolbar.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+
+        createAndInitializeTable(fViewComposite);
+        fEventsTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        fViewComposite.layout();
+    }
+
+    private Composite createEditorToolbar(Composite viewComposite) {
+        Composite toolbarComposite = new Composite(viewComposite, SWT.NONE);
+        toolbarComposite.setLayout(new GridLayout(4, false));
+
+        Label filler = new Label(toolbarComposite, SWT.NONE);
+        filler.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+
+        fReloadButton = new Button(toolbarComposite, SWT.PUSH);
+        fReloadButton.setImage(REFRESH_IMAGE); //$NON-NLS-1$
+        fReloadButton.setToolTipText("Refresh");
+        fReloadButton.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                super.widgetSelected(e);
+                TmfTimeRange range = new TmfTimeRange(TmfTimestamp.BIG_BANG, TmfTimestamp.BIG_CRUNCH);
+                TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(fTrace, fTrace, range);
+                fTrace.broadcastAsync(signal);
+            }
+        });
+
+        final Combo c1 = new Combo(toolbarComposite, SWT.NONE);
+        c1.add("No reload");
+        c1.add("Reload all");
+        c1.add("Load new");
+
+        final Combo c2 = new Combo(toolbarComposite, SWT.NONE);
+        c2.add("manually");
+        c2.add("automatically");
+        c2.add("every second");
+        c2.add("every 30 seconds");
+        final String customFrequency = "Custom frequency...";
+        c2.add(customFrequency);
+        c2.addSelectionListener(new SelectionAdapter() {
+
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                super.widgetSelected(e);
+
+                // Setting frequency
+                if (c2.getSelectionIndex() == 2) {
+                    fReloadFrequency = 1000;
+                } else if (c2.getSelectionIndex() == 3) {
+                    fReloadFrequency = 30000;
+                } else if (c2.getItem(c2.getSelectionIndex()).equals(customFrequency)) {
+                    SyncTimeLoadingSelectionDialog dialog = new SyncTimeLoadingSelectionDialog(c2.getShell());
+                    dialog.open();
+                    if (dialog.getReturnCode() == Window.OK) {
+                        Object[] result = dialog.getResult();
+                        final int timer = (int) result[0];
+                        if (c2.getItemCount() > 5) {
+                            c2.remove(c2.getItemCount() - 1);
+                        }
+                        fReloadFrequency = timer;
+                        c2.add("every " + String.format("%,d", timer) + "ms");
+                        c2.select(c2.getItemCount() - 1);
+                    }
+                }
+
+                reloadOptionsChanged(c1, c2);
+            }
+
+        });
+
+        c1.addSelectionListener(new SelectionAdapter() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                super.widgetSelected(e);
+                if (c1.getSelectionIndex() == 0) {
+                    c2.setEnabled(false);
+                    c2.setText(""); //$NON-NLS-1$
+                } else {
+                    c2.setEnabled(true);
+                    if (c2.getSelectionIndex() == -1) {
+                        c2.select(0);
+                    }
+                }
+
+                reloadOptionsChanged(c1, c2);
+            }
+        });
+        c1.select(0);
+
+        return toolbarComposite;
+    }
+
+    private void reloadOptionsChanged(final Combo c1, final Combo c2) {
+        if (fRefreshJob != null) {
+            fRefreshJob.cancel();
+            fRefreshJob = null;
+        }
+
+        if (c1.getSelectionIndex() == 1 && c2.getSelectionIndex() > 1) {
+
+            final Job innerJob = new Job("Timer loading job") {
+                private TmfFilterTreeNode fFilter;
+
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    final List<ColorSetting> asList = new ArrayList<>(Arrays.asList(ColorSettingsManager.getColorSettings()));
+                    if (fFilter != null) {
+                        for (ColorSetting cs : asList) {
+                            if (cs.getFilter() == fFilter) {
+                                asList.remove(cs);
+                                break;
+                            }
+                        }
+                    }
+                    final long oldLastRank = Math.max(0, fTrace.getNbEvents() - 1);
+                    fFilter = new TmfFilterTreeNode(null) {
+
+                        @Override
+                        public String toString(boolean explicit) {
+                            // TODO Auto-generated method stub
+                            return null;
+                        }
+
+                        @Override
+                        public boolean matches(ITmfEvent event) {
+                            return event.getRank() > oldLastRank;
+                        }
+
+                        @Override
+                        public String getNodeName() {
+                            return "rankfilternode";
+                        }
+                    };
+
+                    Display.getDefault().syncExec(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            ColorSetting colorSetting = new ColorSetting(null, new RGB(255, 255, 0), null, fFilter);
+                            asList.add(colorSetting);
+                            ColorSettingsManager.setColorSettings(asList.toArray(new ColorSetting[asList.size()]));
+
+                        }
+                    });
+
+                    TmfTimeRange range = new TmfTimeRange(TmfTimestamp.BIG_BANG, TmfTimestamp.BIG_CRUNCH);
+                    TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(fTrace, fTrace, range);
+                    fTrace.broadcastAsync(signal);
+                    if (!monitor.isCanceled()) {
+                        schedule(fReloadFrequency);
+                    }
+                    return Status.OK_STATUS;
+                }
+            };
+            innerJob.setSystem(true);
+
+            Job outerJob = new Job("Timer loading job") {
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    fEventsTable.setScrollLock(false);
+                    innerJob.schedule();
+                    while (fTrace != null && !monitor.isCanceled()) {
+                        try {
+                            Display.getDefault().asyncExec(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    if (fReloadButton.getImage() == null) {
+                                        fReloadButton.setImage(REFRESH_IMAGE);
+                                    } else {
+                                        fReloadButton.setImage(null);
+                                    }
+                                }
+                            });
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            // Ignored
+                        }
+                    }
+                    innerJob.cancel();
+                    fEventsTable.setScrollLock(true);
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            fReloadButton.setImage(REFRESH_IMAGE);
+                        }
+                    });
+
+                    return Status.OK_STATUS;
+                }
+            };
+            outerJob.schedule();
+            fRefreshJob = outerJob;
+        }
+    }
+
+    /**
+     * A dialog for selecting the different parameters synching files in time
+     * loading mode.
+     */
+    private static class SyncTimeLoadingSelectionDialog extends SelectionStatusDialog {
+
+        private static final String DEFAULT_LOAD_FREQUENCY = "2000"; //$NON-NLS-1$
+        private final Status STATUS_OK = new Status(IStatus.OK, Activator.PLUGIN_ID, null);
+        private final Status STATUS_INVALID_LOAD_FREQUENCY = new Status(IStatus.ERROR, Activator.PLUGIN_ID, org.eclipse.tracecompass.internal.tmf.ui.project.dialogs.Messages.SyncTimeLoadingSelectionDialog_ErrorInvalidLoadFrequency);
+        private Text fTimerText;
+
+        private static final String DIALOG_SETTINGS_ID = "org.eclipse.tracecompass.internal.tmf.ui.project.dialogs.SyncTimeLoadingSelectionDialog"; //$NON-NLS-1$
+        private static final String DIALOG_SETTINGS_LOAD_FREQUENCY = "loadFrequency"; //$NON-NLS-1$
+        private int fTimer;
+        private boolean fLoadMode;
+
+        /**
+         * Constructor.
+         *
+         * @param parent
+         *            the parent shell
+         */
+        public SyncTimeLoadingSelectionDialog(Shell parent) {
+            super(parent);
+
+            setStatusLineAboveButtons(true);
+        }
+
+        @Override
+        protected Control createDialogArea(Composite parent) {
+            Composite dialogAreaComposite = new Composite(parent, SWT.NONE);
+            dialogAreaComposite.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, true));
+            dialogAreaComposite.setLayout(new GridLayout(2, false));
+
+            Label timerLabel = new Label(dialogAreaComposite, SWT.NONE);
+            timerLabel.setText(org.eclipse.tracecompass.internal.tmf.ui.project.dialogs.Messages.SyncTimeLoadingSelectionDialog_LoadFrequency);
+            fTimerText = new Text(dialogAreaComposite, SWT.BORDER);
+            fTimerText.setText(DEFAULT_LOAD_FREQUENCY);
+            GridData gridData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+            fTimerText.setLayoutData(gridData);
+            fTimerText.addVerifyListener(new VerifyListener() {
+                @Override
+                public void verifyText(VerifyEvent e) {
+                    // only numbers and default are allowed.
+                    e.doit = e.text.matches("[0-9]*"); //$NON-NLS-1$
+                }
+            });
+            fTimerText.addModifyListener(new ModifyListener() {
+
+                @Override
+                public void modifyText(ModifyEvent event) {
+                    validateDialog();
+                }
+            });
+
+            restoreDialogSettings();
+
+            return super.createDialogArea(parent);
+        }
+
+        private void validateDialog() {
+            try {
+                int parsedInt = Integer.parseInt(fTimerText.getText());
+                if (parsedInt <= 0) {
+                    updateStatus(STATUS_INVALID_LOAD_FREQUENCY);
+                } else {
+                    updateStatus(STATUS_OK);
+                }
+            } catch (NumberFormatException e) {
+                updateStatus(STATUS_INVALID_LOAD_FREQUENCY);
+            }
+        }
+
+        private void restoreDialogSettings() {
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            IDialogSettings section = settings.getSection(DIALOG_SETTINGS_ID);
+            if (section == null) {
+                section = settings.addNewSection(DIALOG_SETTINGS_ID);
+            } else {
+                try {
+                    int loadFrequency = section.getInt(DIALOG_SETTINGS_LOAD_FREQUENCY);
+                    fTimerText.setText(Integer.toString(loadFrequency));
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
+            }
+        }
+
+        @Override
+        protected void computeResult() {
+            String timerStr = fTimerText.getText();
+            fTimer = Integer.parseInt(timerStr);
+        }
+
+        @Override
+        protected void okPressed() {
+            saveDialogSettings();
+            super.okPressed();
+        }
+
+        private void saveDialogSettings() {
+            IDialogSettings settings = Activator.getDefault().getDialogSettings();
+            IDialogSettings section = settings.getSection(DIALOG_SETTINGS_ID);
+            section.put(DIALOG_SETTINGS_LOAD_FREQUENCY, Integer.parseInt(fTimerText.getText()));
+        }
+
+        @Override
+        public Object[] getResult() {
+            return new Object[] { fTimer, fLoadMode };
+        }
+
+    }
+
+    private void createAndInitializeTable(Composite parent) {
         if (fTrace != null) {
             setPartName(fTrace.getName());
             fEventsTable = createEventsTable(fParent, fTrace.getCacheSize());
@@ -252,7 +618,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
 
             broadcast(new TmfTraceOpenedSignal(this, fTrace, fFile));
         } else {
-            fEventsTable = new TmfEventsTable(fParent, 0);
+            fEventsTable = new TmfEventsTable(parent, 0);
             fEventsTable.addSelectionChangedListener(this);
         }
         IStatusLineManager statusLineManager = getEditorSite().getActionBars().getStatusLineManager();

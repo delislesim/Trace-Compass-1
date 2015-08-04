@@ -18,8 +18,10 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.tracecompass.tmf.core.signal.TmfTraceRangeUpdatedSignal;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
-import org.eclipse.tracecompass.tmf.core.trace.ITmfTraceCompleteness;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceFolder;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -54,14 +56,10 @@ public class SyncRefreshAllHandler extends AbstractHandler {
 
     private static void refreshTrace(TmfTraceElement t) {
         final TmfTraceElement traceElement = t.getElementUnderTraceFolder();
-//        trace.closeEditors();
-//        trace.deleteSupplementaryFolder();
-//        TmfOpenTraceHelper.openTraceFromElement(trace);
         ITmfTrace trace = traceElement.getTrace();
-        if (trace instanceof ITmfTraceCompleteness) {
-            ITmfTraceCompleteness complete = (ITmfTraceCompleteness) trace;
-            complete.setComplete(false);
-        }
+        TmfTimeRange range = new TmfTimeRange(TmfTimestamp.BIG_BANG, TmfTimestamp.BIG_CRUNCH);
+        TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(trace, trace, range);
+        trace.broadcastAsync(signal);
     }
 
 }

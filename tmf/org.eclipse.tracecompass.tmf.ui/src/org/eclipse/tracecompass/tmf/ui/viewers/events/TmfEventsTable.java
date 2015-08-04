@@ -359,6 +359,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
     private MenuManager fTablePopupMenuManager;
     private MenuManager fHeaderPopupMenuManager;
 
+    private boolean fScrollLock = true;
+
     // ------------------------------------------------------------------------
     // Constructors
     // ------------------------------------------------------------------------
@@ -2702,6 +2704,13 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
     }
 
     /**
+     * @since 2.0
+     */
+    public void setScrollLock(boolean scrollLock) {
+        fScrollLock = scrollLock;
+    }
+
+    /**
      * Notifies any selection changed listeners that the viewer's selection has
      * changed. Only listeners registered at the time this method is called are
      * notified.
@@ -2882,6 +2891,11 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         if ((signal.getTrace() != fTrace) || fTable.isDisposed()) {
             return;
         }
+
+        if (!fScrollLock) {
+            fPendingGotoRank = Math.max(fTrace.getNbEvents() - 1, 0);
+        }
+
         // Perform the refresh on the UI thread
         Display.getDefault().asyncExec(new Runnable() {
             @Override

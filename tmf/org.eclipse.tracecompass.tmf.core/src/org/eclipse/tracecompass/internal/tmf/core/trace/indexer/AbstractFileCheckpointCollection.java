@@ -453,6 +453,7 @@ public abstract class AbstractFileCheckpointCollection implements ICheckpointCol
      */
     @Override
     public void dispose() {
+
         try {
             if (fRandomAccessFile != null) {
                 if (fHeader != null) {

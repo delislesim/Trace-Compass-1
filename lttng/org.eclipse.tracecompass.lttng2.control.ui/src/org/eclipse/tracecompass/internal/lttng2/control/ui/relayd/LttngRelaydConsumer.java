@@ -196,8 +196,6 @@ public final class LttngRelaydConsumer {
                                         fTimestampEnd = nanoTimeStamp;
                                     }
                                 } else if (indexReply.getStatus() == NextIndexReturnCode.VIEWER_INDEX_HUP) {
-                                    // The trace is now complete because the trace session was destroyed
-                                    fCtfTmfTrace.setComplete(true);
                                     TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(LttngRelaydConsumer.this, fCtfTmfTrace, new TmfTimeRange(fCtfTmfTrace.getStartTime(), new TmfNanoTimestamp(fTimestampEnd)));
                                     fCtfTmfTrace.broadcastAsync(signal);
                                     return Status.OK_STATUS;
