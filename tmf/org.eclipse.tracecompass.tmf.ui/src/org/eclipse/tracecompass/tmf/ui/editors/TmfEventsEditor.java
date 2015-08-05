@@ -15,8 +15,6 @@ package org.eclipse.tracecompass.tmf.ui.editors;
 
 import static org.eclipse.tracecompass.common.core.NonNullUtils.checkNotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
@@ -53,7 +51,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -67,9 +64,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.tracecompass.internal.tmf.ui.Activator;
 import org.eclipse.tracecompass.internal.tmf.ui.editors.ITmfEventsEditorConstants;
 import org.eclipse.tracecompass.tmf.core.TmfCommonConstants;
-import org.eclipse.tracecompass.tmf.core.event.ITmfEvent;
 import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
-import org.eclipse.tracecompass.tmf.core.filter.model.TmfFilterTreeNode;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTimestampFormatUpdateSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceClosedSignal;
@@ -89,8 +84,6 @@ import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectRegistry;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfTraceTypeUIUtils;
 import org.eclipse.tracecompass.tmf.ui.viewers.events.TmfEventsTable;
-import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSetting;
-import org.eclipse.tracecompass.tmf.ui.views.colors.ColorSettingsManager;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
@@ -389,49 +382,9 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
         if (c1.getSelectionIndex() == 1 && c2.getSelectionIndex() > 1) {
 
             final Job innerJob = new Job("Timer loading job") {
-                private TmfFilterTreeNode fFilter;
 
                 @Override
                 protected IStatus run(IProgressMonitor monitor) {
-                    final List<ColorSetting> asList = new ArrayList<>(Arrays.asList(ColorSettingsManager.getColorSettings()));
-                    if (fFilter != null) {
-                        for (ColorSetting cs : asList) {
-                            if (cs.getFilter() == fFilter) {
-                                asList.remove(cs);
-                                break;
-                            }
-                        }
-                    }
-                    final long oldLastRank = Math.max(0, fTrace.getNbEvents() - 1);
-                    fFilter = new TmfFilterTreeNode(null) {
-
-                        @Override
-                        public String toString(boolean explicit) {
-                            // TODO Auto-generated method stub
-                            return null;
-                        }
-
-                        @Override
-                        public boolean matches(ITmfEvent event) {
-                            return event.getRank() > oldLastRank;
-                        }
-
-                        @Override
-                        public String getNodeName() {
-                            return "rankfilternode";
-                        }
-                    };
-
-                    Display.getDefault().syncExec(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            ColorSetting colorSetting = new ColorSetting(null, new RGB(255, 255, 0), null, fFilter);
-                            asList.add(colorSetting);
-                            ColorSettingsManager.setColorSettings(asList.toArray(new ColorSetting[asList.size()]));
-
-                        }
-                    });
 
                     TmfTimeRange range = new TmfTimeRange(TmfTimestamp.BIG_BANG, TmfTimestamp.BIG_CRUNCH);
                     TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(fTrace, fTrace, range);
@@ -447,14 +400,19 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
             Job outerJob = new Job("Timer loading job") {
                 @Override
                 protected IStatus run(IProgressMonitor monitor) {
-                    fEventsTable.setScrollLock(false);
                     innerJob.schedule();
                     while (fTrace != null && !monitor.isCanceled()) {
+                        fEventsTable.setScrollLock(false);
+                        fEventsTable.setHighLightNewEvents(true);
                         try {
                             Display.getDefault().asyncExec(new Runnable() {
 
                                 @Override
                                 public void run() {
+                                    if (fReloadButton.isDisposed()) {
+                                        return;
+                                    }
+
                                     if (fReloadButton.getImage() == null) {
                                         fReloadButton.setImage(REFRESH_IMAGE);
                                     } else {
@@ -469,6 +427,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
                     }
                     innerJob.cancel();
                     fEventsTable.setScrollLock(true);
+                    fEventsTable.setHighLightNewEvents(false);
                     Display.getDefault().asyncExec(new Runnable() {
                         @Override
                         public void run() {

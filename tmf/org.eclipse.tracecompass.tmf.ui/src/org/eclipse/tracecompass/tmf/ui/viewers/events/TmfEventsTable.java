@@ -100,6 +100,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -361,6 +362,14 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
 
     private boolean fScrollLock = true;
 
+    private boolean fHighLightNewEvents = false;
+
+    private long fOldLastRank;
+
+    private Color fNewEventColor;
+
+    private long fOldOldLastRank;
+
     // ------------------------------------------------------------------------
     // Constructors
     // ------------------------------------------------------------------------
@@ -432,6 +441,8 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
     public TmfEventsTable(final Composite parent, int cacheSize,
             @NonNull Iterable<ITmfEventAspect> aspects) {
         super("TmfEventsTable"); //$NON-NLS-1$
+
+        fNewEventColor = new Color(parent.getDisplay(), new RGB(255, 255, 0));
 
         fComposite = new Composite(parent, SWT.NONE);
         final GridLayout gl = new GridLayout(1, false);
@@ -1498,6 +1509,11 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             item.setForeground(colorSetting.getForegroundColor());
             item.setBackground(colorSetting.getBackgroundColor());
         }
+
+        if (fHighLightNewEvents && rank > fOldOldLastRank) {
+            item.setBackground(fNewEventColor);
+        }
+
         item.setFont(fFont);
 
         if (searchMatch) {
@@ -2711,6 +2727,13 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
     }
 
     /**
+     * @since 2.0
+     */
+    public void setHighLightNewEvents(boolean highLightNewEvents) {
+        fHighLightNewEvents = highLightNewEvents;
+    }
+
+    /**
      * Notifies any selection changed listeners that the viewer's selection has
      * changed. Only listeners registered at the time this method is called are
      * notified.
@@ -2892,8 +2915,14 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             return;
         }
 
+        long lastRank = fTrace.getNbEvents() - 1;
         if (!fScrollLock) {
-            fPendingGotoRank = Math.max(fTrace.getNbEvents() - 1, 0);
+            fPendingGotoRank = Math.max(lastRank, 0);
+        }
+        fOldOldLastRank = fOldLastRank;
+        fOldLastRank = lastRank;
+        if (fOldOldLastRank == fOldLastRank) {
+            return;
         }
 
         // Perform the refresh on the UI thread
@@ -2901,6 +2930,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             @Override
             public void run() {
                 if (!fTable.isDisposed() && (fTrace != null)) {
+
                     if (fTable.getData(Key.FILTER_OBJ) == null) {
                         /* +1 for header row */
                         fTable.setItemCount((int) fTrace.getNbEvents() + 1);
