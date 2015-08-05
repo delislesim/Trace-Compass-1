@@ -125,6 +125,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
     private Composite fViewComposite;
 
     private int fReloadFrequency = 0;
+    private int fCustomReloadFrequency = 0;
 
     private Job fRefreshJob;
 
@@ -297,7 +298,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
 
         fReloadButton = new Button(toolbarComposite, SWT.PUSH);
         fReloadButton.setImage(REFRESH_IMAGE); //$NON-NLS-1$
-        fReloadButton.setToolTipText("Refresh");
+        fReloadButton.setToolTipText("Refresh the trace content");
         fReloadButton.addSelectionListener(new SelectionAdapter() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -308,17 +309,15 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
             }
         });
 
-        final Combo c1 = new Combo(toolbarComposite, SWT.NONE);
-        c1.add("No reload");
-        c1.add("Reload all");
-        c1.add("Load new");
+        Label refreshLabel = new Label(toolbarComposite, SWT.NONE);
+        refreshLabel.setText("Refresh");
 
         final Combo c2 = new Combo(toolbarComposite, SWT.NONE);
         c2.add("manually");
         c2.add("automatically");
         c2.add("every second");
-        c2.add("every 30 seconds");
-        final String customFrequency = "Custom frequency...";
+        c2.add("every 30 secs");
+        final String customFrequency = "Custom...";
         c2.add(customFrequency);
         c2.addSelectionListener(new SelectionAdapter() {
 
@@ -326,8 +325,13 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
             public void widgetSelected(SelectionEvent e) {
                 super.widgetSelected(e);
 
-                // Setting frequency
-                if (c2.getSelectionIndex() == 2) {
+                int oldFrequency = fReloadFrequency;
+
+                if (c2.getSelectionIndex() == 0) {
+                    fReloadFrequency = -1;
+                } else if (c2.getSelectionIndex() == 1) {
+                    fReloadFrequency = -1;
+                } else if (c2.getSelectionIndex() == 2) {
                     fReloadFrequency = 1000;
                 } else if (c2.getSelectionIndex() == 3) {
                     fReloadFrequency = 30000;
@@ -340,48 +344,39 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
                         if (c2.getItemCount() > 5) {
                             c2.remove(c2.getItemCount() - 1);
                         }
-                        fReloadFrequency = timer;
-                        c2.add("every " + String.format("%,d", timer) + "ms");
+                        fCustomReloadFrequency = timer;
+                        fReloadFrequency = fCustomReloadFrequency;
+                        if (fReloadFrequency % 1000 == 0) {
+                            c2.add("every " + String.format("%,d", timer / 1000) + " secs");
+                        } else {
+                            c2.add("every " + String.format("%,d", timer) + " ms");
+                        }
                         c2.select(c2.getItemCount() - 1);
                     }
+                } else if (c2.getSelectionIndex() == 5) {
+                    fReloadFrequency = fCustomReloadFrequency;
                 }
 
-                reloadOptionsChanged(c1, c2);
+                if (fReloadFrequency != oldFrequency) {
+                    reloadOptionsChanged(c2);
+                }
             }
 
         });
-
-        c1.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                super.widgetSelected(e);
-                if (c1.getSelectionIndex() == 0) {
-                    c2.setEnabled(false);
-                    c2.setText(""); //$NON-NLS-1$
-                } else {
-                    c2.setEnabled(true);
-                    if (c2.getSelectionIndex() == -1) {
-                        c2.select(0);
-                    }
-                }
-
-                reloadOptionsChanged(c1, c2);
-            }
-        });
-        c1.select(0);
+        c2.select(0);
 
         return toolbarComposite;
     }
 
-    private void reloadOptionsChanged(final Combo c1, final Combo c2) {
+    private void reloadOptionsChanged(final Combo c2) {
         if (fRefreshJob != null) {
             fRefreshJob.cancel();
             fRefreshJob = null;
         }
 
-        if (c1.getSelectionIndex() == 1 && c2.getSelectionIndex() > 1) {
+        if (c2.getSelectionIndex() > 1) {
 
-            final Job innerJob = new Job("Timer loading job") {
+            final Job innerJob = new Job("Refreshing " + fTrace.getName() + " (single refresh)") {
 
                 @Override
                 protected IStatus run(IProgressMonitor monitor) {
@@ -397,7 +392,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
             };
             innerJob.setSystem(true);
 
-            Job outerJob = new Job("Timer loading job") {
+            Job outerJob = new Job("Refreshing " + fTrace.getName() + " " + c2.getText()) {
                 @Override
                 protected IStatus run(IProgressMonitor monitor) {
                     innerJob.schedule();
