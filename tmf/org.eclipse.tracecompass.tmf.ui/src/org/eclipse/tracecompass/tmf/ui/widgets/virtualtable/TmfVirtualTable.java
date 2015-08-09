@@ -20,8 +20,6 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -388,15 +386,6 @@ public class TmfVirtualTable extends Composite {
                     fTable.setTopIndex(0);
                 }
                 fResetTopIndex = false;
-            }
-        });
-
-        fTable.addDisposeListener(new DisposeListener() {
-
-            @Override
-            public void widgetDisposed(DisposeEvent e) {
-                System.out.println();
-
             }
         });
     }
