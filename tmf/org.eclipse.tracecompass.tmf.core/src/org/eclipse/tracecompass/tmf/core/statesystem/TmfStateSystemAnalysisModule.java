@@ -24,6 +24,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.tracecompass.internal.tmf.core.TmfCoreTracer;
 import org.eclipse.tracecompass.internal.tmf.core.statesystem.backends.partial.PartialHistoryBackend;
 import org.eclipse.tracecompass.internal.tmf.core.statesystem.backends.partial.PartialStateSystem;
 import org.eclipse.tracecompass.statesystem.core.ITmfStateSystem;
@@ -40,7 +41,6 @@ import org.eclipse.tracecompass.tmf.core.signal.TmfSignalHandler;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTrace;
-import org.eclipse.tracecompass.tmf.core.trace.ITmfTraceCompleteness;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceManager;
 import org.eclipse.tracecompass.tmf.core.trace.TmfTraceUtils;
 import org.eclipse.tracecompass.tmf.core.trace.experiment.TmfExperiment;
@@ -229,6 +229,7 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
     @Override
     public void dispose() {
         super.dispose();
+        disposeProvider(false);
         if (fStateSystem != null) {
             fStateSystem.dispose();
         }
@@ -409,9 +410,8 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
             request.cancel();
         }
 
-        fTimeRange = TmfTimeRange.ETERNITY;
-        final ITmfTrace trace = provider.getTrace();
-        if (!isCompleteTrace(trace)) {
+        if (fTimeRange == null) {
+            final ITmfTrace trace = provider.getTrace();
             fTimeRange = trace.getTimeRange();
         }
 
@@ -477,16 +477,12 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
         @Override
         public void handleSuccess() {
             super.handleSuccess();
-            if (isCompleteTrace(trace)) {
-                disposeProvider(false);
-            } else {
-                fNbRead += getNbRead();
-                synchronized (fRequestSyncObj) {
-                    final TmfTimeRange timeRange = fTimeRange;
-                    if (timeRange != null) {
-                        if (getRange().getEndTime().getValue() < timeRange.getEndTime().getValue()) {
-                            startRequest();
-                        }
+            fNbRead += getNbRead();
+            synchronized (fRequestSyncObj) {
+                final TmfTimeRange timeRange = fTimeRange;
+                if (timeRange != null) {
+                    if (getRange().getEndTime().getValue() < timeRange.getEndTime().getValue()) {
+                        startRequest();
                     }
                 }
             }
@@ -495,9 +491,7 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
         @Override
         public void handleCancel() {
             super.handleCancel();
-            if (isCompleteTrace(trace)) {
-                disposeProvider(true);
-            }
+            disposeProvider(true);
         }
 
         @Override
@@ -532,6 +526,7 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
      */
     @TmfSignalHandler
     public void traceRangeUpdated(final TmfTraceRangeUpdatedSignal signal) {
+        TmfCoreTracer.traceAnalysis(getId(), getTrace(), "traceRangeUpdated, " + signal.getRange());
         fTimeRange = signal.getRange();
         ITmfStateProvider stateProvider = fStateProvider;
         synchronized (fRequestSyncObj) {
@@ -550,12 +545,9 @@ public abstract class TmfStateSystemAnalysisModule extends TmfAbstractAnalysisMo
         if (stateProvider == null || timeRange == null) {
             return;
         }
+        TmfCoreTracer.traceAnalysis(getId(), getTrace(), "startRequest, " + timeRange);
         ITmfEventRequest request = new StateSystemEventRequest(stateProvider, timeRange, fNbRead);
         stateProvider.getTrace().sendRequest(request);
         fRequest = request;
-    }
-
-    private static boolean isCompleteTrace(ITmfTrace trace) {
-        return !(trace instanceof ITmfTraceCompleteness) || ((ITmfTraceCompleteness) trace).isComplete();
     }
 }

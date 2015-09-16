@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
@@ -48,6 +49,7 @@ import org.eclipse.tracecompass.tmf.core.event.aspect.ITmfEventAspect;
 import org.eclipse.tracecompass.tmf.core.exceptions.TmfTraceException;
 import org.eclipse.tracecompass.tmf.core.timestamp.ITmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfNanoTimestamp;
+import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimestamp;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfContext;
 import org.eclipse.tracecompass.tmf.core.trace.ITmfTraceProperties;
@@ -60,6 +62,7 @@ import org.eclipse.tracecompass.tmf.core.trace.indexer.TmfBTreeTraceIndexer;
 import org.eclipse.tracecompass.tmf.core.trace.indexer.checkpoint.ITmfCheckpoint;
 import org.eclipse.tracecompass.tmf.core.trace.indexer.checkpoint.TmfCheckpoint;
 import org.eclipse.tracecompass.tmf.core.trace.location.ITmfLocation;
+import org.eclipse.tracecompass.tmf.ctf.core.CtfConstants;
 import org.eclipse.tracecompass.tmf.ctf.core.context.CtfLocation;
 import org.eclipse.tracecompass.tmf.ctf.core.context.CtfLocationInfo;
 import org.eclipse.tracecompass.tmf.ctf.core.context.CtfTmfContext;
@@ -563,6 +566,37 @@ public class CtfTmfTrace extends TmfTrace
         return new TmfNanoTimestamp(getTimestampTransform().transform(ts));
     }
 
+    @Override
+    protected TmfTimeRange getInitialSafeTimeRange() {
+        if (isLive()) {
+            // Let the tracer tell us the safe time range (lttng-relayd)
+            return null;
+        }
+
+        return super.getInitialSafeTimeRange();
+    }
+
+    private boolean isLive() {
+        if (getResource() == null) {
+            return false;
+        }
+
+        String host = null;
+        String port = null;
+        String sessionName = null;
+        try {
+            host = getResource().getPersistentProperty(CtfConstants.LIVE_HOST);
+            port = getResource().getPersistentProperty(CtfConstants.LIVE_PORT);
+            sessionName = getResource().getPersistentProperty(CtfConstants.LIVE_SESSION_NAME);
+        } catch (CoreException e) {
+            Activator.getDefault().logError(e.getMessage(), e);
+            // Something happened to the resource, assume we won't get any more
+            // data from it
+            return false;
+        }
+        return host != null && port != null && sessionName != null;
+    }
+
     private static int fCheckpointSize = -1;
 
     @Override
@@ -587,40 +621,4 @@ public class CtfTmfTrace extends TmfTrace
     public ITmfLocation restoreLocation(ByteBuffer bufferIn) {
         return new CtfLocation(bufferIn);
     }
-
-//    @Override
-//    public boolean isComplete() {
-//        if (getResource() == null) {
-//            return true;
-//        }
-//
-//        String host = null;
-//        String port = null;
-//        String sessionName = null;
-//        try {
-//            host = getResource().getPersistentProperty(CtfConstants.LIVE_HOST);
-//            port = getResource().getPersistentProperty(CtfConstants.LIVE_PORT);
-//            sessionName = getResource().getPersistentProperty(CtfConstants.LIVE_SESSION_NAME);
-//        } catch (CoreException e) {
-//            Activator.getDefault().logError(e.getMessage(), e);
-//            // Something happened to the resource, assume we won't get any more
-//            // data from it
-//            return true;
-//        }
-//        return host == null || port == null || sessionName == null;
-//    }
-//
-//    @Override
-//    public void setComplete(final boolean isComplete) {
-//        super.setComplete(isComplete);
-//        try {
-//            if (isComplete) {
-//                getResource().setPersistentProperty(CtfConstants.LIVE_HOST, null);
-//                getResource().setPersistentProperty(CtfConstants.LIVE_PORT, null);
-//                getResource().setPersistentProperty(CtfConstants.LIVE_SESSION_NAME, null);
-//            }
-//        } catch (CoreException e) {
-//            Activator.getDefault().logError(e.getMessage(), e);
-//        }
-//    }
 }

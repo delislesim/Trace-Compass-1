@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.tracecompass.internal.tmf.core.Activator;
+import org.eclipse.tracecompass.internal.tmf.core.TmfCoreTracer;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModule;
 import org.eclipse.tracecompass.tmf.core.analysis.IAnalysisModuleHelper;
 import org.eclipse.tracecompass.tmf.core.analysis.TmfAnalysisManager;
@@ -666,13 +667,30 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
                 return;
             }
 
-            final TmfTimeRange timeRange = new TmfTimeRange(getStartTime(), TmfTimestamp.BIG_CRUNCH);
-            final TmfTraceRangeUpdatedSignal rangeUpdatedsignal = new TmfTraceRangeUpdatedSignal(this, this, timeRange);
+            final TmfTimeRange timeRange = getInitialSafeTimeRange();
+            if (timeRange != null) {
+                final TmfTraceRangeUpdatedSignal rangeUpdatedsignal = new TmfTraceRangeUpdatedSignal(this, this, timeRange);
+                TmfCoreTracer.trace("traceOpened, " + timeRange);
 
-            // Broadcast in separate thread to prevent deadlock
-            broadcastAsync(rangeUpdatedsignal);
+                // Broadcast in separate thread to prevent deadlock
+                broadcastAsync(rangeUpdatedsignal);
+            }
             return;
         }
+    }
+
+    /**
+     * Returns the initial time range in which it is safe to perform event
+     * requests. If not null, this time range is broadcasted when the trace is
+     * opened.
+     *
+     * @return the initial safe time range or null if no time range is safe
+     *         initially
+     *
+     * @since 2.0
+     */
+    protected TmfTimeRange getInitialSafeTimeRange() {
+        return new TmfTimeRange(getStartTime(), TmfTimestamp.BIG_CRUNCH);
     }
 
     /**
@@ -735,21 +753,4 @@ public abstract class TmfTrace extends TmfEventProvider implements ITmfTrace, IT
                 + ", fNbEvents=" + fNbEvents + ", fStartTime=" + fStartTime
                 + ", fEndTime=" + fEndTime + ", fStreamingInterval=" + fStreamingInterval + "]";
     }
-
-//    @Override
-//    public boolean isComplete() {
-//        /*
-//         * Be default, all traces are "complete" which means no more data will
-//         * be added later
-//         */
-//        return true;
-//    }
-//
-//    @Override
-//    public void setComplete(boolean isComplete) {
-//        /*
-//         * This should be overridden by trace classes that can support live
-//         * reading (traces in an incomplete state)
-//         */
-//    }
 }

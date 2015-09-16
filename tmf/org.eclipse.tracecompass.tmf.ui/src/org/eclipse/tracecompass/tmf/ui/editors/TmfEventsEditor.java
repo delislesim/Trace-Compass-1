@@ -426,7 +426,9 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
                     Display.getDefault().asyncExec(new Runnable() {
                         @Override
                         public void run() {
-                            fReloadButton.setImage(REFRESH_IMAGE);
+                            if (!fReloadButton.isDisposed()) {
+                                fReloadButton.setImage(REFRESH_IMAGE);
+                            }
                         }
                     });
 

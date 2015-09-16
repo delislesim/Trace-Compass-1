@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -38,6 +39,7 @@ import org.eclipse.tracecompass.internal.lttng2.control.ui.Activator;
 import org.eclipse.tracecompass.tmf.core.signal.TmfTraceRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfNanoTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
+import org.eclipse.tracecompass.tmf.ctf.core.CtfConstants;
 import org.eclipse.tracecompass.tmf.ctf.core.trace.CtfTmfTrace;
 
 /**
@@ -196,6 +198,7 @@ public final class LttngRelaydConsumer {
                                         fTimestampEnd = nanoTimeStamp;
                                     }
                                 } else if (indexReply.getStatus() == NextIndexReturnCode.VIEWER_INDEX_HUP) {
+                                    removeLive(fCtfTmfTrace);
                                     TmfTraceRangeUpdatedSignal signal = new TmfTraceRangeUpdatedSignal(LttngRelaydConsumer.this, fCtfTmfTrace, new TmfTimeRange(fCtfTmfTrace.getStartTime(), new TmfNanoTimestamp(fTimestampEnd)));
                                     fCtfTmfTrace.broadcastAsync(signal);
                                     return Status.OK_STATUS;
@@ -213,6 +216,17 @@ public final class LttngRelaydConsumer {
         };
         fConsumerJob.setSystem(true);
         fConsumerJob.schedule();
+    }
+
+    private static void removeLive(CtfTmfTrace ctfTmfTrace) {
+        IResource resource = ctfTmfTrace.getResource();
+        try {
+            resource.setPersistentProperty(CtfConstants.LIVE_HOST, null);
+            resource.setPersistentProperty(CtfConstants.LIVE_PORT, null);
+            resource.setPersistentProperty(CtfConstants.LIVE_SESSION_NAME, null);
+        } catch (CoreException e) {
+            Activator.getDefault().logError(e.getMessage(), e);
+        }
     }
 
     /**

@@ -1203,9 +1203,4 @@ public class TmfVirtualTable extends Composite {
         this.doubleClickListener = doubleClickListener;
     }
 
-    @Override
-    public void dispose() {
-        // TODO Auto-generated method stub
-        super.dispose();
-    }
 }
