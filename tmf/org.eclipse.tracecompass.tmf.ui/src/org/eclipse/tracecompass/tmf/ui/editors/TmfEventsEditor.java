@@ -556,7 +556,7 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
     private void createAndInitializeTable(Composite parent) {
         if (fTrace != null) {
             setPartName(fTrace.getName());
-            fEventsTable = createEventsTable(fParent, fTrace.getCacheSize());
+            fEventsTable = createEventsTable(parent, fTrace.getCacheSize());
             fEventsTable.registerContextMenus(getSite());
             fEventsTable.setColumnOrder(TmfTraceColumnManager.loadColumnOrder(fTrace.getTraceTypeId()));
             fEventsTable.addSelectionChangedListener(this);
