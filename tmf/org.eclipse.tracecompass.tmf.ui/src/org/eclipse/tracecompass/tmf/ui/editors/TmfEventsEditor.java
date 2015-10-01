@@ -397,8 +397,8 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
                 protected IStatus run(IProgressMonitor monitor) {
                     innerJob.schedule();
                     while (fTrace != null && !monitor.isCanceled()) {
-                        fEventsTable.setScrollLock(false);
-                        fEventsTable.setHighLightNewEvents(true);
+//                        fEventsTable.setScrollLock(false);
+//                        fEventsTable.setHighLightNewEvents(true);
                         try {
                             Display.getDefault().asyncExec(new Runnable() {
 
@@ -421,8 +421,8 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
                         }
                     }
                     innerJob.cancel();
-                    fEventsTable.setScrollLock(true);
-                    fEventsTable.setHighLightNewEvents(false);
+//                    fEventsTable.setScrollLock(true);
+//                    fEventsTable.setHighLightNewEvents(false);
                     Display.getDefault().asyncExec(new Runnable() {
                         @Override
                         public void run() {
@@ -579,6 +579,8 @@ public class TmfEventsEditor extends TmfEditor implements ITmfTraceEditor, IReus
         }
         IStatusLineManager statusLineManager = getEditorSite().getActionBars().getStatusLineManager();
         fEventsTable.setStatusLineManager(statusLineManager);
+        fEventsTable.setHighLightNewEvents(true);
+        fEventsTable.setScrollLock(false);
     }
 
     @Override

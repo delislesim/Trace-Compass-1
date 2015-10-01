@@ -1510,7 +1510,7 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
             item.setBackground(colorSetting.getBackgroundColor());
         }
 
-        if (fHighLightNewEvents && rank > fOldOldLastRank) {
+        if (fHighLightNewEvents && rank > fOldOldLastRank && fOldOldLastRank > 0) {
             item.setBackground(fNewEventColor);
         }
 
@@ -2916,10 +2916,12 @@ public class TmfEventsTable extends TmfComponent implements IGotoMarker, IColorS
         }
 
         long lastRank = fTrace.getNbEvents() - 1;
-        if (!fScrollLock) {
+        if (!fScrollLock && fOldLastRank != 0) {
             fPendingGotoRank = Math.max(lastRank, 0);
         }
-        fOldOldLastRank = fOldLastRank;
+        if (fOldLastRank > 0) {
+            fOldOldLastRank = fOldLastRank;
+        }
         fOldLastRank = lastRank;
         if (fOldOldLastRank == fOldLastRank) {
             return;
