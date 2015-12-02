@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+<modelVersion>4.0.0</modelVersion>
+	<!--
+	/*******************************************************************************
+	* Copyright (c) 2015 Efficios Inc.
+	* All rights reserved. This program and the accompanying materials
+	* are made available under the terms of the Eclipse Public License v1.0
+	* which accompanies this distribution, and is available at
+	* http://www.eclipse.org/legal/epl-v10.html
+	*
+	* Contributors:
+	* Jonathan Rajotte Julien - initial implementation
+	*******************************************************************************/
+	-->
+	<name>org.eclipse.tracecompass.rcp.tests</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.rcptt.core.builder.q7Builder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.rcptt.core.rcpttnature</nature>
+	</natures>
+</projectDescription>

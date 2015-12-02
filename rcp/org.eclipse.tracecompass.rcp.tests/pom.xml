@@ -1,0 +1,72 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<!--
+	/*******************************************************************************
+	* Copyright (c) 2015 Efficios Inc.
+	* All rights reserved. This program and the accompanying materials
+	* are made available under the terms of the Eclipse Public License v1.0
+	* which accompanies this distribution, and is available at
+	* http://www.eclipse.org/legal/epl-v10.html
+	*
+	* Contributors:
+	* Jonathan Rajotte Julien - initial implementation
+	*******************************************************************************/
+	-->
+	<!-- Change groupId, artifactId and version -->
+	<artifactId>tracecompass-rcp-test</artifactId>
+	<groupId>tracecompass-rcp-test</groupId>
+	<version>0.1</version>
+
+	<packaging>rcpttTest</packaging>
+
+	<!-- Change properies below to your values -->
+	<properties>
+		<autPath>${project.basedir}/rcp/trace-compass</autPath>
+		<dataPath>${project.basedir}/data</dataPath>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.rcptt</groupId>
+				<artifactId>rcptt-maven-plugin</artifactId>
+				<version>2.1.0-SNAPSHOT</version>
+				<extensions>true</extensions>
+				<configuration>
+					<aut>
+						<explicit>${autPath}</explicit>
+
+						<vmArgs> 
+							<vmArg>-Xmx1536m</vmArg>  
+							<vmArg>-XX:MaxPermSize=256m</vmArg> 
+							<vmArg>-DdataPath=${dataPath}</vmArg>
+						</vmArgs> 
+					</aut>
+					<runner>
+						<version>2.1.0-SNAPSHOT</version>
+					</runner>
+					<suites>
+						<suite>open_trace</suite>
+					</suites>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>rcptt-snapshots</id>
+			<name>RCPTT Maven Snapshots repository</name>
+			<snapshots>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+			<url>https://repo.eclipse.org/content/repositories/rcptt-snapshots/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>rcptt-releases</id>
+			<name>RCPTT Maven repository</name>
+			<url>https://repo.eclipse.org/content/repositories/rcptt-releases/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

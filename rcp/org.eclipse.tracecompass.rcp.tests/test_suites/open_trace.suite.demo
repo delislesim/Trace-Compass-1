@@ -1,0 +1,34 @@
+--- RCPTT testcase ---
+Format-Version: 1.0
+Element-Name: open_trace
+Element-Type: testsuite
+Element-Version: 2.0
+Id: _3WKjAJIMEeWlJ7F5c_Pz9A
+Runtime-Version: 2.1.0.201511240016
+Save-Time: 12/2/15 3:08 PM
+
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
+Content-Type: text/plain
+Entry-Name: .description
+
+/*******************************************************************************
+* Copyright (c) 2015 Efficios Inc.
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+* Jonathan Rajotte Julien - initial implementation
+*******************************************************************************/
+
+Superset of open trace test suites.
+------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
+Content-Type: text/testcase
+Entry-Name: testcase-items
+
+_qrCwsJILEeWlJ7F5c_Pz9A	// kind: 'suite' name: 'open_trace_dynamic' path: '../dynamic_trace/test_suites/open_trace_dynamic.suite'
+_vjjDoJRvEeWALc2lld1Yng	// kind: 'suite' name: 'open_trace_static' path: '../static_trace/test_suites/open_trace_static.suite'
+
+------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--
