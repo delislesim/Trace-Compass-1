@@ -105,7 +105,7 @@
 						<version>2.1.0-SNAPSHOT</version>
 					</runner>
 					<suites>
-						<suite>open_trace</suite>
+						<suite>open_trace_suite</suite>
 					</suites>
 				</configuration>
 			</plugin>
