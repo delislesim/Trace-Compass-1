@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-<modelVersion>4.0.0</modelVersion>
-	<!--
-	/*******************************************************************************
-	* Copyright (c) 2015 Efficios Inc.
-	* All rights reserved. This program and the accompanying materials
-	* are made available under the terms of the Eclipse Public License v1.0
-	* which accompanies this distribution, and is available at
-	* http://www.eclipse.org/legal/epl-v10.html
-	*
-	* Contributors:
-	* Jonathan Rajotte Julien - initial implementation
-	*******************************************************************************/
-	-->
 	<name>org.eclipse.tracecompass.rcp.tests</name>
 	<comment></comment>
 	<projects>
@@ -29,12 +16,12 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1449614644246</id>
-			<name></name>
-			<type>10</type>
+			<id>1449615992914</id>
+			<name>target</name>
+			<type>9</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-target</arguments>
+				<arguments>1.0-name-matches-false-false-dependency</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>
