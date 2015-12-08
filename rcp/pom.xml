@@ -43,6 +43,7 @@
       </activation>
       <modules>
         <module>org.eclipse.tracecompass.rcp.product</module>
+        <module>org.eclipse.tracecompass.rcp.tests</module>
       </modules>
     </profile>
   </profiles>

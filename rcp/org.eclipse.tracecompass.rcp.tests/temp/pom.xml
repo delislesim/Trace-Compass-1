@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.stackoverflow</groupId>
+  <artifactId>q2359872</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>q2359872</name>
+  <properties>
+    <my.lib>${maven.dependency.org.eclipse.tracecompass.testtraces.tracecompass-test-traces-ctf.jar.path}</my.lib>
+  </properties>
+
+<repositories>
+    <repository>
+      <id>trace-compass-test-traces</id>
+      <name>Trace Compass Test Traces</name>
+      <url>http://archive.eclipse.org/tracecompass/tracecompass-test-traces/maven</url>
+    </repository>
+  </repositories>
+<!--	<pluginRepositories>
+		<pluginRepository>
+			<id>trace-compass-test-traces</id>
+			<name>Trace Compass Test Traces</name>
+			<url>http://archive.eclipse.org/tracecompass/tracecompass-test-traces/maven</url>
+		</pluginRepository>
+	</pluginRepositories>
+-->
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.tracecompass.testtraces</groupId>
+      <artifactId>tracecompass-test-traces-ctf</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>process-resources</phase>
+            <configuration>
+              <tasks>
+                <echo>${my.lib}</echo>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

@@ -4,8 +4,8 @@ Element-Name: open_trace_dynamic
 Element-Type: testsuite
 Element-Version: 2.0
 Id: _qrCwsJILEeWlJ7F5c_Pz9A
-Runtime-Version: 2.1.0.201511240016
-Save-Time: 12/2/15 3:07 PM
+Runtime-Version: 2.1.0.201512080016
+Save-Time: 12/8/15 12:11 AM
 
 ------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa
 Content-Type: text/plain
@@ -24,10 +24,3 @@ Entry-Name: .description
 
 Regroup tests concerning the opening of a dynamic trace.
 ------=_.description-216f885c-d591-38ce-8ea2-e4f8cb4d6ffa--
-------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8
-Content-Type: text/testcase
-Entry-Name: testcase-items
-
-_PQ_TgJIEEeWlJ7F5c_Pz9A	// kind: 'test' name: 'open_trace_dynamic_1' path: '../tests/open_trace_dynamic_1.test'
-
-------=_testcase-items-62c497da-4241-31f4-811a-6b453a3ecff8--

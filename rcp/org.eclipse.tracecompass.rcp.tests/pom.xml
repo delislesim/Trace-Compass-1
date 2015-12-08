@@ -11,23 +11,75 @@
 	*
 	* Contributors:
 	* Jonathan Rajotte Julien - initial implementation
+	* Marc-Andre Laperle - Integrated into Trace Compass build
 	*******************************************************************************/
 	-->
-	<!-- Change groupId, artifactId and version -->
-	<artifactId>tracecompass-rcp-test</artifactId>
-	<groupId>tracecompass-rcp-test</groupId>
-	<version>0.1</version>
+
+	<artifactId>org.eclipse.tracecompass.rcp.tests</artifactId>
+	<name>Trace Compass RCP Product Tests</name>
+
+	<parent>
+		<artifactId>org.eclipse.tracecompass.rcp-parent</artifactId>
+		<groupId>org.eclipse.tracecompass</groupId>
+		<version>2.0.0-SNAPSHOT</version>
+	</parent>
 
 	<packaging>rcpttTest</packaging>
 
 	<!-- Change properies below to your values -->
 	<properties>
-		<autPath>${project.basedir}/rcp/trace-compass</autPath>
-		<dataPath>${project.basedir}/data</dataPath>
+		<dataPath>${project.basedir}/../../ctf/org.eclipse.tracecompass.ctf.core.tests/traces/synctraces.tar.gz</dataPath>
+		<!--<dataPath>${maven.dependency.org.eclipse.tracecompass.testtraces.tracecompass-test-traces-ctf.jar.path}</dataPath>-->
+		<aut.extension>tar.gz</aut.extension>
 	</properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.tracecompass.testtraces</groupId>
+      <artifactId>tracecompass-test-traces-ctf</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+  </dependencies>
+<repositories>
+    <repository>
+      <id>trace-compass-test-traces</id>
+      <name>Trace Compass Test Traces</name>
+      <url>http://archive.eclipse.org/tracecompass/tracecompass-test-traces/maven</url>
+    </repository>
+  </repositories>
+
+	<profiles>
+		<profile>
+			<id>windows-rcptt</id>
+			<activation>
+				<os>
+					<family>Windows</family>
+				</os>
+			</activation>
+			<properties>
+				<aut.extension>zip</aut.extension>
+			</properties>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>
+<!--<plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-resources</phase>
+            <configuration>
+              <tasks>
+                <echo>${dataPath}</echo>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>-->
 			<plugin>
 				<groupId>org.eclipse.rcptt</groupId>
 				<artifactId>rcptt-maven-plugin</artifactId>
@@ -35,7 +87,9 @@
 				<extensions>true</extensions>
 				<configuration>
 					<aut>
-						<explicit>${autPath}</explicit>
+						<groupId>org.eclipse.tracecompass</groupId>
+						<artifactId>tracing</artifactId>
+						<extension>${aut.extension}</extension>
 
 						<vmArgs> 
 							<vmArg>-Xmx1536m</vmArg>  
@@ -57,9 +111,6 @@
 		<pluginRepository>
 			<id>rcptt-snapshots</id>
 			<name>RCPTT Maven Snapshots repository</name>
-			<snapshots>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
 			<url>https://repo.eclipse.org/content/repositories/rcptt-snapshots/</url>
 		</pluginRepository>
 		<pluginRepository>
