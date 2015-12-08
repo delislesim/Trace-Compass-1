@@ -16,12 +16,21 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1449615992914</id>
+			<id>1449616579192</id>
 			<name>target</name>
 			<type>9</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-dependency</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1449616579195</id>
+			<name>target</name>
+			<type>9</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-aut</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>
