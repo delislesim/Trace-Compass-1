@@ -117,6 +117,7 @@ public abstract class AbstractStateSystemTimeGraphView extends AbstractTimeGraph
                 getTimeGraphViewer().setLinks(links);
                 /* Refresh the trace-specific markers when zooming */
                 markers.addAll(getTraceMarkerList(getZoomStartTime(), getZoomEndTime(), getResolution(), getMonitor()));
+                System.out.println("Zoomthread, setting " + markers.size() + " markers");
                 getTimeGraphViewer().setMarkers(markers);
             }
         }

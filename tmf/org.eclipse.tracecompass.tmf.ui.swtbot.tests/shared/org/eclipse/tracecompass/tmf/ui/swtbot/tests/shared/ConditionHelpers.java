@@ -502,20 +502,28 @@ public final class ConditionHelpers {
             ICondition selectionRangeCondition = ConditionHelpers.selectionRange(fSelectionRange);
             if (!selectionRangeCondition.test()) {
                 fFailureMessage = selectionRangeCondition.getFailureMessage();
+                logFalse();
                 return false;
             }
             @NonNull TmfTimeRange curWindowRange = TmfTraceManager.getInstance().getCurrentTraceContext().getWindowRange();
             if (!curWindowRange.contains(fVisibleTime)) {
                 fFailureMessage = "Current window range " + curWindowRange + " does not contain " + fVisibleTime;
+                logFalse();
                 return false;
             }
 
             if (fView.isDirty()) {
                 fFailureMessage = "Time graph is dirty";
+                logFalse();
                 return false;
 
             }
+            System.out.println("TimeGraphIsReadyCondition: OK");
             return true;
+        }
+
+        private void logFalse() {
+            System.out.println("TimeGraphIsReadyCondition: " + getFailureMessage());
         }
 
         @Override

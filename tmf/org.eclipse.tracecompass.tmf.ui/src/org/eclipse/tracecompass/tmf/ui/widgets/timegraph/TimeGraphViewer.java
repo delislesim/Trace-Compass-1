@@ -553,6 +553,7 @@ public class TimeGraphViewer implements ITimeDataProvider, IMarkerAxisListener, 
         fTimeGraphCtrl.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
+                System.out.println("TimeGraphViewer keyPressed " + e);
                 if ((e.character == '+' || e.character == '=') && ((e.stateMask & SWT.CTRL) == 0)) {
                     zoomIn();
                 } else if (e.character == '-' && ((e.stateMask & SWT.CTRL) == 0)) {
@@ -1024,6 +1025,7 @@ public class TimeGraphViewer implements ITimeDataProvider, IMarkerAxisListener, 
     }
 
     private void setSelectionRangeInt(long beginTime, long endTime, boolean ensureVisible, boolean doNotify) {
+        System.out.println("setSelectionRangeInt: " + beginTime + ", " + endTime);
         long time0 = fTime0;
         long time1 = fTime1;
         long selectionBegin = fSelectionBegin;
@@ -2303,23 +2305,30 @@ public class TimeGraphViewer implements ITimeDataProvider, IMarkerAxisListener, 
      * begin time. Markers that begin at the same time are ordered by end time.
      */
     private void selectNextMarker() {
+        System.out.println("TimeGraphViewer.selectNextMarker " + fTimeGraphCtrl.hashCode());
         List<IMarkerEvent> markers = getTimeGraphControl().getMarkers();
         if (markers == null) {
+            System.out.println("TimeGraphViewer.selectNextMarker Null markers");
             return;
         }
+        System.out.println("TimeGraphViewer markers size: " + markers.size());
         for (IMarkerEvent marker : markers) {
             final long time = Math.min(fSelectionBegin, fSelectionEnd);
             final long duration = Math.max(fSelectionBegin, fSelectionEnd) - time;
-            if ((marker.getTime() > time ||
-                    (marker.getTime() == time && marker.getDuration() > duration))
-                    && !fSkippedMarkerCategories.contains(marker.getCategory())) {
+            boolean skipped = fSkippedMarkerCategories.contains(marker.getCategory());
+            boolean nextInTime = marker.getTime() > time ||
+                    (marker.getTime() == time && marker.getDuration() > duration);
+            if (nextInTime && !skipped) {
                 setSelectionRangeNotify(marker.getTime(), marker.getTime() + marker.getDuration(), false);
                 ensureVisible(marker.getTime());
                 notifyRangeListeners();
                 fTimeGraphCtrl.updateStatusLine();
                 return;
             }
+
+            System.out.println("TimeGraphViewer marker not selected, skipped: " + skipped + ", nextInTime: " + nextInTime);
         }
+        System.out.println("TimeGraphViewer.selectNextMarker no selection set");
     }
 
     /**

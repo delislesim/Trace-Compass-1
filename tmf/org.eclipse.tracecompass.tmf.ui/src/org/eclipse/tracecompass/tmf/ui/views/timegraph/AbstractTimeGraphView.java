@@ -694,6 +694,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         @Override
         public final void run() {
             doRun();
+            System.out.println("Done zooming for [" + fZoomStartTime + ", " + fZoomEndTime + "]");
             fDirty.decrementAndGet();
         }
 
@@ -802,8 +803,9 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
      * Getter for the time graph viewer
      *
      * @return The time graph viewer
+     * @since 2.0
      */
-    protected TimeGraphViewer getTimeGraphViewer() {
+    public TimeGraphViewer getTimeGraphViewer() {
         return fTimeGraphWrapper.getTimeGraphViewer();
     }
 
@@ -1957,6 +1959,7 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
      */
     public boolean isDirty() {
         if (fTrace == null) {
+            System.out.println("AbstractTimeGraphView.isDirty: false (trace null)");
             return false;
         }
 
@@ -1967,17 +1970,32 @@ public abstract class AbstractTimeGraphView extends TmfView implements ITmfTimeA
         // If the time graph control hasn't updated all the way to the end of
         // the window range then it's dirty. A refresh should happen later.
         if (fTimeGraphWrapper.getTimeGraphViewer().getTime0() != startTime || fTimeGraphWrapper.getTimeGraphViewer().getTime1() != endTime) {
+            System.out.println("AbstractTimeGraphView.isDirty: true (time graph control hasn't updated all the way to the end of the window range)");
             return true;
         }
 
         if (fZoomThread == null) {
             // The zoom thread is null but we might be just about to create it (refresh called).
-            return fDirty.get() != 0;
+            boolean b = fDirty.get() != 0;
+            System.out.println("AbstractTimeGraphView.isDirty: " + b + " (zoom thread null)");
+            return b;
         }
         // Dirty if the zoom thread is not done or if it hasn't zoomed all the
         // way to the end of the window range. In the latter case, there should be
         // a subsequent zoom thread that will be triggered.
-        return fDirty.get() != 0 || fZoomThread.getZoomStartTime() != startTime || fZoomThread.getZoomEndTime() != endTime;
+        boolean dirtyFlagSet = fDirty.get() != 0;
+        if (dirtyFlagSet) {
+            System.out.println("AbstractTimeGraphView.isDirty: " + true + " (zoom thread done: " + false + ")");
+            return true;
+        }
+        long zoomStartTime = fZoomThread.getZoomStartTime();
+        long zoomEndTime = fZoomThread.getZoomEndTime();
+        boolean b = zoomStartTime != startTime || zoomEndTime != endTime;
+        if (b) {
+            System.out.println("AbstractTimeGraphView.isDirty: " + b + " (zoom thread hasn't reached the corrent time range: zoom start: " + zoomStartTime + " expected " + startTime + " , zoomEnd: " + zoomEndTime + " expected " + endTime + ")");
+        }
+        System.out.println("AbstractTimeGraphView.isDirty: " + b);
+        return b;
     }
 
     private void createColumnSelectionListener(TreeViewer treeViewer) {

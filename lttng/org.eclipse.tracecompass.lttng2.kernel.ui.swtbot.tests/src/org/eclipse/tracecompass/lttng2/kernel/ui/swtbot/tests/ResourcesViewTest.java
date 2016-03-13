@@ -12,17 +12,25 @@
 
 package org.eclipse.tracecompass.lttng2.kernel.ui.swtbot.tests;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jface.bindings.keys.KeyStroke;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotView;
 import org.eclipse.swtbot.swt.finder.SWTBot;
+import org.eclipse.swtbot.swt.finder.finders.UIThreadRunnable;
 import org.eclipse.swtbot.swt.finder.keyboard.Keyboard;
 import org.eclipse.swtbot.swt.finder.keyboard.KeyboardFactory;
 import org.eclipse.swtbot.swt.finder.keyboard.Keystrokes;
+import org.eclipse.swtbot.swt.finder.matchers.WidgetOfType;
+import org.eclipse.swtbot.swt.finder.results.VoidResult;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSelectionRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
@@ -31,6 +39,7 @@ import org.eclipse.tracecompass.tmf.core.timestamp.TmfNanoTimestamp;
 import org.eclipse.tracecompass.tmf.core.timestamp.TmfTimeRange;
 import org.eclipse.tracecompass.tmf.ui.swtbot.tests.shared.ConditionHelpers;
 import org.eclipse.tracecompass.tmf.ui.views.timegraph.AbstractTimeGraphView;
+import org.eclipse.tracecompass.tmf.ui.widgets.timegraph.widgets.TimeGraphControl;
 import org.eclipse.ui.IWorkbenchPart;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -67,6 +76,7 @@ public class ResourcesViewTest extends KernelTestBase {
     private static final @NonNull ITmfTimestamp CPU0_TIME5 = new TmfNanoTimestamp(1368000272653141144L);
 
     private SWTBotView fViewBot;
+    private Listener fFocusListener;
 
     /**
      * Before Test
@@ -78,6 +88,20 @@ public class ResourcesViewTest extends KernelTestBase {
         fViewBot.show();
         super.before();
         fViewBot.setFocus();
+        UIThreadRunnable.syncExec(() -> {
+            Control focusControl = fViewBot.getWidget().getDisplay().getFocusControl();
+            System.out.println("Focused: " + focusControl.getClass().getSimpleName() + " " + focusControl.hashCode());
+            if (fFocusListener == null) {
+                fFocusListener = new Listener() {
+
+                    @Override
+                    public void handleEvent(Event event) {
+                        System.out.println("view focused out " + event.widget.hashCode());
+                    }
+                };
+                fViewBot.getWidget().getDisplay().getFocusControl().addListener(SWT.FocusOut, fFocusListener);
+            }
+        });
     }
 
     /**
@@ -86,16 +110,16 @@ public class ResourcesViewTest extends KernelTestBase {
     @Test
     public void testKeyboardSelectNextPreviousMarker() {
         testNextPreviousMarker(
-                () -> KEYBOARD.pressShortcut(KeyStroke.getInstance('.')),
-                () -> KEYBOARD.pressShortcut(Keystrokes.SHIFT, KeyStroke.getInstance('.')),
-                () -> KEYBOARD.pressShortcut(KeyStroke.getInstance(',')),
-                () -> KEYBOARD.pressShortcut(Keystrokes.SHIFT, KeyStroke.getInstance(',')));
+                () -> {System.out.println("Pressing key '.'"); KEYBOARD.pressShortcut(KeyStroke.getInstance('.'));},
+                () -> {System.out.println("Pressing key shift-'.'"); KEYBOARD.pressShortcut(Keystrokes.SHIFT, KeyStroke.getInstance('.'));},
+                () -> {System.out.println("Pressing key ','"); KEYBOARD.pressShortcut(KeyStroke.getInstance(','));},
+                () -> {System.out.println("Pressing key shift-','"); KEYBOARD.pressShortcut(Keystrokes.SHIFT, KeyStroke.getInstance(','));});
     }
 
     /**
      * Test tool bar buttons "Next Marker" and "Previous Marker"
      */
-    @Test
+//    @Test
     public void testToolBarSelectNextPreviousMarker() {
         testNextPreviousMarker(
                 () -> fViewBot.toolbarButton(NEXT_MARKER).click(),
@@ -111,6 +135,16 @@ public class ResourcesViewTest extends KernelTestBase {
 
         /* select first item */
         KEYBOARD.pressShortcut(Keystrokes.HOME);
+
+        UIThreadRunnable.syncExec(new VoidResult() {
+            @Override
+            public void run() {
+                final TimeGraphControl timegraph = fViewBot.bot().widget(WidgetOfType.widgetOfType(TimeGraphControl.class));
+                assertTrue(timegraph.isFocusControl());
+                Shell shell = timegraph.getShell();
+                assertEquals(shell.getDisplay().getActiveShell(), shell);
+            }
+        });
 
         /* click "Next Marker" 3 times */
         nextMarker.run();
@@ -210,7 +244,7 @@ public class ResourcesViewTest extends KernelTestBase {
     /**
      * Test tool bar button "Add Bookmark..." and "Remove Bookmark"
      */
-    @Test
+//    @Test
     public void testAddRemoveBookmark() {
         /* change window range to 10 ms */
         TmfTimeRange range = new TmfTimeRange(START_TIME, START_TIME.normalize(10000000L, ITmfTimestamp.NANOSECOND_SCALE));

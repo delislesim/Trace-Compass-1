@@ -12,6 +12,8 @@
 
 package org.eclipse.tracecompass.alltests.swtbot;
 
+import org.eclipse.tracecompass.lttng2.kernel.ui.swtbot.tests.ResourcesViewTest;
+
 import junit.framework.JUnit4TestAdapter;
 import junit.framework.TestSuite;
 
@@ -20,7 +22,7 @@ import junit.framework.TestSuite;
  */
 public class SWTBotStressTests extends TestSuite {
 
-    private static final int NB_RUNS = 20;
+    private static final int NB_RUNS = 100;
 
     /**
      * @return Test suite definition
@@ -28,7 +30,8 @@ public class SWTBotStressTests extends TestSuite {
     public static TestSuite suite() {
         TestSuite s = new TestSuite();
         for (int i = 0; i < NB_RUNS; i++) {
-            s.addTest(new JUnit4TestAdapter(RunAllSWTBotTests.class));
+//            s.addTest(new JUnit4TestAdapter(ControlFlowViewTest.class));
+            s.addTest(new JUnit4TestAdapter(ResourcesViewTest.class));
         }
         return s;
     }

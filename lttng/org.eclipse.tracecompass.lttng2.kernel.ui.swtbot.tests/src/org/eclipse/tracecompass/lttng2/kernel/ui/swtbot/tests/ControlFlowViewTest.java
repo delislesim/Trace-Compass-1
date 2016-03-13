@@ -18,6 +18,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotView;
 import org.eclipse.swtbot.swt.finder.SWTBot;
 import org.eclipse.swtbot.swt.finder.finders.UIThreadRunnable;
@@ -30,6 +31,7 @@ import org.eclipse.swtbot.swt.finder.results.VoidResult;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotLabel;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotToolbarButton;
 import org.eclipse.swtbot.swt.finder.widgets.SWTBotTree;
+import org.eclipse.swtbot.swt.finder.widgets.SWTBotTreeItem;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSelectionRangeUpdatedSignal;
 import org.eclipse.tracecompass.tmf.core.signal.TmfSignalManager;
 import org.eclipse.tracecompass.tmf.core.signal.TmfWindowRangeUpdatedSignal;
@@ -130,6 +132,8 @@ public class ControlFlowViewTest extends KernelTestBase {
         /* select first item */
         final SWTBotTree tree = fViewBot.bot().tree();
         tree.pressShortcut(Keystrokes.HOME);
+        SWTBotTreeItem treeItem = tree.getTreeItem("gnuplot");
+        assertTrue(treeItem.isSelected());
 
         /* set focus on time graph */
         final TimeGraphControl timegraph = fViewBot.bot().widget(WidgetOfType.widgetOfType(TimeGraphControl.class));
@@ -137,6 +141,9 @@ public class ControlFlowViewTest extends KernelTestBase {
             @Override
             public void run() {
                 timegraph.setFocus();
+                assertTrue(timegraph.isFocusControl());
+                Shell shell = timegraph.getShell();
+                assertEquals(shell.getDisplay().getActiveShell(), shell);
             }
         });
 
@@ -324,6 +331,8 @@ public class ControlFlowViewTest extends KernelTestBase {
         /* select first item */
         final SWTBotTree tree = fViewBot.bot().tree();
         tree.pressShortcut(Keystrokes.HOME);
+        SWTBotTreeItem treeItem = tree.getTreeItem("gnuplot");
+        assertTrue(treeItem.isSelected());
 
         /* set focus on time graph */
         final TimeGraphControl timegraph = fViewBot.bot().widget(WidgetOfType.widgetOfType(TimeGraphControl.class));

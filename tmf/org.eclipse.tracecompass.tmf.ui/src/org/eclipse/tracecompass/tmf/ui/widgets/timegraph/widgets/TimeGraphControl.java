@@ -2242,8 +2242,10 @@ public class TimeGraphControl extends TimeGraphBaseControl
             }
         } else if (SWT.ARROW_LEFT == e.keyCode && fDragState == DRAG_NONE) {
             boolean extend = (e.stateMask & SWT.SHIFT) != 0;
+            System.out.println("TimeGraphControl.keyPressed: SWT.ARROW_LEFT");
             selectPrevEvent(extend);
         } else if (SWT.ARROW_RIGHT == e.keyCode && fDragState == DRAG_NONE) {
+            System.out.println("TimeGraphControl.keyPressed: SWT.ARROW_RIGHT");
             boolean extend = (e.stateMask & SWT.SHIFT) != 0;
             selectNextEvent(extend);
         } else if (SWT.PAGE_DOWN == e.keyCode) {
