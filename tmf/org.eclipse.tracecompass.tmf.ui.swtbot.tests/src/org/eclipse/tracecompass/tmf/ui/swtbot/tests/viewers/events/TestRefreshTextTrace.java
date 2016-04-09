@@ -17,8 +17,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Logger;
-import org.apache.log4j.varia.NullAppender;
 import org.eclipse.swtbot.eclipse.finder.SWTWorkbenchBot;
 import org.eclipse.swtbot.eclipse.finder.widgets.SWTBotEditor;
 import org.eclipse.swtbot.swt.finder.junit.SWTBotJunit4ClassRunner;
@@ -64,7 +64,7 @@ public class TestRefreshTextTrace {
         SWTBotPreferences.KEYBOARD_LAYOUT = "EN_US";
         SWTBotUtils.initialize();
         SWTBotPreferences.TIMEOUT = 20000; /* 20 second timeout */
-        Logger.getRootLogger().addAppender(new NullAppender());
+        Logger.getRootLogger().addAppender(new ConsoleAppender());
         fBot = new SWTWorkbenchBot();
 
         SWTBotUtils.closeView("welcome", fBot);
@@ -135,12 +135,17 @@ public class TestRefreshTextTrace {
 
         @Override
         public boolean test() throws Exception {
-            return fTrace.getNbEvents() == fNbEvents;
+            long nbEvents = fTrace.getNbEvents();
+            boolean b = nbEvents == fNbEvents;
+            if (!b) {
+                System.out.println("Not enough events, at " + nbEvents);
+            }
+            return b;
         }
 
         @Override
         public String getFailureMessage() {
-            return fTrace.getName() + " did not contain the expected number of " + fNbEvents + " events";
+            return fTrace.getName() + " did not contain the expected number of " + fNbEvents + " events. Current: " + fTrace.getNbEvents();
         }
     }
 
