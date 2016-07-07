@@ -3,6 +3,7 @@
 package statemachine.impl;
 
 import java.util.Collection;
+
 import org.eclipse.emf.common.notify.Notification;
 import org.eclipse.emf.common.notify.NotificationChain;
 import org.eclipse.emf.common.util.EList;
@@ -11,6 +12,8 @@ import org.eclipse.emf.ecore.InternalEObject;
 import org.eclipse.emf.ecore.impl.ENotificationImpl;
 import org.eclipse.emf.ecore.util.EObjectContainmentEList;
 import org.eclipse.emf.ecore.util.InternalEList;
+import org.eclipse.jdt.annotation.NonNull;
+
 import statemachine.AbstractState;
 import statemachine.Statemachine;
 import statemachine.StatemachinePackage;
@@ -67,7 +70,7 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * @generated
 	 * @ordered
 	 */
-	protected static final String ASSOCIATED_ATTRIBUTE_EDEFAULT = null;
+	protected static final String ASSOCIATED_ATTRIBUTE_EDEFAULT = "";
 	/**
 	 * The cached value of the '{@link #getAssociatedAttribute() <em>Associated Attribute</em>}' attribute.
 	 * <!-- begin-user-doc -->
@@ -76,7 +79,7 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * @generated
 	 * @ordered
 	 */
-	protected String associatedAttribute = ASSOCIATED_ATTRIBUTE_EDEFAULT;
+	private @NonNull String fAssociatedAttribute = ASSOCIATED_ATTRIBUTE_EDEFAULT;
 
 	/**
 	 * <!-- begin-user-doc -->
@@ -135,8 +138,8 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getAssociatedAttribute() {
-		return associatedAttribute;
+	public @NonNull String getAssociatedAttribute() {
+		return fAssociatedAttribute;
 	}
 
 	/**
@@ -145,10 +148,10 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * @generated
 	 */
 	public void setAssociatedAttribute(String newAssociatedAttribute) {
-		String oldAssociatedAttribute = associatedAttribute;
-		associatedAttribute = newAssociatedAttribute;
+		String oldAssociatedAttribute = fAssociatedAttribute;
+		fAssociatedAttribute = newAssociatedAttribute;
 		if (eNotificationRequired())
-			eNotify(new ENotificationImpl(this, Notification.SET, StatemachinePackage.STATEMACHINE__ASSOCIATED_ATTRIBUTE, oldAssociatedAttribute, associatedAttribute));
+			eNotify(new ENotificationImpl(this, Notification.SET, StatemachinePackage.STATEMACHINE__ASSOCIATED_ATTRIBUTE, oldAssociatedAttribute, fAssociatedAttribute));
 	}
 
 	/**
@@ -240,7 +243,7 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 			case StatemachinePackage.STATEMACHINE__ASSOCIATED_TREE:
 				return ASSOCIATED_TREE_EDEFAULT == null ? associatedTree != null : !ASSOCIATED_TREE_EDEFAULT.equals(associatedTree);
 			case StatemachinePackage.STATEMACHINE__ASSOCIATED_ATTRIBUTE:
-				return ASSOCIATED_ATTRIBUTE_EDEFAULT == null ? associatedAttribute != null : !ASSOCIATED_ATTRIBUTE_EDEFAULT.equals(associatedAttribute);
+				return ASSOCIATED_ATTRIBUTE_EDEFAULT == null ? fAssociatedAttribute != null : !ASSOCIATED_ATTRIBUTE_EDEFAULT.equals(fAssociatedAttribute);
 		}
 		return super.eIsSet(featureID);
 	}
@@ -258,7 +261,7 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 		result.append(" (associatedTree: ");
 		result.append(associatedTree);
 		result.append(", associatedAttribute: ");
-		result.append(associatedAttribute);
+		result.append(fAssociatedAttribute);
 		result.append(')');
 		return result.toString();
 	}

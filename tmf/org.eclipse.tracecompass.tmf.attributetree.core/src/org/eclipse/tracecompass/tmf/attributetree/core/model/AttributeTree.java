@@ -2,10 +2,11 @@ package org.eclipse.tracecompass.tmf.attributetree.core.model;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-import java.util.Vector;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,6 +18,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.tracecompass.tmf.core.util.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -29,8 +31,8 @@ public class AttributeTree {
 	private static AttributeTree INSTANCE = null;
 	
 	//private static AbstractAttributeNode invisibleRoot = null;
-	private static Map<File, AbstractAttributeNode> loadedTrees = new HashMap<>(); // File = Attribute tree file, AbstractAttributeNode = Invisible root
-	private static Stack<Pair<AbstractAttributeNode, String>> queryNodeStack = new Stack<>();
+	private static Map<File, AbstractAttributeNode> fLoadedTrees = new HashMap<>(); // File = Attribute tree file, AbstractAttributeNode = Invisible root
+	private static Stack<Pair<AbstractAttributeNode, String>> fQueryNodeStack = new Stack<>();
 	//private static File currentFile;
 	
 	private AttributeTree() {
@@ -44,9 +46,9 @@ public class AttributeTree {
 		return INSTANCE;
 	}
 	
-	public AbstractAttributeNode getNodeFromPath(File attributeTreeFile, String path) {
+	public AbstractAttributeNode getNodeFromPath(File attributeTreeFile, @NonNull String path) {
 		checkLoadedTrees(attributeTreeFile);
-		AbstractAttributeNode currentNode = loadedTrees.get(attributeTreeFile);
+		AbstractAttributeNode currentNode = fLoadedTrees.get(attributeTreeFile);
 		for(String nodeName : splitPath(path)) {
 			currentNode = searchNode(currentNode, nodeName);
 		}
@@ -55,12 +57,12 @@ public class AttributeTree {
 	
 	public AbstractAttributeNode getRoot(File attributeTreeFile) {
 		checkLoadedTrees(attributeTreeFile);
-		return loadedTrees.get(attributeTreeFile);
+		return fLoadedTrees.get(attributeTreeFile);
 	}
 	
 	public boolean saveAttributeTree(File attributeTreeFile) {
 		checkLoadedTrees(attributeTreeFile); 
-		// TODO If attributeTreeFile doesn't exist it crash
+		// TODO If attributeTreeFile doesn't exist it crashes
 		Document xmlFile = null;
 		try {
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory
@@ -71,7 +73,7 @@ public class AttributeTree {
 			return false;
 		}
 		
-		Element rootElement = loadedTrees.get(attributeTreeFile).createElement(loadedTrees.get(attributeTreeFile), xmlFile);
+		Element rootElement = fLoadedTrees.get(attributeTreeFile).createElement(fLoadedTrees.get(attributeTreeFile), xmlFile);
 		xmlFile.appendChild(rootElement);
 		try {
 			TransformerFactory transformerFactory = TransformerFactory
@@ -96,7 +98,7 @@ public class AttributeTree {
 			return false;
 		}
 		
-		loadedTrees.put(newAttributeTreeFile, new ConstantAttributeNode(null, "root"));
+		fLoadedTrees.put(newAttributeTreeFile, new ConstantAttributeNode(null, "root"));
 		saveAttributeTree(newAttributeTreeFile);
 		
 		return true;		
@@ -108,7 +110,7 @@ public class AttributeTree {
 	 * @param treeFile File to check if the tree is loaded
 	 */
 	private void checkLoadedTrees(File attributeTreeFile) {
-		if(!loadedTrees.containsKey(attributeTreeFile)) {
+		if(!fLoadedTrees.containsKey(attributeTreeFile)) {
 			loadXmlTree(attributeTreeFile);
 		}
 	}
@@ -131,9 +133,9 @@ public class AttributeTree {
 		NodeList nodeList = xmlTree.getElementsByTagName("root");
 		Node xmlRootNode = nodeList.item(0); // Only one root
 		AbstractAttributeNode root = new ConstantAttributeNode(null, ((Element)xmlRootNode).getAttribute("name"));
-		loadedTrees.put(xmlFile, root);
-		getTreeFromXml(xmlRootNode, loadedTrees.get(xmlFile));
-		addQueryToTree(loadedTrees.get(xmlFile));
+		fLoadedTrees.put(xmlFile, root);
+		getTreeFromXml(xmlRootNode, fLoadedTrees.get(xmlFile));
+		addQueryToTree(fLoadedTrees.get(xmlFile));
 	}
 	
 	private static void getTreeFromXml(Node parentNode, AbstractAttributeNode parentAttribute) {
@@ -152,7 +154,7 @@ public class AttributeTree {
 				
 				String xpathQuery = childElement.getAttribute("query");
 				if(!xpathQuery.equals("")) {
-					queryNodeStack.push(new Pair<AbstractAttributeNode, String>(parent, xpathQuery));
+					fQueryNodeStack.push(new Pair<AbstractAttributeNode, String>(parent, xpathQuery));
 				}
 			} else if (childElement.getAttribute("type").equals(AttributeValueNode.class.getSimpleName())) {
 				parent = new AttributeValueNode(parentAttribute, childElement.getAttribute("name"));
@@ -162,8 +164,8 @@ public class AttributeTree {
 	}
 	
 	private static void addQueryToTree(AbstractAttributeNode root) {
-		while (!queryNodeStack.empty()) {
-			Pair<AbstractAttributeNode, String> queryPair = queryNodeStack.pop();
+		while (!fQueryNodeStack.empty()) {
+			Pair<AbstractAttributeNode, String> queryPair = fQueryNodeStack.pop();
 			VariableAttributeNode node = (VariableAttributeNode) queryPair.getFirst();
 			String path = queryPair.getSecond();
 			
@@ -191,9 +193,9 @@ public class AttributeTree {
 		return null;
 	}
 	
-	private static Vector<String> splitPath(String path) {
+	private static List<String> splitPath(@NonNull String path) {
 		String[] splitedPath = path.split("/");
-		Vector<String> nodeInPath = new Vector<>();
+		List<String> nodeInPath = new ArrayList<>();
 		for (int i = 2; i < splitedPath.length; i++) { // Skip root + empty string
 			nodeInPath.add(splitedPath[i]);
 		}

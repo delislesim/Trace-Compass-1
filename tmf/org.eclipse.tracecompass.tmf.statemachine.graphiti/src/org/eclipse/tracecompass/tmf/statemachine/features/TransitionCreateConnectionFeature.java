@@ -78,7 +78,7 @@ public class TransitionCreateConnectionFeature extends AbstractCreateConnectionF
 	}
 
 	private StateChange getAppropriateStateChange() {
-		String attributePath = null;
+		String attributePath = "/";
 		if(targetState.eContainer() instanceof Statemachine) {
 			Statemachine stateMachine = (Statemachine)targetState.eContainer();
 			attributePath = stateMachine.getAssociatedAttribute();
