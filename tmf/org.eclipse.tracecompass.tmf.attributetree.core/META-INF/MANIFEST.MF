@@ -8,7 +8,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.tracecompass.tmf.statemachine.ecore,
  org.eclipse.tracecompass.tmf.core,
  org.eclipse.jdt.annotation;bundle-version="2.1.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: org.eclipse.tracecompass.tmf.attributetree.core.model,
  org.eclipse.tracecompass.tmf.attributetree.core.utils
