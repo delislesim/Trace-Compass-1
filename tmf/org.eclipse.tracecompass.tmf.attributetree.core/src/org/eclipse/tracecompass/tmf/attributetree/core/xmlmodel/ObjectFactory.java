@@ -62,7 +62,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "attributeTreeRoot")
     public JAXBElement<AttributeTreeRoot> createAttributeTreeRoot(AttributeTreeRoot value) {
-        return new JAXBElement<AttributeTreeRoot>(_AttributeTreeRoot_QNAME, AttributeTreeRoot.class, null, value);
+        return new JAXBElement<>(_AttributeTreeRoot_QNAME, AttributeTreeRoot.class, null, value);
     }
 
 }

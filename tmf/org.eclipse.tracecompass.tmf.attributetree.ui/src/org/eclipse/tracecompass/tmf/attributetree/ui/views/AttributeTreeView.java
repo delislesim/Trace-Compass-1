@@ -32,15 +32,15 @@ import org.eclipse.tracecompass.tmf.attributetree.ui.widgets.AttributeTreeCompos
 import org.eclipse.ui.IActionBars;
 
 public class AttributeTreeView extends TmfView {
-	
+
 	private Composite composite;
 	private AttributeTreeComposite attributeTree;
-	
+
 	private File openedFile;
 	private String LAST_OPENED_KEY = "lastOpenedFile";
-	
+
 	private int GRID_NUM_COLUMNS = 3;
-	
+
 	private enum NodeType {
 		CONSTANT, VARIABLE, VALUE
 	}
@@ -53,44 +53,44 @@ public class AttributeTreeView extends TmfView {
 	public void createPartControl(Composite parent) {
 		composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout(GRID_NUM_COLUMNS, false));
-		
+
 		GridData gridData;
-		
+
 		// TODO : replace this images loading system ?
 		Image addConstantImage = Activator.getDefault().getImageFromPath("/icons/addconstantAttribute.png");
 		Image addVariableImage = Activator.getDefault().getImageFromPath("/icons/addvariableAttribute.png");
 		Image addValueImage = Activator.getDefault().getImageFromPath("/icons/addvalue.png");
 		Image removeImage = Activator.getDefault().getImageFromPath("/icons/removeAttribute.png");
-		Image editAttributeImage = Activator.getDefault().getImageFromPath("/icons/rename.gif");;
-		
+		Image editAttributeImage = Activator.getDefault().getImageFromPath("/icons/rename.gif");
+
 		Button addConstantAttributeButton = new Button(composite, SWT.PUSH);
 		//addConstantAttributeButton.setText("Constant");
 		addConstantAttributeButton.setImage(addConstantImage);
 		gridData = new GridData();
 		addConstantAttributeButton.setLayoutData(gridData);
-		
+
 		Button addVariableAttributeButton = new Button(composite, SWT.PUSH);
 		//addVariableAttributeButton.setText("Variable");
 		addVariableAttributeButton.setImage(addVariableImage);
 		gridData = new GridData();
 		addConstantAttributeButton.setLayoutData(gridData);
-		
+
 		Button addAttributeValueButton = new Button(composite, SWT.PUSH);
 		//addAttributeValueButton.setText("Value");
 		addAttributeValueButton.setImage(addValueImage);
 		gridData = new GridData();
 		addConstantAttributeButton.setLayoutData(gridData);
-		
+
 		Button removeAttributeButton = new Button(composite, SWT.PUSH);
 		//removeAttributeButton.setText("Remove");
 		removeAttributeButton.setImage(removeImage);
 		gridData = new GridData();
 		removeAttributeButton.setLayoutData(gridData);
-		
+
 		removeAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
-    			IStructuredSelection selection = (IStructuredSelection) attributeTree.getSelection();
+    			IStructuredSelection selection = attributeTree.getSelection();
     			if(!selection.isEmpty()) {
     				if(selection.getFirstElement() instanceof AbstractAttributeNode) {
     					removeAttribute((AbstractAttributeNode)selection.getFirstElement());
@@ -98,17 +98,17 @@ public class AttributeTreeView extends TmfView {
     			}
     		}
 		});
-		
+
 		Button editAttributeButton = new Button(composite, SWT.PUSH);
 		//editAttributeButton.setText("Edit");
 		editAttributeButton.setImage(editAttributeImage);
 		gridData = new GridData();
 		editAttributeButton.setLayoutData(gridData);
-		
+
 		editAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
-    			IStructuredSelection selection = (IStructuredSelection) attributeTree.getSelection();
+    			IStructuredSelection selection = attributeTree.getSelection();
     			if(!selection.isEmpty()) {
     				if(selection.getFirstElement() instanceof AbstractAttributeNode) {
     					editAttributeDialog(composite.getDisplay(), (AbstractAttributeNode)selection.getFirstElement());
@@ -116,17 +116,17 @@ public class AttributeTreeView extends TmfView {
     			}
     		}
 		});
-		
+
 		// TODO : remove when right click will be implemented
 		Button changeQueryVariableAttributeButton = new Button(composite, SWT.PUSH);
 		changeQueryVariableAttributeButton.setText("Query");
 		gridData = new GridData();
 		changeQueryVariableAttributeButton.setLayoutData(gridData);
-		
+
 		changeQueryVariableAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
-    			IStructuredSelection selection = (IStructuredSelection) attributeTree.getSelection();
+    			IStructuredSelection selection = attributeTree.getSelection();
     			if(!selection.isEmpty()) {
     				if(selection.getFirstElement() instanceof VariableAttributeNode) {
     					VariableAttributeNode queryNode = (VariableAttributeNode)selection.getFirstElement();
@@ -141,28 +141,28 @@ public class AttributeTreeView extends TmfView {
     			}
     		}
 		});
-		
+
 		addConstantAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
     			addAttribute(NodeType.CONSTANT);
     		}
 		});
-		
+
 		addVariableAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
     			addAttribute(NodeType.VARIABLE);
     		}
 		});
-		
+
 		addAttributeValueButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
     			addAttribute(NodeType.VALUE);
     		}
 		});
-		
+
 		attributeTree = new AttributeTreeComposite(composite, SWT.NONE);
 		String lastOpenedFilePath = Activator.getDefault().getDialogSettings().get(LAST_OPENED_KEY);
 		if(lastOpenedFilePath != null) {
@@ -171,15 +171,15 @@ public class AttributeTreeView extends TmfView {
 				attributeTree.setTreeViewerInput(openedFile);
 			}
 		}
-		
+
 		setViewInformation(openedFile);
-        
+
         IActionBars bars = getViewSite().getActionBars();
         //bars.getToolBarManager().add(getNewAction());
         bars.getToolBarManager().add(getOpenAction());
         bars.getToolBarManager().add(getSaveAction());
 	}
-	
+
 	private Action getSaveAction() {
 		Action saveAction = new Action("Save", IAction.AS_PUSH_BUTTON) {
 			@Override
@@ -194,7 +194,7 @@ public class AttributeTreeView extends TmfView {
 //    				xmlFile = dBuilder.newDocument();
 //    			} catch (ParserConfigurationException exception) {
 //    			}
-//    			
+//
 //    			Element rootElement = attributeTree.getRoot().createElement(attributeTree.getRoot(), xmlFile);
 //    			xmlFile.appendChild(rootElement);
 //    			try {
@@ -202,7 +202,7 @@ public class AttributeTreeView extends TmfView {
 //    						.newInstance();
 //    				Transformer transformer = transformerFactory.newTransformer();
 //    				DOMSource source = new DOMSource(xmlFile);
-//    				
+//
 //    				StreamResult savedFileResult = new StreamResult(openedFile);
 //    				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 //    				transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -215,7 +215,7 @@ public class AttributeTreeView extends TmfView {
 		//saveAction.setText("Save");
 		return saveAction;
 	}
-	
+
 	private Action getOpenAction() {
 		Action openAction = new Action("Open", IAction.AS_PUSH_BUTTON) {
 			@Override
@@ -223,11 +223,11 @@ public class AttributeTreeView extends TmfView {
 				FileDialog openDialog = new FileDialog(new Shell(), SWT.OPEN);
 				openDialog.setFilterNames(new String[] { "Attribute Tree" + " (*.attributetree)"}); //$NON-NLS-1$
 				openDialog.setFilterExtensions(new String[] { "*.attributetree"}); //$NON-NLS-1$
-				
+
 				// Default path for attribute tree selection (the workspace)
 				String defaultAttributeTreePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
 				openDialog.setFilterPath(defaultAttributeTreePath);
-				
+
 		        String filePath = openDialog.open();
 				if (filePath != null) {
 					openedFile = new File(filePath);
@@ -241,24 +241,24 @@ public class AttributeTreeView extends TmfView {
 		openAction.setImageDescriptor(Activator.getDefault().getImageDescripterFromPath("/icons/open.gif"));
 		return openAction;
 	}
-	
-	private Action getNewAction() {
-		Action newAction = new Action("New tree", IAction.AS_PUSH_BUTTON) {
-			@Override
-            public void run() {
-				FileDialog saveDialog = new FileDialog(new Shell(), SWT.SAVE);
-				saveDialog.setFilterNames(new String[] { "Attribute Tree" + " (*.attributetree)"}); //$NON-NLS-1$
-				saveDialog.setFilterExtensions(new String[] { "*.attributetree"}); //$NON-NLS-1$
-				
-		        String filePath = saveDialog.open();
-		        File treeFile = new File(filePath);
-		        attributeTree.setTreeViewerInput(treeFile);
-			}
-		};
-		newAction.setImageDescriptor(Activator.getDefault().getImageDescripterFromPath("/icons/new.gif"));
-		return newAction;
-	}
-	
+
+//	private Action getNewAction() {
+//		Action newAction = new Action("New tree", IAction.AS_PUSH_BUTTON) {
+//			@Override
+//            public void run() {
+//				FileDialog saveDialog = new FileDialog(new Shell(), SWT.SAVE);
+//				saveDialog.setFilterNames(new String[] { "Attribute Tree" + " (*.attributetree)"}); //$NON-NLS-1$
+//				saveDialog.setFilterExtensions(new String[] { "*.attributetree"}); //$NON-NLS-1$
+//
+//		        String filePath = saveDialog.open();
+//		        File treeFile = new File(filePath);
+//		        attributeTree.setTreeViewerInput(treeFile);
+//			}
+//		};
+//		newAction.setImageDescriptor(Activator.getDefault().getImageDescripterFromPath("/icons/new.gif"));
+//		return newAction;
+//	}
+
 	private void setViewInformation(File file) {
 		if(file == null) {
 			setPartName("Attribute Tree View");
@@ -273,21 +273,21 @@ public class AttributeTreeView extends TmfView {
 	public void setFocus() {
 		composite.setFocus();
 	}
-	
+
 	private void removeAttribute(AbstractAttributeNode node) {
 		node.getParent().removeChild(node);
 		attributeTree.refresh();
 	}
-	
+
 	private void addAttribute(NodeType type) {
-		IStructuredSelection selection = (IStructuredSelection) attributeTree.getSelection();
+		IStructuredSelection selection = attributeTree.getSelection();
 		AbstractAttributeNode parent;
 		if(selection.isEmpty()) {
 			parent = attributeTree.getRoot();
 		} else {
 			parent = (AbstractAttributeNode) selection.getFirstElement();
 		}
-		
+
 		switch(type) {
 		case CONSTANT:
 			new ConstantAttributeNode(parent);
@@ -298,19 +298,21 @@ public class AttributeTreeView extends TmfView {
 		case VALUE:
 			new AttributeValueNode(parent);
 			break;
+		default:
+		    throw new IllegalStateException("Enum value not handled"); //$NON-NLS-1$
 		}
 		attributeTree.refresh();
 	}
-	
+
 	private void editAttributeDialog(Display display, final AbstractAttributeNode attributeNode) {
 		final Shell dialog = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         dialog.setLayout (new GridLayout(2, false));
         dialog.setText("Attribtue name");
-        
+
         GridData gridData;
         Label nameLabel = new Label(dialog, SWT.NONE);
         nameLabel.setText("Name");
-        
+
         final Text attributeNameText = new Text(dialog, SWT.SINGLE);
         attributeNameText.setText(attributeNode.getName());
         attributeNameText.selectAll();
@@ -318,7 +320,7 @@ public class AttributeTreeView extends TmfView {
         gridData.horizontalAlignment = SWT.FILL;
         gridData.grabExcessHorizontalSpace = true;
         attributeNameText.setLayoutData(gridData);
-        
+
         Button ok = new Button(dialog, SWT.PUSH);
         ok.setText("Ok");
         ok.addSelectionListener(new SelectionAdapter() {
@@ -329,7 +331,7 @@ public class AttributeTreeView extends TmfView {
         		dialog.close();
         	}
 		});
-        
+
         Button cancel = new Button(dialog, SWT.PUSH);
         cancel.setText("Cancel");
         cancel.addSelectionListener(new SelectionAdapter() {
@@ -338,23 +340,24 @@ public class AttributeTreeView extends TmfView {
         		dialog.close();
         	}
 		});
-        
+
         dialog.pack();
         dialog.open();
 		while (!dialog.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+			if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
-	
+
 	private void queryDialog(Display display, final VariableAttributeNode queryNode) {
 		final Shell dialog = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         dialog.setLayout (new GridLayout(1, false));
         dialog.setText("Query path");
-        
+
         final AttributeTreeComposite queryAttributeTree = new AttributeTreeComposite(dialog, SWT.NONE);
         queryAttributeTree.setTreeViewerInput(openedFile);
-        
+
         Button selectButton = new Button(dialog, SWT.PUSH);
         selectButton.setText("Select");
         selectButton.addSelectionListener(new SelectionAdapter() {
@@ -377,14 +380,15 @@ public class AttributeTreeView extends TmfView {
 //				queryNode.setQueryPath(new AttributeTreePath(selectedNode));
 //				dialog.close();
 //			}
-//        	
+//
 //        });
-        
+
         dialog.pack();
         dialog.open();
 		while (!dialog.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+			if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
 }

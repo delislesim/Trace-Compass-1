@@ -8,7 +8,7 @@ import statemachine.StatemachineFactory;
 
 public class AttributeTreePath {
 	
-	private Vector<AbstractAttributeNode> path = new Vector<AbstractAttributeNode>();
+	private Vector<AbstractAttributeNode> path = new Vector<>();
 	
 	public AttributeTreePath(AbstractAttributeNode leaf) {
 		buildTreePath(leaf);
@@ -27,7 +27,7 @@ public class AttributeTreePath {
 	}
 	
 	public Vector<StateAttribute> getAllStateAttribute() {
-		Vector<StateAttribute> stateAttributeList = new Vector<StateAttribute>();
+		Vector<StateAttribute> stateAttributeList = new Vector<>();
 		for(int i = path.size()-2; i >= 0; i--) { // -2 because of the invisible root
 			StateAttribute stateAttribute = StatemachineFactory.eINSTANCE.createStateAttribute();
 			stateAttribute.setValue(path.get(i).getName());

@@ -115,7 +115,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public Statemachine createStatemachine() {
+	@Override
+    public Statemachine createStatemachine() {
 		StatemachineImpl statemachine = new StatemachineImpl();
 		return statemachine;
 	}
@@ -125,7 +126,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public Named createNamed() {
+	@Override
+    public Named createNamed() {
 		NamedImpl named = new NamedImpl();
 		return named;
 	}
@@ -135,7 +137,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public InitialState createInitialState() {
+	@Override
+    public InitialState createInitialState() {
 		InitialStateImpl initialState = new InitialStateImpl();
 		return initialState;
 	}
@@ -145,7 +148,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public FinalState createFinalState() {
+	@Override
+    public FinalState createFinalState() {
 		FinalStateImpl finalState = new FinalStateImpl();
 		return finalState;
 	}
@@ -155,7 +159,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public State createState() {
+	@Override
+    public State createState() {
 		StateImpl state = new StateImpl();
 		return state;
 	}
@@ -165,7 +170,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public Transition createTransition() {
+	@Override
+    public Transition createTransition() {
 		TransitionImpl transition = new TransitionImpl();
 		return transition;
 	}
@@ -175,7 +181,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public ConditionalTransition createConditionalTransition() {
+	@Override
+    public ConditionalTransition createConditionalTransition() {
 		ConditionalTransitionImpl conditionalTransition = new ConditionalTransitionImpl();
 		return conditionalTransition;
 	}
@@ -185,7 +192,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateValue createStateValue() {
+	@Override
+    public StateValue createStateValue() {
 		StateValueImpl stateValue = new StateValueImpl();
 		return stateValue;
 	}
@@ -195,7 +203,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateAttribute createStateAttribute() {
+	@Override
+    public StateAttribute createStateAttribute() {
 		StateAttributeImpl stateAttribute = new StateAttributeImpl();
 		return stateAttribute;
 	}
@@ -205,7 +214,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public ConditionalState createConditionalState() {
+	@Override
+    public ConditionalState createConditionalState() {
 		ConditionalStateImpl conditionalState = new ConditionalStateImpl();
 		return conditionalState;
 	}
@@ -215,7 +225,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateChange createStateChange() {
+	@Override
+    public StateChange createStateChange() {
 		StateChangeImpl stateChange = new StateChangeImpl();
 		return stateChange;
 	}
@@ -225,7 +236,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public AbstractCondition createAbstractCondition() {
+	@Override
+    public AbstractCondition createAbstractCondition() {
 		AbstractConditionImpl abstractCondition = new AbstractConditionImpl();
 		return abstractCondition;
 	}
@@ -235,7 +247,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public FieldCondition createFieldCondition() {
+	@Override
+    public FieldCondition createFieldCondition() {
 		FieldConditionImpl fieldCondition = new FieldConditionImpl();
 		return fieldCondition;
 	}
@@ -245,7 +258,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public AttributeCondition createAttributeCondition() {
+	@Override
+    public AttributeCondition createAttributeCondition() {
 		AttributeConditionImpl attributeCondition = new AttributeConditionImpl();
 		return attributeCondition;
 	}
@@ -295,7 +309,8 @@ public class StatemachineFactoryImpl extends EFactoryImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StatemachinePackage getStatemachinePackage() {
+	@Override
+    public StatemachinePackage getStatemachinePackage() {
 		return (StatemachinePackage)getEPackage();
 	}
 

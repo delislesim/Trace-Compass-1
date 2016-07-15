@@ -102,7 +102,7 @@ public class TimeGraphView {
      */
     public List<DefinedValue> getDefinedValue() {
         if (definedValue == null) {
-            definedValue = new ArrayList<DefinedValue>();
+            definedValue = new ArrayList<>();
         }
         return this.definedValue;
     }
@@ -131,7 +131,7 @@ public class TimeGraphView {
      */
     public List<ViewEntry> getEntry() {
         if (entry == null) {
-            entry = new ArrayList<ViewEntry>();
+            entry = new ArrayList<>();
         }
         return this.entry;
     }

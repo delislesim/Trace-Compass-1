@@ -16,7 +16,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.eclipse.tracecompass.tmf.attributetree.core.model.AbstractAttributeNode;
@@ -32,7 +31,10 @@ import org.eclipse.tracecompass.tmf.xmlconverter.core.model.DefinedValue;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.EventField;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.EventHandler;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadOutput;
+import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadOutput.Analysis;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadProvider;
+import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadProvider.Label;
+import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadProvider.TraceType;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.ObjectFactory;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.StateAttribute;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.StateChange;
@@ -40,44 +42,41 @@ import org.eclipse.tracecompass.tmf.xmlconverter.core.model.StateProvider;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.StateValue;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.TimeGraphView;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.Tmfxml;
-import org.eclipse.tracecompass.tmf.xmlconverter.core.model.ViewStateAttribute;
-import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadOutput.Analysis;
-import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadProvider.Label;
-import org.eclipse.tracecompass.tmf.xmlconverter.core.model.HeadProvider.TraceType;
 import org.eclipse.tracecompass.tmf.xmlconverter.core.model.ViewEntry;
+import org.eclipse.tracecompass.tmf.xmlconverter.core.model.ViewStateAttribute;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
-	
+
 	private Document fGraphitiXml = null;
 	public static final String FILE_NAME = "convert_xml.xml";
-	
+
 	private String fStatemachineTag = "statemachine:Statemachine";
 	private String fStateAttributeTag = "stateAttribute";
 	private String fStateValueTag = "stateValue";
 	private String fConditonTag = "condition";
 	private String fTransitionTag = "transitions";
-	
+
 	private String fStateType = "statemachine:State";
 	private String fInitialStateType = "statemachine:InitialState";
 	private String fConditionalStateType = "statemachine:ConditionalState";
-	
+
 	private String fAttributeConditionType = "statemachine:AttributeCondition";
-	
+
 	private Map<Integer, Node> fStatemachineList = new HashMap<>();
 	private Map<Integer, Map<Integer, Node>> fStatemachineStatesList = new HashMap<>();
-	
+
 	private Map<String, EventHandler> fEventHandlerList = new HashMap<>();
-	
+
 	private String traceType = "org.eclipse.tracecompass.tmf.core.development";
 	private String xmlID;
-	
+
 	private int statemachinePositionInXml = 1;
 	private int statePositionInStatemachine = 0;
-	
+
 	private ObjectFactory factory = new ObjectFactory();
 
 	@Override
@@ -90,11 +89,11 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			return null;
 		}
-		
+
 		xmlID = diagramFile.getName().replaceFirst("[.][^.]+$", "").replaceAll("[^a-z0-9A-Z]", ".");
-		
+
 		NodeList statemachineNodeList = fGraphitiXml.getElementsByTagName(fStatemachineTag);
-		for (int i = 0; i < statemachineNodeList.getLength(); i++) {	
+		for (int i = 0; i < statemachineNodeList.getLength(); i++) {
 			Node statemachineNode = statemachineNodeList.item(i);
 			if(statemachineNode.getNodeType() == Node.TEXT_NODE) {
 				continue;
@@ -102,7 +101,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			fStatemachineList.put(statemachinePositionInXml, statemachineNode);
 			++statemachinePositionInXml;
 		}
-		
+
 		for(Entry<Integer, Node> statemachineNode : fStatemachineList.entrySet()) {
 			Map<Integer, Node> states = extractStateInformation(statemachineNode.getValue());
 			fStatemachineStatesList.put(statemachineNode.getKey(), states);
@@ -110,8 +109,8 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		}
 		return buildXmlFile(diagramFile.getPath().replace(".diagram", ".xml"));
 	}
-	
-	private Map<Integer, Node> extractStateInformation(Node parentStatemachine) {		
+
+	private Map<Integer, Node> extractStateInformation(Node parentStatemachine) {
 		NodeList stateNodeList = parentStatemachine.getChildNodes();
 		Map<Integer, Node> statesMap = new HashMap<>();
 		for (int i = 0; i < stateNodeList.getLength(); i++) {
@@ -124,8 +123,8 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		}
 		return statesMap;
 	}
-	
-	private Vector<Node> extractTransitionsNode(Node parentState) {
+
+	private static Vector<Node> extractTransitionsNode(Node parentState) {
 		NodeList transitionNodeList = parentState.getChildNodes();
 		Vector<Node> transitionList = new Vector<>();
 		for (int i = 0; i < transitionNodeList.getLength(); i++) {
@@ -137,7 +136,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		}
 		return transitionList;
 	}
-	
+
 	private Vector<StateChange> extractStateChange(Node node) {
 		Vector<StateChange> stateChanges = new Vector<>();
 		NodeList stateChangeNodeList = node.getChildNodes();
@@ -147,7 +146,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 				if(stateChangeNode.getNodeType() == Node.TEXT_NODE) {
 					continue;
 				}
-				
+
 				Vector<StateAttribute> stateAttributeList = new Vector<>();
 				StateValue stateValue = factory.createStateValue();
 				NodeList stateChangeInformationList = null;
@@ -165,7 +164,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		}
 		return stateChanges;
 	}
-	
+
 	private void extractAttribute(NodeList attributeNodeList, Vector<StateAttribute> stateAttributeList, StateValue stateValue) {
 		for(int i = 0; i < attributeNodeList.getLength(); i++) {
 			Node node = attributeNodeList.item(i);
@@ -194,19 +193,19 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			}
 		}
 	}
-	
+
 	private StateAttribute stateAttributeQuery(Node stateAttributeNode) {
 		StateAttribute stateAttribute = factory.createStateAttribute();
 		stateAttribute.setType(stateAttributeNode.getAttributes().getNamedItem("type").getNodeValue());
 		stateAttribute.setValue(stateAttributeNode.getAttributes().getNamedItem("value").getNodeValue());
-		
+
 		NodeList queryStateAttributeList = stateAttributeNode.getChildNodes();
 		for (int i = 0; i < queryStateAttributeList.getLength(); i++) {
 			Node queryStateAttributeNode = queryStateAttributeList.item(i);
 			if(queryStateAttributeNode.getNodeType() == Node.TEXT_NODE) {
 				continue;
 			}
-			
+
 			StateAttribute queryStateAttribute = factory.createStateAttribute();
 			queryStateAttribute.setType(queryStateAttributeNode.getAttributes().getNamedItem("type").getNodeValue());
 			queryStateAttribute.setValue(queryStateAttributeNode.getAttributes().getNamedItem("value").getNodeValue());
@@ -214,7 +213,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		}
 		return stateAttribute;
 	}
-	
+
 	private StateChange extractStateChangeFromCondition(Node condition) {
 		// Hack to avoid text node
 		Vector<Node> transitions = new Vector<>();
@@ -228,7 +227,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 				conditions.add(node);
 			}
 		}
-		
+
 		StateChange thenStateChange = null;
 		StateChange elseStateChange = null;
 		for(Node transition : transitions) {
@@ -249,7 +248,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 				}
 			}
 		}
-		
+
 		Vector<Pair<Condition, Boolean>> ifCondition = new Vector<>();
 		Boolean notCondition = false;
 		for(Node conditionNode : conditions) {
@@ -258,19 +257,19 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			} else {
 				notCondition = false;
 			}
-			
+
 			if(conditionNode.getAttributes().getNamedItem("xsi:type").getNodeValue().equals(fAttributeConditionType)) {
 				StateChange conditionStateChange = factory.createStateChange();
 				conditionStateChange = extractStateChange(conditionNode).firstElement();
 				Condition attributeCondition = new Condition();
 				attributeCondition.getStateAttribute().addAll(conditionStateChange.getStateAttribute());
 				attributeCondition.setStateValue(conditionStateChange.getStateValue());
-				ifCondition.add(new Pair<Condition, Boolean>(attributeCondition, notCondition));
+				ifCondition.add(new Pair<>(attributeCondition, notCondition));
 			} else {
 				EventField eventField = new EventField();
 				String fieldName = conditionNode.getAttributes().getNamedItem("fieldName").getNodeValue();
-				eventField.setName(fieldName);				
-				
+				eventField.setName(fieldName);
+
 				Node stateValueNode = conditionNode.getChildNodes().item(1);
 				String type;
 				if(stateValueNode.getAttributes().getNamedItem("type") == null) {
@@ -282,14 +281,14 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 				StateValue stateValue = factory.createStateValue();
 				stateValue.setType(type);
 				stateValue.setValue(value);
-				
+
 				Condition fieldCondition = new Condition();
 				fieldCondition.setField(eventField);
 				fieldCondition.setStateValue(stateValue);
-				ifCondition.add(new Pair<Condition, Boolean>(fieldCondition, notCondition));
+				ifCondition.add(new Pair<>(fieldCondition, notCondition));
 			}
 		}
-		
+
 		StateChange stateChange = factory.createStateChange();
 		ConditionSingle conditionSingle = new ConditionSingle();
 		ConditionSingle notConditionSingle = new ConditionSingle();
@@ -320,34 +319,34 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 					conditionMultiple.getConditionAndOrAndAnd().add(conditionElement);
 				}
 			}
-			
+
 //			// TODO Test only
 //			Condition condition1 = ifCondition.get(0).getFirst();
 //			Condition condition2 = ifCondition.get(1).getFirst();
 //			Condition condition3 = ifCondition.get(2).getFirst();
 //			Condition condition4 = ifCondition.get(3).getFirst();
-//			
+//
 //			// (0 AND 1) OR (2 AND 3)
 //			ConditionMultiple condition1_2 = new ConditionMultiple();
 //			JAXBElement<Condition> element1 = factory.createConditionMultipleCondition(condition1);
 //			JAXBElement<Condition> element2 = factory.createConditionMultipleCondition(condition2);
 //			condition1_2.getConditionAndOrAndAnd().add(element1);
 //			condition1_2.getConditionAndOrAndAnd().add(element2);
-//			
+//
 //			ConditionMultiple condition2_3 = new ConditionMultiple();
 //			JAXBElement<Condition> element3 = factory.createConditionMultipleCondition(condition3);
 //			JAXBElement<Condition> element4 = factory.createConditionMultipleCondition(condition4);
 //			condition2_3.getConditionAndOrAndAnd().add(element3);
 //			condition2_3.getConditionAndOrAndAnd().add(element4);
-//			
+//
 //			ConditionMultiple conditionAll = new ConditionMultiple();
 //			JAXBElement<ConditionMultiple> element1_2 = factory.createConditionMultipleAnd(condition1_2);
 //			JAXBElement<ConditionMultiple> element3_4 = factory.createConditionMultipleAnd(condition2_3);
 //			conditionAll.getConditionAndOrAndAnd().add(element1_2);
 //			conditionAll.getConditionAndOrAndAnd().add(element3_4);
 //			conditionSingle.setOr(conditionAll);
-			
-			
+
+
 			if(isAndExpression) {
 				conditionSingle.setAnd(conditionMultiple);
 			} else {
@@ -355,10 +354,10 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			}
 			stateChange.setIf(conditionSingle);
 		}
-		
+
 		stateChange.setThen(thenStateChange);
 		stateChange.setElse(elseStateChange);
-		
+
 		return stateChange;
 	}
 
@@ -370,28 +369,28 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		int statemachineIndex = Integer.parseInt(splitedTargetState[0]);
 		// splitedTargetState[1] is the element type. In this case we don't need it
 		int stateIndex = Integer.parseInt(splitedTargetState[2]);
-		
+
 		return fStatemachineStatesList.get(statemachineIndex).get(stateIndex);
 	}
-	
+
 	private File buildXmlFile(String xmlFilePath) {
 		// State provider
 		StateProvider stateProvider = factory.createStateProvider();
 		stateProvider.setVersion(new BigInteger("0"));
 		stateProvider.setId(xmlID + ".state.provider");
-		
+
 		// Head
 		HeadProvider headprovider = factory.createHeadProvider();
-		
+
 		Label headLabel = factory.createHeadProviderLabel();
 		headLabel.setValue(xmlID.replaceAll("[.]", " ") + " state provider");
-		
+
 		TraceType headTraceType = factory.createHeadProviderTraceType();
 		headTraceType.setId(traceType);
 		headprovider.setLabel(headLabel);
 		headprovider.getTraceType().add(headTraceType);
 		stateProvider.setHead(headprovider);
-		
+
 		for(Entry<Integer, Map<Integer, Node>> statemachineStatesEntry : fStatemachineStatesList.entrySet()) {
 			Map<String, Node> conditionalTransition = new HashMap<>();
 			for(Entry<Integer, Node> state : statemachineStatesEntry.getValue().entrySet()) {
@@ -408,11 +407,11 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 					definedValue.setValue(definedValueValue.toString());
 					stateProvider.getDefinedValue().add(definedValue);
 				}
-				
+
 				if (state.getValue().getAttributes().getNamedItem("xsi:type").getNodeValue().equals(fStateType) || state.getValue().getAttributes().getNamedItem("xsi:type").getNodeValue().equals(fInitialStateType)) {
 					// Event handler
 					Vector<Node> transitions = extractTransitionsNode(state.getValue());
-					for(Node transitionNode : transitions) {						
+					for(Node transitionNode : transitions) {
 						EventHandler eventHandler = factory.createEventHandler();
 						String transitionName = transitionNode.getAttributes().getNamedItem("name").getNodeValue();
 						if(fEventHandlerList.containsKey(transitionName)) {
@@ -422,9 +421,9 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 						}
 						Vector<StateChange> transitionStateChanges = extractStateChange(transitionNode);
 						eventHandler.getStateChange().addAll(transitionStateChanges);
-						
+
 						fEventHandlerList.put(transitionName, eventHandler);
-						
+
 						Node transitionTarget = getTargetState(transitionNode);
 						if(transitionTarget.getAttributes().getNamedItem("xsi:type").getNodeValue().equals(fConditionalStateType)) {
 							conditionalTransition.put(transitionName, transitionTarget);
@@ -432,20 +431,20 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 					}
 				}
 			}
-			
+
 			for(Entry<String, Node> conditionalEntry : conditionalTransition.entrySet()) {
 				StateChange conditionStateChange = extractStateChangeFromCondition(conditionalEntry.getValue());
 				fEventHandlerList.get(conditionalEntry.getKey()).getStateChange().add(conditionStateChange);
 			}
 		}
-		
+
 		for (Entry<String, EventHandler> eventHandler : fEventHandlerList.entrySet()) {
 			stateProvider.getEventHandler().add(eventHandler.getValue());
 		}
-		
+
 		// Create XY views
 		// TODO
-		
+
 		Tmfxml tmfXml = factory.createTmfxml();
 		tmfXml.getTimeGraphViewOrStateProvider().add(stateProvider);
 		// Create control flow views
@@ -464,7 +463,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		}
 		return xmlFile;
 	}
-	
+
 	private List<TimeGraphView> createTimeGraphView() {
 		List<TimeGraphView> timeGraphViewList = new ArrayList<>();
 		for (Entry<Integer, Map<Integer, Node>> statemachineStatesEntry : fStatemachineStatesList.entrySet()) {
@@ -509,7 +508,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			AbstractAttributeNode leafNode = AttributeTree.getInstance().getNodeFromPath(new File(statemachineTree), statemachinePath);
 			AttributeTreePath treePath = new AttributeTreePath(leafNode);
 			Vector<AbstractAttributeNode> pathVector = treePath.getPath();
-			
+
 			String path = "";
 			for(int i = pathVector.size() - 2; i >= 0; i--) { //Skip root element
 				AbstractAttributeNode node = pathVector.get(i);
@@ -520,16 +519,16 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 					break;
 				}
 			}
-			
+
 			ViewEntry viewEntry = factory.createViewEntry();
 			viewEntry.setPath(path);
-			
+
 			ViewStateAttribute viewStateAttribute = factory.createViewStateAttribute();
 			viewStateAttribute.setType("constant");
 			viewStateAttribute.setValue(pathVector.get(0).getName());
 			viewEntry.setDisplay(viewStateAttribute);
 			// TODO Entry name ?
-			
+
 			timeGraphView.getEntry().add(viewEntry);
 
 			timeGraphViewList.add(timeGraphView);

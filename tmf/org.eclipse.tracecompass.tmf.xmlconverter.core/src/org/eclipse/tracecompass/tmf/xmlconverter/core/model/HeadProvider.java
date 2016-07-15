@@ -89,7 +89,7 @@ public class HeadProvider {
      */
     public List<HeadProvider.TraceType> getTraceType() {
         if (traceType == null) {
-            traceType = new ArrayList<HeadProvider.TraceType>();
+            traceType = new ArrayList<>();
         }
         return this.traceType;
     }

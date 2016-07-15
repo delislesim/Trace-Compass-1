@@ -36,23 +36,22 @@ public class StatesUpdateFeature extends AbstractUpdateFeature {
                 }
             }
         }
- 
+
         // retrieve name from business model
         String businessName = null;
         Object bo = getBusinessObjectForPictogramElement(pictogramElement);
         if (bo instanceof AbstractState) {
             businessName = ((AbstractState)bo).getName();
         }
- 
+
         // update needed, if names are different
         boolean updateNameNeeded =
-            ((pictogramName == null && businessName != null) || 
+            ((pictogramName == null && businessName != null) ||
                 (pictogramName != null && !pictogramName.equals(businessName)));
         if (updateNameNeeded) {
             return Reason.createTrueReason("Name is out of date");
-        } else {
-            return Reason.createFalseReason();
         }
+        return Reason.createFalseReason();
 	}
 
 	@Override
@@ -64,7 +63,7 @@ public class StatesUpdateFeature extends AbstractUpdateFeature {
         if (bo instanceof AbstractState) {
             businessName = ((AbstractState)bo).getName();
         }
- 
+
         // Set name in pictogram model
         if (pictogramElement instanceof ContainerShape) {
             ContainerShape cs = (ContainerShape) pictogramElement;

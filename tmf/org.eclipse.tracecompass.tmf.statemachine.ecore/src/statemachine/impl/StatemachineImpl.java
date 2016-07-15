@@ -79,7 +79,7 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * @generated
 	 * @ordered
 	 */
-	private @NonNull String fAssociatedAttribute = ASSOCIATED_ATTRIBUTE_EDEFAULT;
+	private String fAssociatedAttribute = ASSOCIATED_ATTRIBUTE_EDEFAULT;
 
 	/**
 	 * <!-- begin-user-doc -->
@@ -105,9 +105,10 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<AbstractState> getStates() {
+	@Override
+    public EList<AbstractState> getStates() {
 		if (states == null) {
-			states = new EObjectContainmentEList<AbstractState>(AbstractState.class, this, StatemachinePackage.STATEMACHINE__STATES);
+			states = new EObjectContainmentEList<>(AbstractState.class, this, StatemachinePackage.STATEMACHINE__STATES);
 		}
 		return states;
 	}
@@ -117,7 +118,8 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getAssociatedTree() {
+	@Override
+    public String getAssociatedTree() {
 		return associatedTree;
 	}
 
@@ -126,11 +128,13 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setAssociatedTree(String newAssociatedTree) {
+	@Override
+    public void setAssociatedTree(String newAssociatedTree) {
 		String oldAssociatedTree = associatedTree;
 		associatedTree = newAssociatedTree;
-		if (eNotificationRequired())
-			eNotify(new ENotificationImpl(this, Notification.SET, StatemachinePackage.STATEMACHINE__ASSOCIATED_TREE, oldAssociatedTree, associatedTree));
+		if (eNotificationRequired()) {
+            eNotify(new ENotificationImpl(this, Notification.SET, StatemachinePackage.STATEMACHINE__ASSOCIATED_TREE, oldAssociatedTree, associatedTree));
+        }
 	}
 
 	/**
@@ -138,7 +142,8 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public @NonNull String getAssociatedAttribute() {
+	@Override
+    public @NonNull String getAssociatedAttribute() {
 		return fAssociatedAttribute;
 	}
 
@@ -147,11 +152,13 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setAssociatedAttribute(String newAssociatedAttribute) {
+	@Override
+    public void setAssociatedAttribute(String newAssociatedAttribute) {
 		String oldAssociatedAttribute = fAssociatedAttribute;
 		fAssociatedAttribute = newAssociatedAttribute;
-		if (eNotificationRequired())
-			eNotify(new ENotificationImpl(this, Notification.SET, StatemachinePackage.STATEMACHINE__ASSOCIATED_ATTRIBUTE, oldAssociatedAttribute, fAssociatedAttribute));
+		if (eNotificationRequired()) {
+            eNotify(new ENotificationImpl(this, Notification.SET, StatemachinePackage.STATEMACHINE__ASSOCIATED_ATTRIBUTE, oldAssociatedAttribute, fAssociatedAttribute));
+        }
 	}
 
 	/**
@@ -255,7 +262,9 @@ public class StatemachineImpl extends NamedImpl implements Statemachine {
 	 */
 	@Override
 	public String toString() {
-		if (eIsProxy()) return super.toString();
+		if (eIsProxy()) {
+            return super.toString();
+        }
 
 		StringBuffer result = new StringBuffer(super.toString());
 		result.append(" (associatedTree: ");

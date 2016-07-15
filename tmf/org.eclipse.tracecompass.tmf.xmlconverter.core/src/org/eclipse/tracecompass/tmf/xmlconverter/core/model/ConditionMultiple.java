@@ -61,7 +61,7 @@ public class ConditionMultiple {
     })
     protected List<JAXBElement<?>> conditionAndOrAndAnd;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the conditionAndOrAndAnd property.
@@ -90,7 +90,7 @@ public class ConditionMultiple {
      */
     public List<JAXBElement<?>> getConditionAndOrAndAnd() {
         if (conditionAndOrAndAnd == null) {
-            conditionAndOrAndAnd = new ArrayList<JAXBElement<?>>();
+            conditionAndOrAndAnd = new ArrayList<>();
         }
         return this.conditionAndOrAndAnd;
     }

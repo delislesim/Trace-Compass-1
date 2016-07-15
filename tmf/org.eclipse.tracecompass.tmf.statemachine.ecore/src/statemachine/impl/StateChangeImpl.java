@@ -82,9 +82,10 @@ public class StateChangeImpl extends MinimalEObjectImpl.Container implements Sta
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<StateAttribute> getStateAttribute() {
+	@Override
+    public EList<StateAttribute> getStateAttribute() {
 		if (stateAttribute == null) {
-			stateAttribute = new EObjectContainmentEList<StateAttribute>(StateAttribute.class, this, StatemachinePackage.STATE_CHANGE__STATE_ATTRIBUTE);
+			stateAttribute = new EObjectContainmentEList<>(StateAttribute.class, this, StatemachinePackage.STATE_CHANGE__STATE_ATTRIBUTE);
 		}
 		return stateAttribute;
 	}
@@ -94,7 +95,8 @@ public class StateChangeImpl extends MinimalEObjectImpl.Container implements Sta
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateValue getStateValue() {
+	@Override
+    public StateValue getStateValue() {
 		return stateValue;
 	}
 
@@ -118,7 +120,8 @@ public class StateChangeImpl extends MinimalEObjectImpl.Container implements Sta
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setStateValue(StateValue newStateValue) {
+	@Override
+    public void setStateValue(StateValue newStateValue) {
 		if (newStateValue != stateValue) {
 			NotificationChain msgs = null;
 			if (stateValue != null)

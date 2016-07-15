@@ -74,7 +74,7 @@ public class Tmfxml {
      */
     public List<Object> getTimeGraphViewOrStateProvider() {
         if (timeGraphViewOrStateProvider == null) {
-            timeGraphViewOrStateProvider = new ArrayList<Object>();
+            timeGraphViewOrStateProvider = new ArrayList<>();
         }
         return this.timeGraphViewOrStateProvider;
     }

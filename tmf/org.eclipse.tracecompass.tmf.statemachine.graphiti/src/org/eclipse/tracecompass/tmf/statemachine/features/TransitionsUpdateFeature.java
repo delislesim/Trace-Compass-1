@@ -35,19 +35,18 @@ public class TransitionsUpdateFeature extends AbstractUpdateFeature {
         		}
         	}
         }
-        
+
         String transitionName = null;
         Object bo = getBusinessObjectForPictogramElement(pictogramElement);
         if(bo instanceof AbstractTransition) {
         	transitionName = ((AbstractTransition)bo).getName();
         }
-        
+
 		if ((connectionDecoratorName == null && transitionName != null)
 				|| (connectionDecoratorName != null && !connectionDecoratorName.equals(transitionName))) {
 			return Reason.createTrueReason("Name is out of date");
-		} else {
-			return Reason.createFalseReason();
 		}
+		return Reason.createFalseReason();
 	}
 
 	@Override
@@ -58,7 +57,7 @@ public class TransitionsUpdateFeature extends AbstractUpdateFeature {
         if (bo instanceof AbstractTransition) {
         	transitionName = ((AbstractTransition)bo).getName();
         }
-        
+
         if(pictogramElement instanceof Connection) {
         	EList<ConnectionDecorator> connectionDecorators = ((Connection) pictogramElement).getConnectionDecorators();
         	for(ConnectionDecorator decorator : connectionDecorators) {
@@ -68,7 +67,7 @@ public class TransitionsUpdateFeature extends AbstractUpdateFeature {
         		}
         	}
         }
-        
+
 		return false;
 	}
 

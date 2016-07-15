@@ -63,9 +63,10 @@ public class AttributeConditionImpl extends AbstractConditionImpl implements Att
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<StateAttribute> getStateAttribute() {
+	@Override
+    public EList<StateAttribute> getStateAttribute() {
 		if (stateAttribute == null) {
-			stateAttribute = new EObjectContainmentEList<StateAttribute>(StateAttribute.class, this, StatemachinePackage.ATTRIBUTE_CONDITION__STATE_ATTRIBUTE);
+			stateAttribute = new EObjectContainmentEList<>(StateAttribute.class, this, StatemachinePackage.ATTRIBUTE_CONDITION__STATE_ATTRIBUTE);
 		}
 		return stateAttribute;
 	}

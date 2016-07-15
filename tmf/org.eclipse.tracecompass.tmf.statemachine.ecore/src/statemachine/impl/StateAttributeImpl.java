@@ -112,7 +112,8 @@ public class StateAttributeImpl extends MinimalEObjectImpl.Container implements 
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateAttributeType getType() {
+	@Override
+    public StateAttributeType getType() {
 		return type;
 	}
 
@@ -121,7 +122,8 @@ public class StateAttributeImpl extends MinimalEObjectImpl.Container implements 
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setType(StateAttributeType newType) {
+	@Override
+    public void setType(StateAttributeType newType) {
 		StateAttributeType oldType = type;
 		type = newType == null ? TYPE_EDEFAULT : newType;
 		if (eNotificationRequired())
@@ -133,7 +135,8 @@ public class StateAttributeImpl extends MinimalEObjectImpl.Container implements 
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getValue() {
+	@Override
+    public String getValue() {
 		return value;
 	}
 
@@ -142,7 +145,8 @@ public class StateAttributeImpl extends MinimalEObjectImpl.Container implements 
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setValue(String newValue) {
+	@Override
+    public void setValue(String newValue) {
 		String oldValue = value;
 		value = newValue;
 		if (eNotificationRequired())
@@ -154,9 +158,10 @@ public class StateAttributeImpl extends MinimalEObjectImpl.Container implements 
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<StateAttribute> getStateAttributeQuery() {
+	@Override
+    public EList<StateAttribute> getStateAttributeQuery() {
 		if (stateAttributeQuery == null) {
-			stateAttributeQuery = new EObjectContainmentEList<StateAttribute>(StateAttribute.class, this, StatemachinePackage.STATE_ATTRIBUTE__STATE_ATTRIBUTE_QUERY);
+			stateAttributeQuery = new EObjectContainmentEList<>(StateAttribute.class, this, StatemachinePackage.STATE_ATTRIBUTE__STATE_ATTRIBUTE_QUERY);
 		}
 		return stateAttributeQuery;
 	}

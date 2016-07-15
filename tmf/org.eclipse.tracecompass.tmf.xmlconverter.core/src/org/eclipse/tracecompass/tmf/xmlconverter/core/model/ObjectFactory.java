@@ -218,7 +218,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "tmfxml")
     public JAXBElement<Tmfxml> createTmfxml(Tmfxml value) {
-        return new JAXBElement<Tmfxml>(_Tmfxml_QNAME, Tmfxml.class, null, value);
+        return new JAXBElement<>(_Tmfxml_QNAME, Tmfxml.class, null, value);
     }
 
     /**
@@ -227,7 +227,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "not", scope = ConditionMultiple.class)
     public JAXBElement<ConditionSingle> createConditionMultipleNot(ConditionSingle value) {
-        return new JAXBElement<ConditionSingle>(_ConditionMultipleNot_QNAME, ConditionSingle.class, ConditionMultiple.class, value);
+        return new JAXBElement<>(_ConditionMultipleNot_QNAME, ConditionSingle.class, ConditionMultiple.class, value);
     }
 
     /**
@@ -236,7 +236,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "condition", scope = ConditionMultiple.class)
     public JAXBElement<Condition> createConditionMultipleCondition(Condition value) {
-        return new JAXBElement<Condition>(_ConditionMultipleCondition_QNAME, Condition.class, ConditionMultiple.class, value);
+        return new JAXBElement<>(_ConditionMultipleCondition_QNAME, Condition.class, ConditionMultiple.class, value);
     }
 
     /**
@@ -245,7 +245,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "or", scope = ConditionMultiple.class)
     public JAXBElement<ConditionMultiple> createConditionMultipleOr(ConditionMultiple value) {
-        return new JAXBElement<ConditionMultiple>(_ConditionMultipleOr_QNAME, ConditionMultiple.class, ConditionMultiple.class, value);
+        return new JAXBElement<>(_ConditionMultipleOr_QNAME, ConditionMultiple.class, ConditionMultiple.class, value);
     }
 
     /**
@@ -254,7 +254,7 @@ public class ObjectFactory {
      */
     @XmlElementDecl(namespace = "", name = "and", scope = ConditionMultiple.class)
     public JAXBElement<ConditionMultiple> createConditionMultipleAnd(ConditionMultiple value) {
-        return new JAXBElement<ConditionMultiple>(_ConditionMultipleAnd_QNAME, ConditionMultiple.class, ConditionMultiple.class, value);
+        return new JAXBElement<>(_ConditionMultipleAnd_QNAME, ConditionMultiple.class, ConditionMultiple.class, value);
     }
 
 }

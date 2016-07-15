@@ -55,7 +55,7 @@ public class EventHandler {
     @XmlAttribute(name = "eventName", required = true)
     protected String eventName;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the stateChange property.
@@ -81,7 +81,7 @@ public class EventHandler {
      */
     public List<StateChange> getStateChange() {
         if (stateChange == null) {
-            stateChange = new ArrayList<StateChange>();
+            stateChange = new ArrayList<>();
         }
         return this.stateChange;
     }

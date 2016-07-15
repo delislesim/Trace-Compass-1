@@ -53,7 +53,7 @@ public class Location {
     @XmlAttribute(name = "id", required = true)
     protected String id;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the stateAttribute property.
@@ -79,7 +79,7 @@ public class Location {
      */
     public List<StateAttribute> getStateAttribute() {
         if (stateAttribute == null) {
-            stateAttribute = new ArrayList<StateAttribute>();
+            stateAttribute = new ArrayList<>();
         }
         return this.stateAttribute;
     }

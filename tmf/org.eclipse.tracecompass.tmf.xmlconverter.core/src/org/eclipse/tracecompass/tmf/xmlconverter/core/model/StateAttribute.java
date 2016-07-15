@@ -85,7 +85,7 @@ public class StateAttribute {
      */
     public List<StateAttribute> getStateAttribute() {
         if (stateAttribute == null) {
-            stateAttribute = new ArrayList<StateAttribute>();
+            stateAttribute = new ArrayList<>();
         }
         return this.stateAttribute;
     }

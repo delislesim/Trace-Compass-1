@@ -230,7 +230,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getStatemachine() {
+	@Override
+    public EClass getStatemachine() {
 		return statemachineEClass;
 	}
 
@@ -239,7 +240,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getStatemachine_States() {
+	@Override
+    public EReference getStatemachine_States() {
 		return (EReference)statemachineEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -248,7 +250,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getStatemachine_AssociatedTree() {
+	@Override
+    public EAttribute getStatemachine_AssociatedTree() {
 		return (EAttribute)statemachineEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -257,7 +260,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getStatemachine_AssociatedAttribute() {
+	@Override
+    public EAttribute getStatemachine_AssociatedAttribute() {
 		return (EAttribute)statemachineEClass.getEStructuralFeatures().get(2);
 	}
 
@@ -266,7 +270,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getNamed() {
+	@Override
+    public EClass getNamed() {
 		return namedEClass;
 	}
 
@@ -275,7 +280,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getNamed_Name() {
+	@Override
+    public EAttribute getNamed_Name() {
 		return (EAttribute)namedEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -284,7 +290,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getAbstractState() {
+	@Override
+    public EClass getAbstractState() {
 		return abstractStateEClass;
 	}
 
@@ -293,7 +300,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getAbstractState_Transitions() {
+	@Override
+    public EReference getAbstractState_Transitions() {
 		return (EReference)abstractStateEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -302,7 +310,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getAbstractTransition() {
+	@Override
+    public EClass getAbstractTransition() {
 		return abstractTransitionEClass;
 	}
 
@@ -311,7 +320,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getAbstractTransition_State() {
+	@Override
+    public EReference getAbstractTransition_State() {
 		return (EReference)abstractTransitionEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -320,7 +330,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getAbstractTransition_StateChange() {
+	@Override
+    public EReference getAbstractTransition_StateChange() {
 		return (EReference)abstractTransitionEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -329,7 +340,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getInitialState() {
+	@Override
+    public EClass getInitialState() {
 		return initialStateEClass;
 	}
 
@@ -338,7 +350,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getFinalState() {
+	@Override
+    public EClass getFinalState() {
 		return finalStateEClass;
 	}
 
@@ -347,7 +360,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getState() {
+	@Override
+    public EClass getState() {
 		return stateEClass;
 	}
 
@@ -356,7 +370,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getState_StateColor() {
+	@Override
+    public EAttribute getState_StateColor() {
 		return (EAttribute)stateEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -365,7 +380,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getTransition() {
+	@Override
+    public EClass getTransition() {
 		return transitionEClass;
 	}
 
@@ -374,7 +390,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getConditionalTransition() {
+	@Override
+    public EClass getConditionalTransition() {
 		return conditionalTransitionEClass;
 	}
 
@@ -383,7 +400,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getStateValue() {
+	@Override
+    public EClass getStateValue() {
 		return stateValueEClass;
 	}
 
@@ -392,7 +410,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getStateValue_Type() {
+	@Override
+    public EAttribute getStateValue_Type() {
 		return (EAttribute)stateValueEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -401,7 +420,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getStateValue_Value() {
+	@Override
+    public EAttribute getStateValue_Value() {
 		return (EAttribute)stateValueEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -410,7 +430,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getStateAttribute() {
+	@Override
+    public EClass getStateAttribute() {
 		return stateAttributeEClass;
 	}
 
@@ -419,7 +440,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getStateAttribute_Type() {
+	@Override
+    public EAttribute getStateAttribute_Type() {
 		return (EAttribute)stateAttributeEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -428,7 +450,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getStateAttribute_Value() {
+	@Override
+    public EAttribute getStateAttribute_Value() {
 		return (EAttribute)stateAttributeEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -437,7 +460,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getStateAttribute_StateAttributeQuery() {
+	@Override
+    public EReference getStateAttribute_StateAttributeQuery() {
 		return (EReference)stateAttributeEClass.getEStructuralFeatures().get(2);
 	}
 
@@ -446,7 +470,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getConditionalState() {
+	@Override
+    public EClass getConditionalState() {
 		return conditionalStateEClass;
 	}
 
@@ -455,7 +480,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getConditionalState_Condition() {
+	@Override
+    public EReference getConditionalState_Condition() {
 		return (EReference)conditionalStateEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -464,7 +490,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getConditionalState_AndExpression() {
+	@Override
+    public EAttribute getConditionalState_AndExpression() {
 		return (EAttribute)conditionalStateEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -473,7 +500,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getConditionalState_ConditionsOrganization() {
+	@Override
+    public EAttribute getConditionalState_ConditionsOrganization() {
 		return (EAttribute)conditionalStateEClass.getEStructuralFeatures().get(2);
 	}
 
@@ -482,7 +510,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getStateChange() {
+	@Override
+    public EClass getStateChange() {
 		return stateChangeEClass;
 	}
 
@@ -491,7 +520,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getStateChange_StateAttribute() {
+	@Override
+    public EReference getStateChange_StateAttribute() {
 		return (EReference)stateChangeEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -500,7 +530,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getStateChange_StateValue() {
+	@Override
+    public EReference getStateChange_StateValue() {
 		return (EReference)stateChangeEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -509,7 +540,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getAbstractCondition() {
+	@Override
+    public EClass getAbstractCondition() {
 		return abstractConditionEClass;
 	}
 
@@ -518,7 +550,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getAbstractCondition_StateValue() {
+	@Override
+    public EReference getAbstractCondition_StateValue() {
 		return (EReference)abstractConditionEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -527,7 +560,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getAbstractCondition_IsNotCondition() {
+	@Override
+    public EAttribute getAbstractCondition_IsNotCondition() {
 		return (EAttribute)abstractConditionEClass.getEStructuralFeatures().get(1);
 	}
 
@@ -536,7 +570,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getFieldCondition() {
+	@Override
+    public EClass getFieldCondition() {
 		return fieldConditionEClass;
 	}
 
@@ -545,7 +580,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EAttribute getFieldCondition_FieldName() {
+	@Override
+    public EAttribute getFieldCondition_FieldName() {
 		return (EAttribute)fieldConditionEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -554,7 +590,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EClass getAttributeCondition() {
+	@Override
+    public EClass getAttributeCondition() {
 		return attributeConditionEClass;
 	}
 
@@ -563,7 +600,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EReference getAttributeCondition_StateAttribute() {
+	@Override
+    public EReference getAttributeCondition_StateAttribute() {
 		return (EReference)attributeConditionEClass.getEStructuralFeatures().get(0);
 	}
 
@@ -572,7 +610,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EEnum getStateValueType() {
+	@Override
+    public EEnum getStateValueType() {
 		return stateValueTypeEEnum;
 	}
 
@@ -581,7 +620,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EEnum getStateAttributeType() {
+	@Override
+    public EEnum getStateAttributeType() {
 		return stateAttributeTypeEEnum;
 	}
 
@@ -590,7 +630,8 @@ public class StatemachinePackageImpl extends EPackageImpl implements Statemachin
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StatemachineFactory getStatemachineFactory() {
+	@Override
+    public StatemachineFactory getStatemachineFactory() {
 		return (StatemachineFactory)getEFactoryInstance();
 	}
 

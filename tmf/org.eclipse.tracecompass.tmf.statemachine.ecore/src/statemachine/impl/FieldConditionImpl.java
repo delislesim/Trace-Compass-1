@@ -69,7 +69,8 @@ public class FieldConditionImpl extends AbstractConditionImpl implements FieldCo
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getFieldName() {
+	@Override
+    public String getFieldName() {
 		return fieldName;
 	}
 
@@ -78,7 +79,8 @@ public class FieldConditionImpl extends AbstractConditionImpl implements FieldCo
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setFieldName(String newFieldName) {
+	@Override
+    public void setFieldName(String newFieldName) {
 		String oldFieldName = fieldName;
 		fieldName = newFieldName;
 		if (eNotificationRequired())

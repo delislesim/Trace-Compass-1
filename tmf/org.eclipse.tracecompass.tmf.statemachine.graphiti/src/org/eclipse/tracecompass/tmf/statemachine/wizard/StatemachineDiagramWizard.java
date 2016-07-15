@@ -37,22 +37,22 @@ import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 
 public class StatemachineDiagramWizard extends BasicNewResourceWizard {
-	
+
 	private static final String PAGE_NAME_DIAGRAM = "New Diagram";
 	private static final String WIZARD_WINDOW_TITLE = "New Diagram";
 
 	private String diagramTypeId = "State Machine";
-	
+
 	private StatemachineDiagramPage newDiagramPage;
-	private IStructuredSelection selection;
-	
+	private IStructuredSelection fSelection;
+
 	@Override
 	public void addPages() {
 		super.addPages();
-		newDiagramPage = new StatemachineDiagramPage(PAGE_NAME_DIAGRAM, selection);
+		newDiagramPage = new StatemachineDiagramPage(PAGE_NAME_DIAGRAM, fSelection);
 		addPage(newDiagramPage);
 	}
-	
+
 	@Override
 	public boolean canFinish() {
 		return super.canFinish();
@@ -61,31 +61,31 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 	@Override
 	public void init(IWorkbench workbench, IStructuredSelection currentSelection) {
 		super.init(workbench, currentSelection);
-		selection = currentSelection;
+		fSelection = currentSelection;
 		setWindowTitle(WIZARD_WINDOW_TITLE);
 	}
 
 	@Override
 	public boolean performFinish() {
 		String diagramName = newDiagramPage.getDiagramName();
-		
+
 		IProject project = null;
 		IFolder diagramFolder = null;
-		
-		Object element = selection.getFirstElement();
+
+		Object element = fSelection.getFirstElement();
 		if (element instanceof IProject) {
 			project = (IProject) element;
 		} else if (element instanceof IFolder) {
 			diagramFolder = (IFolder) element;
 			project = diagramFolder.getProject();
 		}
-		
+
 		if (project == null || !project.isAccessible()) {
 			return false;
 		}
-		
+
 		Diagram diagram = Graphiti.getPeCreateService().createDiagram(diagramTypeId, diagramName, true);
-		
+
 		if (diagramFolder == null) {
 			IFolder statemachineFolder = null;
 			IFolder statemachineDiagramFolder = null;
@@ -107,10 +107,10 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 					return false;
 				}
 			}
-			
+
 			diagramFolder = project.getFolder("Statemachine/Diagrams");
 		}
-		
+
 		String statemachineDiagramExtension = "diagram";
 		IFile diagramFile = diagramFolder.getFile(diagramName + "." + statemachineDiagramExtension);
 		URI uri = URI.createPlatformResourceURI(diagramFile.getFullPath().toString(), true);
@@ -118,7 +118,7 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		if(!isCreated) {
 			return false;
 		}
-		
+
 		String editorID = DiagramEditor.DIAGRAM_EDITOR_ID;
 		String providerId = GraphitiUi.getExtensionManager().getDiagramTypeProviderId(diagram.getDiagramTypeId());
 		DiagramEditorInput editorInput = new DiagramEditorInput(EcoreUtil.getURI(diagram), providerId);
@@ -127,7 +127,7 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		} catch (PartInitException e) {
 			return false;
 		}
-		
+
 		// Create or use the attribute tree
 		if(newDiagramPage.getUseExistingFile()) {
 			String treeFilePath = newDiagramPage.getExistingTreePath();
@@ -139,27 +139,27 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		// TODO If attribute cannot be create the diagram will be create and it's wrong !
 		return true;
 	}
-	
+
 	private boolean createAttributeTreeFile(String diagramName) {
 		IFolder attributeTreeFolder = null;
 		IProject attributeTreeProject = null;
-		
-		Object selectedElement = selection.getFirstElement();		
+
+		Object selectedElement = fSelection.getFirstElement();
 		if (selectedElement instanceof IProject) {
 			attributeTreeProject = (IProject) selectedElement;
 		} else if (selectedElement instanceof IFolder) {
 			attributeTreeFolder = (IFolder) selectedElement;
 			attributeTreeProject = attributeTreeFolder.getProject();
 		}
-		
+
 		if (attributeTreeProject == null || !attributeTreeProject.isAccessible()) {
 			return false;
 		}
-		
+
 		if (attributeTreeFolder == null) {
 			IFolder statemachineFolder = null;
 			IFolder treeFolder = null;
-			
+
 			statemachineFolder = attributeTreeProject.getFolder("Statemachine");
 			if (!statemachineFolder.exists()) {
 				try {
@@ -179,74 +179,76 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 			}
 			attributeTreeFolder = attributeTreeProject.getFolder("Statemachine/Tree");
 		}
-		
+
 		File attributeTreeFile = attributeTreeFolder.getFile(newDiagramPage.getNewTreeName() + ".attributetree").getLocation().toFile();
 		if (!attributeTreeFile.exists()) {
 			if(!AttributeTree.getInstance().createNewAttributeTree(attributeTreeFile)) {
 				return false;
 			}
 		}
-		
+
 		AttributeTreeUtils.addAttributeTreeFile(diagramName, attributeTreeFile.getAbsolutePath());
 		return true;
 	}
 
-	private boolean createDiagramFile(URI uri, final Diagram diagram) {
+	private static boolean createDiagramFile(URI uri, final Diagram diagram) {
 		TransactionalEditingDomain editingDomain = GraphitiUi.getEmfService().createResourceSetAndEditingDomain();
 		ResourceSet resourceSet = editingDomain.getResourceSet();
-		
+
 		final Resource resource = resourceSet.createResource(uri);
-		
+
 		CommandStack commandStack = editingDomain.getCommandStack();
 		commandStack.execute(new RecordingCommand(editingDomain) {
-			
+
 			@Override
 			protected void doExecute() {
 				resource.setTrackingModification(true);
 				resource.getContents().add(diagram);
 			}
 		});
-		
+
 		boolean saveStatus = save(editingDomain);
 		editingDomain.dispose();
-		
+
 		return saveStatus;
 	}
-	
-	private boolean save(final TransactionalEditingDomain editingDomain) {
+
+	private static boolean save(final TransactionalEditingDomain editingDomain) {
 		boolean saveStatus = true;
-		final Map<URI, String> failedSaves = new HashMap<URI, String>();
-		
+		final Map<URI, String> failedSaves = new HashMap<>();
+
 		IWorkspaceRunnable wsRunnable = new IWorkspaceRunnable() {
-			
+
 			@Override
 			public void run(IProgressMonitor monitor) throws CoreException {
-				Runnable runnable = new Runnable() {					
+				Runnable runnable = new Runnable() {
 					@Override
 					public void run() {
 						Transaction parentTransaction;
-						if(editingDomain != null && (parentTransaction = ((TransactionalEditingDomainImpl) editingDomain).getActiveTransaction()) != null) {
-							do {
-								if(!parentTransaction.isReadOnly()) {
-									throw new IllegalStateException("deadlock"); //TODO Change this message
-								}
-							} while ((parentTransaction = ((TransactionalEditingDomainImpl) editingDomain).getActiveTransaction().getParent()) != null);
-						}
-						
-						Resource[] resourcesArray = (Resource[]) editingDomain.getResourceSet().getResources().toArray();
-						for(int i = 0; i < resourcesArray.length; i++) {
-							Resource resource = resourcesArray[i];
-							if(resource.isModified()) {
-								try {
-									resource.save((Map<?, ?>) Collections.emptyMap().get(resource));
-								} catch (IOException e) {
-									failedSaves.put(resource.getURI(), "Fail");
-								}
-							}
-						}
+						if(editingDomain != null) {
+                            if ((parentTransaction = ((TransactionalEditingDomainImpl) editingDomain).getActiveTransaction()) != null) {
+                            	do {
+                            		if(!parentTransaction.isReadOnly()) {
+                            			throw new IllegalStateException("deadlock"); //TODO Change this message
+                            		}
+                            	} while ((parentTransaction = ((TransactionalEditingDomainImpl) editingDomain).getActiveTransaction().getParent()) != null);
+                            }
+                            Resource[] resourcesArray = (Resource[]) editingDomain.getResourceSet().getResources().toArray();
+                            for(int i = 0; i < resourcesArray.length; i++) {
+                                Resource resource = resourcesArray[i];
+                                if(resource.isModified()) {
+                                    try {
+                                        resource.save((Map<?, ?>) Collections.emptyMap().get(resource));
+                                    } catch (IOException e) {
+                                        failedSaves.put(resource.getURI(), "Fail");
+                                    }
+                                }
+                            }
+                        }
+
 					}
 				};
-				
+
 				try {
 					editingDomain.runExclusive(runnable);
 				} catch (final InterruptedException e) {
@@ -255,7 +257,7 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 				editingDomain.getCommandStack().flush();
 			}
 		};
-		
+
 		try {
 			ResourcesPlugin.getWorkspace().run(wsRunnable, null);
 			if (!failedSaves.isEmpty()) {
@@ -264,7 +266,7 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		} catch (final CoreException e) {
 			saveStatus = false;
 		}
-		
+
 		return saveStatus;
 	}
 }

@@ -15,7 +15,7 @@ public abstract class AbstractAttributeNode {
 	
 	public AbstractAttributeNode(AbstractAttributeNode parent) {
 		parentNode = parent;
-		childNodes = new ArrayList<AbstractAttributeNode>();
+		childNodes = new ArrayList<>();
 		if(parentNode != null) {
 			parentNode.addChild(this);
 		}		

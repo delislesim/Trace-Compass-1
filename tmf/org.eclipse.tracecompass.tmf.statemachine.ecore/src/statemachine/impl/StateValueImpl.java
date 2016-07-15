@@ -92,7 +92,8 @@ public class StateValueImpl extends MinimalEObjectImpl.Container implements Stat
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateValueType getType() {
+	@Override
+    public StateValueType getType() {
 		return type;
 	}
 
@@ -101,7 +102,8 @@ public class StateValueImpl extends MinimalEObjectImpl.Container implements Stat
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setType(StateValueType newType) {
+	@Override
+    public void setType(StateValueType newType) {
 		StateValueType oldType = type;
 		type = newType == null ? TYPE_EDEFAULT : newType;
 		if (eNotificationRequired())
@@ -113,7 +115,8 @@ public class StateValueImpl extends MinimalEObjectImpl.Container implements Stat
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getValue() {
+	@Override
+    public String getValue() {
 		return value;
 	}
 
@@ -122,7 +125,8 @@ public class StateValueImpl extends MinimalEObjectImpl.Container implements Stat
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setValue(String newValue) {
+	@Override
+    public void setValue(String newValue) {
 		String oldValue = value;
 		value = newValue;
 		if (eNotificationRequired())

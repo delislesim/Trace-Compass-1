@@ -81,7 +81,8 @@ public abstract class AbstractTransitionImpl extends NamedImpl implements Abstra
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public AbstractState getState() {
+	@Override
+    public AbstractState getState() {
 		if (state != null && state.eIsProxy()) {
 			InternalEObject oldState = (InternalEObject)state;
 			state = (AbstractState)eResolveProxy(oldState);
@@ -107,7 +108,8 @@ public abstract class AbstractTransitionImpl extends NamedImpl implements Abstra
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setState(AbstractState newState) {
+	@Override
+    public void setState(AbstractState newState) {
 		AbstractState oldState = state;
 		state = newState;
 		if (eNotificationRequired())
@@ -119,9 +121,10 @@ public abstract class AbstractTransitionImpl extends NamedImpl implements Abstra
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<StateChange> getStateChange() {
+	@Override
+    public EList<StateChange> getStateChange() {
 		if (stateChange == null) {
-			stateChange = new EObjectContainmentEList<StateChange>(StateChange.class, this, StatemachinePackage.ABSTRACT_TRANSITION__STATE_CHANGE);
+			stateChange = new EObjectContainmentEList<>(StateChange.class, this, StatemachinePackage.ABSTRACT_TRANSITION__STATE_CHANGE);
 		}
 		return stateChange;
 	}

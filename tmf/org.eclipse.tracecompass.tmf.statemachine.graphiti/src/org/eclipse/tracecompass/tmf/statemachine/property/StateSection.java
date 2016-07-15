@@ -33,25 +33,25 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
 	private Label colorLabel;
 	private static RGB DEFAULT_COLOR = new RGB(0, 0, 255);
 	private RGB stateColor = DEFAULT_COLOR;
-	
+
     @Override
     public void createControls(Composite parent, TabbedPropertySheetPage tabbedPropertySheetPage) {
         super.createControls(parent, tabbedPropertySheetPage);
-        
+
         TabbedPropertySheetWidgetFactory factory = getWidgetFactory();
         final Composite composite = factory.createFlatFormComposite(parent);
         composite.setLayout(new GridLayout(2, false));
-        
+
         GridData gridData;
-        
-        Label label = factory.createLabel(composite, "Name");
-        
+
+        factory.createLabel(composite, "Name");
+
         stateNameText = factory.createText(composite, "");
         gridData = new GridData();
         gridData.horizontalAlignment = SWT.FILL;
         gridData.grabExcessHorizontalSpace = true;
         stateNameText.setLayoutData(gridData);
-        
+
         stateNameText.addModifyListener(new ModifyListener() {
 
         	@Override
@@ -63,31 +63,34 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
         		PictogramElement pe = getSelectedPictogramElement();
         		if (pe != null) {
         			Object bo = Graphiti.getLinkService().getBusinessObjectForLinkedPictogramElement(pe);
-        			if (bo == null)
-        				return;
+        			if (bo == null) {
+                        return;
+                    }
         			String ActualStateName = null;
         			if(bo instanceof AbstractState) {
         				ActualStateName = ((AbstractState) bo).getName();
         			}
-        			if (newStateName.equals(ActualStateName))
-        				return;
+        			if (newStateName.equals(ActualStateName)) {
+                        return;
+                    }
         		}
         		final String stateName = newStateName;
         		IFeature feature = new AbstractFeature(getDiagramTypeProvider().getFeatureProvider()) {
-        				
+
         			@Override
         			public void execute(IContext context) {
-        				PictogramElement pe = getSelectedPictogramElement();
-        				if (pe != null) {
-        					Object bo = Graphiti.getLinkService().getBusinessObjectForLinkedPictogramElement(pe);
-        					if (bo == null)
-        						return;
+        				PictogramElement spe = getSelectedPictogramElement();
+        				if (spe != null) {
+        					Object bo = Graphiti.getLinkService().getBusinessObjectForLinkedPictogramElement(spe);
+        					if (bo == null) {
+                                return;
+                            }
                 			if(bo instanceof AbstractState) {
                 				((AbstractState) bo).setName(stateName);
-                			}        					
+                			}
         				}
         			}
-        			
+
         			@Override
         			public boolean canExecute(IContext context) {
         				return true;
@@ -97,7 +100,7 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
         		execute(feature, context);
         	}
         });
-        
+
         // Add color picker for defining state color in generated views
         colorLabel = factory.createLabel(composite, DEFAULT_COLOR.toString());
         colorLabel.setBackground(new Color(composite.getDisplay(), DEFAULT_COLOR));
@@ -106,7 +109,7 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
         gridData.horizontalAlignment = SWT.FILL;
         gridData.widthHint = 130;
         colorLabel.setLayoutData(gridData);
-        Button colorButton = factory.createButton(composite, "...", SWT.PUSH);    
+        Button colorButton = factory.createButton(composite, "...", SWT.PUSH);
         colorButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
@@ -123,20 +126,21 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
     		}
 		});
     }
-    
+
     @Override
     public void refresh() {
         PictogramElement pe = getSelectedPictogramElement();
         if (pe != null) {
         	Object bo = Graphiti.getLinkService().getBusinessObjectForLinkedPictogramElement(pe);
-        	if (bo == null)
+        	if (bo == null) {
                 return;
-        	
+            }
+
         	if(bo instanceof AbstractState) {
         		String stateName = ((AbstractState)bo).getName();
         		stateNameText.setText((stateName != null) ? stateName : "");
         	}
-        	
+
         	if(bo instanceof State) {
         		String stateColorHex = ((State)bo).getStateColor();
 				if (stateColorHex != null) {
@@ -149,23 +153,24 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
         	}
         }
     }
-    
+
     private void saveStateColor() {
     	IFeature feature = new AbstractFeature(getDiagramTypeProvider().getFeatureProvider()) {
-			
+
 			@Override
 			public void execute(IContext context) {
 				PictogramElement pe = getSelectedPictogramElement();
 				if (pe != null) {
 					Object bo = Graphiti.getLinkService().getBusinessObjectForLinkedPictogramElement(pe);
-					if (bo == null)
-						return;
+					if (bo == null) {
+                        return;
+                    }
         			if(bo instanceof State) {
         				((State) bo).setStateColor(rgbToHex(stateColor));
-        			}        					
+        			}
 				}
 			}
-			
+
 			@Override
 			public boolean canExecute(IContext context) {
 				return true;
@@ -174,25 +179,25 @@ public class StateSection extends GFPropertySection implements ITabbedPropertyCo
 		CustomContext context = new CustomContext();
 		execute(feature, context);
     }
-    
-    private String rgbToHex(RGB rgb) {
+
+    private static String rgbToHex(RGB rgb) {
     	int r = rgb.red;
         int g = rgb.green;
         int b = rgb.blue;
         return "#" + toHexValue(r) + toHexValue(g) + toHexValue(b);
     	//return "#" + Integer.toHexString(r) + Integer.toHexString(g) + Integer.toHexString(b);
     }
-    
-    private String toHexValue(int number) {
+
+    private static String toHexValue(int number) {
         StringBuilder builder = new StringBuilder(Integer.toHexString(number));
         while (builder.length() < 2) {
           builder.append("0");
         }
         return builder.toString().toUpperCase();
     }
-    
+
     // e.g. hex = #FFFFFF
-    private RGB hexToRgb(String hex) {
+    private static RGB hexToRgb(String hex) {
     	int r = Integer.valueOf(hex.substring(1, 3), 16);
         int g = Integer.valueOf(hex.substring(3, 5), 16);
         int b = Integer.valueOf(hex.substring(5, 7), 16);

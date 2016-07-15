@@ -66,9 +66,10 @@ public abstract class AbstractStateImpl extends NamedImpl implements AbstractSta
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<AbstractTransition> getTransitions() {
+	@Override
+    public EList<AbstractTransition> getTransitions() {
 		if (transitions == null) {
-			transitions = new EObjectContainmentEList<AbstractTransition>(AbstractTransition.class, this, StatemachinePackage.ABSTRACT_STATE__TRANSITIONS);
+			transitions = new EObjectContainmentEList<>(AbstractTransition.class, this, StatemachinePackage.ABSTRACT_STATE__TRANSITIONS);
 		}
 		return transitions;
 	}

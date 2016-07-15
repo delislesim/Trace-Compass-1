@@ -59,7 +59,7 @@ public class Condition {
     @XmlElement(required = true)
     protected StateValue stateValue;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the stateAttribute property.
@@ -85,7 +85,7 @@ public class Condition {
      */
     public List<StateAttribute> getStateAttribute() {
         if (stateAttribute == null) {
-            stateAttribute = new ArrayList<StateAttribute>();
+            stateAttribute = new ArrayList<>();
         }
         return this.stateAttribute;
     }

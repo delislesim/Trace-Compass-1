@@ -37,18 +37,17 @@ public class StatemachineUpdateFeature extends AbstractUpdateFeature {
 				}
 			}
 		}
-		
+
 		String boStatemachineName = null;
 		Object bo = getBusinessObjectForPictogramElement(pictogramElement);
 		if(bo instanceof Statemachine) {
 			boStatemachineName = ((Statemachine)bo).getName();
 		}
-		
+
 		if((statemachineName == null && boStatemachineName != null) || (statemachineName != null && !statemachineName.equals(boStatemachineName))) {
 			return Reason.createTrueReason("Name is out of date");
-		} else {
-			return Reason.createFalseReason();
 		}
+		return Reason.createFalseReason();
 	}
 
 	@Override
@@ -59,7 +58,7 @@ public class StatemachineUpdateFeature extends AbstractUpdateFeature {
 		if(bo instanceof Statemachine) {
 			statemachinName = ((Statemachine)bo).getName();
 		}
-		
+
 		if(pictogramElement instanceof ContainerShape) {
 			List<Shape> shapeList = ((ContainerShape) pictogramElement).getChildren();
 			for(Shape shape : shapeList) {

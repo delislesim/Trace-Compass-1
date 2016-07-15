@@ -19,8 +19,6 @@ import org.eclipse.graphiti.ui.features.DefaultFeatureProvider;
 import org.eclipse.tracecompass.tmf.statemachine.features.ConditionalStateAddFeature;
 import org.eclipse.tracecompass.tmf.statemachine.features.ConditionalStateCreateFeature;
 import org.eclipse.tracecompass.tmf.statemachine.features.ConditionalStateLayoutFeature;
-import org.eclipse.tracecompass.tmf.statemachine.features.FinalStateAddFeature;
-import org.eclipse.tracecompass.tmf.statemachine.features.FinalStateCreateFeature;
 import org.eclipse.tracecompass.tmf.statemachine.features.InitialStateAddFeature;
 import org.eclipse.tracecompass.tmf.statemachine.features.InitialStateCreateFeature;
 import org.eclipse.tracecompass.tmf.statemachine.features.StateAddFeature;
@@ -56,19 +54,19 @@ public class StateMachineFeatureProvider extends DefaultFeatureProvider {
 	public ICreateFeature[] getCreateFeatures() {
 		return new ICreateFeature[] {new StateCreateFeature(this), new InitialStateCreateFeature(this), /*new FinalStateCreateFeature(this),*/ new ConditionalStateCreateFeature(this), new StatemachineCreateFeature(this)};
 	}
-	
+
 	@Override
 	public ICreateConnectionFeature[] getCreateConnectionFeatures() {
 		return new ICreateConnectionFeature[] {new TransitionCreateConnectionFeature(this)};
 	}
-	
+
 	@Override
 	public IAddFeature getAddFeature(IAddContext context) {
 		if (context instanceof IAddConnectionContext) {
 			if (context.getNewObject() instanceof Transition) {
 				return new TransitionAddConnectionFeature(this);
 			}
-		} else if (context instanceof IAddContext) {
+		} else {
 			if (context.getNewObject() instanceof State) {
 				return new StateAddFeature(this);
 			} else if (context.getNewObject() instanceof InitialState) {
@@ -84,7 +82,7 @@ public class StateMachineFeatureProvider extends DefaultFeatureProvider {
 
 		return super.getAddFeature(context);
 	}
-	
+
 	@Override
 	public ILayoutFeature getLayoutFeature(ILayoutContext context) {
 		if (context.getPictogramElement() instanceof ContainerShape) {
@@ -96,10 +94,10 @@ public class StateMachineFeatureProvider extends DefaultFeatureProvider {
 				return new StatemachineLayoutFeature(this);
 			}
 		}
-	
+
 		return super.getLayoutFeature(context);
 	}
-	
+
 	@Override
 	public IDirectEditingFeature getDirectEditingFeature(IDirectEditingContext context) {
 	    PictogramElement pe = context.getPictogramElement();
@@ -109,7 +107,7 @@ public class StateMachineFeatureProvider extends DefaultFeatureProvider {
 	    }
 	    return super.getDirectEditingFeature(context);
 	}
-	
+
 	@Override
 	public IUpdateFeature getUpdateFeature(IUpdateContext context) {
 		PictogramElement pictogramElement = context.getPictogramElement();

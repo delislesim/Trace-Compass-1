@@ -2,7 +2,6 @@ package org.eclipse.tracecompass.tmf.statemachine.features;
 
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.graphiti.features.IFeatureProvider;
-import org.eclipse.graphiti.features.ILayoutFeature;
 import org.eclipse.graphiti.features.context.ILayoutContext;
 import org.eclipse.graphiti.features.impl.AbstractLayoutFeature;
 import org.eclipse.graphiti.mm.algorithms.Ellipse;
@@ -16,8 +15,7 @@ import org.eclipse.graphiti.services.Graphiti;
 import statemachine.AbstractState;
 
 
-public class StatesLayoutFeature extends AbstractLayoutFeature implements
-		ILayoutFeature {
+public class StatesLayoutFeature extends AbstractLayoutFeature {
 
 	public StatesLayoutFeature(IFeatureProvider fp) {
 		super(fp);

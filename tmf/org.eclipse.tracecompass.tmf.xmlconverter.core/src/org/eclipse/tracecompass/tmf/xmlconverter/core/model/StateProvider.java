@@ -111,7 +111,7 @@ public class StateProvider {
      */
     public List<DefinedValue> getDefinedValue() {
         if (definedValue == null) {
-            definedValue = new ArrayList<DefinedValue>();
+            definedValue = new ArrayList<>();
         }
         return this.definedValue;
     }
@@ -140,7 +140,7 @@ public class StateProvider {
      */
     public List<Location> getLocation() {
         if (location == null) {
-            location = new ArrayList<Location>();
+            location = new ArrayList<>();
         }
         return this.location;
     }
@@ -169,7 +169,7 @@ public class StateProvider {
      */
     public List<EventHandler> getEventHandler() {
         if (eventHandler == null) {
-            eventHandler = new ArrayList<EventHandler>();
+            eventHandler = new ArrayList<>();
         }
         return this.eventHandler;
     }

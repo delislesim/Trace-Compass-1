@@ -67,7 +67,7 @@ public class AttributeNode {
     @XmlAttribute(name = "query")
     protected String query;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the attributeNode property.
@@ -93,7 +93,7 @@ public class AttributeNode {
      */
     public List<AttributeNode> getAttributeNode() {
         if (attributeNode == null) {
-            attributeNode = new ArrayList<AttributeNode>();
+            attributeNode = new ArrayList<>();
         }
         return this.attributeNode;
     }

@@ -90,7 +90,7 @@ public class HeadOutput {
      */
     public List<HeadOutput.Analysis> getAnalysis() {
         if (analysis == null) {
-            analysis = new ArrayList<HeadOutput.Analysis>();
+            analysis = new ArrayList<>();
         }
         return this.analysis;
     }

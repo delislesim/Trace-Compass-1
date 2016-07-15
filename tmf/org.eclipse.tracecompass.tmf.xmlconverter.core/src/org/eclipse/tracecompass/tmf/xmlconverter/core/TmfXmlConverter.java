@@ -42,11 +42,11 @@ public class TmfXmlConverter implements ITmfXmlConverter {
 	private Document fDoc = null;
 	private String fStatesTag = "states";
 	private String fTransitionsTag = "transitions";
-	private List<String> fStatesList = new ArrayList<String>();
-	private List<String> fTransitionsList = new ArrayList<String>();
-	private Map<String, String> fStatesTransitions = new HashMap<String, String>();
-	
-	private String traceType = "org.eclipse.tracecompass.tmf.core.development";
+	private List<String> fStatesList = new ArrayList<>();
+	private List<String> fTransitionsList = new ArrayList<>();
+	private Map<String, String> fStatesTransitions = new HashMap<>();
+
+	private String fTraceType = "org.eclipse.tracecompass.tmf.core.development";
 	private String xmlID;
 
 	public TmfXmlConverter() {
@@ -63,7 +63,7 @@ public class TmfXmlConverter implements ITmfXmlConverter {
 		} catch (ParserConfigurationException | SAXException | IOException e) {
 			return null;
 		}
-		
+
 		xmlID = xml.getName().replaceFirst("[.][^.]+$", "").replaceAll("[^a-z0-9A-Z]", ".");
 
 		NodeList statesNodeList = fDoc.getElementsByTagName(fStatesTag);
@@ -89,27 +89,27 @@ public class TmfXmlConverter implements ITmfXmlConverter {
 		//return buildXmlFile();
 		return buildXmlFileWithXsd();
 	}
-	
+
 	private File buildXmlFileWithXsd() {
 		ObjectFactory factory = new ObjectFactory();
-		
+
 		// State provider
 		StateProvider stateProvider = factory.createStateProvider();
 		stateProvider.setVersion(new BigInteger("0"));
 		stateProvider.setId(xmlID + ".state.provider");
-		
+
 		// Head
 		HeadProvider headprovider = factory.createHeadProvider();
-		
+
 		Label headLabel = factory.createHeadProviderLabel();
 		headLabel.setValue(xmlID.replaceAll("[.]", " ") + " state provider");
-		
+
 		TraceType headTraceType = factory.createHeadProviderTraceType();
-		headTraceType.setId(traceType);
+		headTraceType.setId(fTraceType);
 		headprovider.setLabel(headLabel);
 		headprovider.getTraceType().add(headTraceType);
 		stateProvider.setHead(headprovider);
-		
+
 		// Defined Value
 		for(int i = 0; i<fStatesList.size(); i++) {
 			DefinedValue definedValue = factory.createDefinedValue();
@@ -117,25 +117,25 @@ public class TmfXmlConverter implements ITmfXmlConverter {
 			definedValue.setValue(((Integer)i).toString());
 			stateProvider.getDefinedValue().add(definedValue);
 		}
-		
+
 		// Event handler
 		for(int i = 0; i<fTransitionsList.size(); i++) {
 			EventHandler eventHandler = factory.createEventHandler();
 			eventHandler.setEventName(fTransitionsList.get(i));
-			
+
 			// State change
 			StateChange statechange = factory.createStateChange();
-			
+
 			// State value
 			StateValue stateValue = factory.createStateValue();
 			stateValue.setType("int");
 			stateValue.setValue("$" + fStatesTransitions.get(fTransitionsList.get(i)));
-			
+
 			statechange.setStateValue(stateValue);
 			eventHandler.getStateChange().add(statechange);
 			stateProvider.getEventHandler().add(eventHandler);
 		}
-		
+
 		Tmfxml tmfXml = factory.createTmfxml();
 		tmfXml.getTimeGraphViewOrStateProvider().add(stateProvider);
 		File file = new File("/home/simon/git/xml_converter/lttng/org.eclipse.tracecompass.tmf.xmlconverter.core.tests/Diagrams/converted_xml.xml");
@@ -151,7 +151,7 @@ public class TmfXmlConverter implements ITmfXmlConverter {
 		return file;
 	}
 
-	private boolean buildXmlFile() {
+	public boolean buildXmlFile() {
 		Document newXml = null;
 		try {
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory
@@ -181,7 +181,7 @@ public class TmfXmlConverter implements ITmfXmlConverter {
 		stateProvider.setAttribute("version", "0");
 		stateProvider.setAttribute("id", xmlID + ".state.provider");
 		head.appendChild(traceType);
-		traceType.setAttribute("id", this.traceType);
+		traceType.setAttribute("id", fTraceType);
 		label.setAttribute("value", xmlID.replaceAll("[.]", " ") + " state provider");
 		head.appendChild(label);
 		for (int i = 0; i < fStatesList.size(); i++) {

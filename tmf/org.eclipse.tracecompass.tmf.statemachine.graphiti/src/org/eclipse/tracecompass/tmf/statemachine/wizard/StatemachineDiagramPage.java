@@ -1,7 +1,5 @@
 package org.eclipse.tracecompass.tmf.statemachine.wizard;
 
-import java.io.File;
-
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -24,20 +22,19 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.tracecompass.tmf.attributetree.core.utils.AttributeTreeUtils;
 
 public class StatemachineDiagramPage extends WizardPage {
-	
+
 	private String diagramName;
 	private String treeName;
 	private String treePath;
-	
+
 	private Text diagramNameText;
 	private Text treeNameText;
 	private Text treePathText;
-	
+
 	private Button existingFileButton;
-	
+
 	private IStructuredSelection selectedElement;
 
 	protected StatemachineDiagramPage(String pageName, IStructuredSelection selection) {
@@ -53,10 +50,10 @@ public class StatemachineDiagramPage extends WizardPage {
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		composite.setLayout(layout);
-		
+
 		Label diagramNameLabel = new Label(composite, SWT.NONE);
 		diagramNameLabel.setText("Diagram name");
-		
+
 		diagramNameText = new Text(composite, SWT.SINGLE);
 		diagramNameText.setText("");
 		diagramNameText.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -64,9 +61,9 @@ public class StatemachineDiagramPage extends WizardPage {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				setPageComplete(validatePage());
-			}			
+			}
 		});
-		
+
 		// Attribute tree creation
 		Group attributeTreeGroup = new Group(composite, SWT.NONE);
 		attributeTreeGroup.setLayout(new GridLayout(2, false));
@@ -74,32 +71,32 @@ public class StatemachineDiagramPage extends WizardPage {
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.horizontalSpan = layout.numColumns;
 		attributeTreeGroup.setLayoutData(gridData);
-		
+
 		Label treeNameLabel = new Label(attributeTreeGroup, SWT.NONE);
 		treeNameLabel.setText("Name");
-		
+
 		treeNameText = new Text(attributeTreeGroup, SWT.SINGLE);
 		treeNameText.setText("");
 		treeNameText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		
+
 		existingFileButton = new Button(attributeTreeGroup, SWT.CHECK);
 		existingFileButton.setText("Use an existing file");
 		gridData = new GridData(SWT.BEGINNING, SWT.FILL, true, false);
 		gridData.horizontalSpan = layout.numColumns;
 		existingFileButton.setLayoutData(gridData);
-		
+
 		treePathText = new Text(attributeTreeGroup, SWT.SINGLE | SWT.READ_ONLY);
 		treePathText.setText("");
 		treePathText.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		treePathText.setEnabled(false);
-		
+
 		final Button browseButton = new Button(attributeTreeGroup, SWT.PUSH);
 		browseButton.setText("Browse");
 		browseButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.FILL, true, false));
 		browseButton.setEnabled(false);
-		
+
 		// Listeners
-		existingFileButton.addSelectionListener(new SelectionListener() {			
+		existingFileButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if(existingFileButton.getSelection()) {
@@ -109,13 +106,13 @@ public class StatemachineDiagramPage extends WizardPage {
 					treePathText.setEnabled(false);
 					browseButton.setEnabled(false);
 				}
-			}			
+			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		
-		browseButton.addSelectionListener(new SelectionListener() {			
+
+		browseButton.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				FileDialog openDialog = new FileDialog(new Shell(), SWT.OPEN);
@@ -124,26 +121,26 @@ public class StatemachineDiagramPage extends WizardPage {
 
 		        treePathText.setText(openDialog.open());
 		        setPageComplete(validatePage());
-			}			
+			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		
-		treeNameText.addModifyListener(new ModifyListener() {			
+
+		treeNameText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				setPageComplete(validatePage());
 			}
 		});
-		
+
 		setPageComplete(validatePage());
 
 		setErrorMessage(null);
 		setMessage(null);
 		setControl(composite);
 	}
-	
+
 	private boolean validatePage() {
 		setErrorMessage(null);
 		setMessage(null);
@@ -152,7 +149,7 @@ public class StatemachineDiagramPage extends WizardPage {
 			setMessage("Please enter diagram name");
 			return false;
 		}
-		
+
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IStatus diagramNameStatus = workspace.validateName(diagramName, IResource.FILE);
 		if(!diagramNameStatus.isOK()) {
@@ -162,20 +159,20 @@ public class StatemachineDiagramPage extends WizardPage {
 		if(!workspaceNameValidation(diagramName + ".diagram")) {
 			setErrorMessage("Diagram name already exist");
 			return false;
-		}	
-		
+		}
+
 		if(!existingFileButton.getSelection()) {
 			treeName = treeNameText.getText();
 			if(treeName.equals("")) {
 				setMessage("Please enter tree name");
 				return false;
 			}
-			
-			IStatus treeNameStatus = workspace.validateName(treeName, IResource.FILE);	
+
+			IStatus treeNameStatus = workspace.validateName(treeName, IResource.FILE);
 			if(!treeNameStatus.isOK()) {
 				setErrorMessage(treeNameStatus.getMessage());
 				return false;
-			}			
+			}
 			if(!workspaceNameValidation(treeNameText + ".attributetree")) {
 				setErrorMessage("Tree name already exist");
 				return false;
@@ -193,7 +190,7 @@ public class StatemachineDiagramPage extends WizardPage {
 
 		return true;
 	}
-	
+
 	private boolean workspaceNameValidation(String fileName) {
 		Object element = selectedElement.getFirstElement();
 		IResource resource = null;
@@ -203,26 +200,26 @@ public class StatemachineDiagramPage extends WizardPage {
 		} else if (element instanceof IFolder) {
 			resource = ((IFolder)element).findMember(fileName);
 		}
-		
+
 		if(resource != null) {
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	public String getDiagramName() {
 		return diagramName;
 	}
-	
+
 	public String getNewTreeName() {
 		return treeName;
 	}
-	
+
 	public String getExistingTreePath() {
 		return treePath;
 	}
-	
+
 	public boolean getUseExistingFile() {
 		return existingFileButton.getSelection();
 	}

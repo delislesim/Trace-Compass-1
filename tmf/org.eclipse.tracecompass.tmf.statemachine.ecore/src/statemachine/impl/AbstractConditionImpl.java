@@ -84,7 +84,8 @@ public class AbstractConditionImpl extends MinimalEObjectImpl.Container implemen
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public StateValue getStateValue() {
+	@Override
+    public StateValue getStateValue() {
 		return stateValue;
 	}
 
@@ -108,7 +109,8 @@ public class AbstractConditionImpl extends MinimalEObjectImpl.Container implemen
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setStateValue(StateValue newStateValue) {
+	@Override
+    public void setStateValue(StateValue newStateValue) {
 		if (newStateValue != stateValue) {
 			NotificationChain msgs = null;
 			if (stateValue != null)
@@ -127,7 +129,8 @@ public class AbstractConditionImpl extends MinimalEObjectImpl.Container implemen
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public boolean isIsNotCondition() {
+	@Override
+    public boolean isIsNotCondition() {
 		return isNotCondition;
 	}
 
@@ -136,7 +139,8 @@ public class AbstractConditionImpl extends MinimalEObjectImpl.Container implemen
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setIsNotCondition(boolean newIsNotCondition) {
+	@Override
+    public void setIsNotCondition(boolean newIsNotCondition) {
 		boolean oldIsNotCondition = isNotCondition;
 		isNotCondition = newIsNotCondition;
 		if (eNotificationRequired())

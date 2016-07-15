@@ -68,7 +68,7 @@ public class AttributeTreeRoot {
      */
     public List<AttributeNode> getAttributeNode() {
         if (attributeNode == null) {
-            attributeNode = new ArrayList<AttributeNode>();
+            attributeNode = new ArrayList<>();
         }
         return this.attributeNode;
     }

@@ -180,7 +180,7 @@ public class ViewEntry {
      */
     public List<ViewEntry> getEntry() {
         if (entry == null) {
-            entry = new ArrayList<ViewEntry>();
+            entry = new ArrayList<>();
         }
         return this.entry;
     }

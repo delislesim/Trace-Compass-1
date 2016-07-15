@@ -46,46 +46,46 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
 	private Text transitionNameText;
 	private Table stateChangeTable;
 	private Group stateChangeGroup;
-	
+
 	private ConvertStatemachineType util = new ConvertStatemachineType();
-	
+
 	private AttributeTreePath selectedPath;
-	
+
     @Override
     public void createControls(Composite parent, TabbedPropertySheetPage tabbedPropertySheetPage) {
         super.createControls(parent, tabbedPropertySheetPage);
-        
+
         TabbedPropertySheetWidgetFactory factory = getWidgetFactory();
         final Composite composite = factory.createFlatFormComposite(parent);
         composite.setLayout(new GridLayout(2, false));
-        
+
         GridData gridData;
-        
-        Label label = factory.createLabel(composite, "Name");
-        
+
+        factory.createLabel(composite, "Name");
+
         transitionNameText = factory.createText(composite, "");
         gridData = new GridData();
         gridData.horizontalAlignment = SWT.FILL;
         gridData.grabExcessHorizontalSpace = true;
         transitionNameText.setLayoutData(gridData);
-        
+
         stateChangeGroup = factory.createGroup(composite, "State Change");
         stateChangeGroup.setLayout(new GridLayout(2, false));
         gridData = new GridData();
         gridData.horizontalAlignment = SWT.FILL;
         gridData.horizontalSpan = 2;
         stateChangeGroup.setLayoutData(gridData);
-        
+
         stateChangeTable = factory.createTable(stateChangeGroup, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL);
         gridData = new GridData();
         gridData.horizontalAlignment = SWT.FILL;
         gridData.verticalAlignment = SWT.FILL;
         gridData.verticalSpan = 2;
         stateChangeTable.setLayoutData(gridData);
-        
+
         Button addStateChangeButton = factory.createButton(stateChangeGroup, "Add/Edit state change", SWT.PUSH);
         Button removeStateChangeButton = factory.createButton(stateChangeGroup, "Remove state change", SWT.PUSH);
-        
+
         addStateChangeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
@@ -98,11 +98,11 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
     			} else {
     				stateChange = StatemachineFactory.eINSTANCE.createStateChange();
     			}
-    			
+
     			addEditStateChangeDialog(composite.getDisplay(), stateChange);
     		}
 		});
-        
+
         removeStateChangeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
@@ -110,7 +110,7 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
     			removeStateChange(stateChangeTableIndex);
     		}
         });
-        
+
         transitionNameText.addModifyListener(new ModifyListener() {
 
         	@Override
@@ -123,18 +123,19 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
         		if(getTransition() != null) {
         			ActualTransitionName = getTransition().getName();
         		}
-    			if (newTransitionName.equals(ActualTransitionName))
-    				return;
+    			if (newTransitionName.equals(ActualTransitionName)) {
+                    return;
+                }
         		final String transitionName = newTransitionName;
         		IFeature feature = new AbstractFeature(getDiagramTypeProvider().getFeatureProvider()) {
-        				
+
         			@Override
         			public void execute(IContext context) {
         				if(getTransition() != null) {
         					getTransition().setName(transitionName);
         				}
         			}
-        			
+
         			@Override
         			public boolean canExecute(IContext context) {
         				return true;
@@ -158,14 +159,14 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
     		}
 		}
     }
-	
+
 	private void addEditStateChangeDialog(Display display, final StateChange stateChange) {
 		final Shell dialog = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         dialog.setLayout (new GridLayout(2, false));
         dialog.setText("State change");
-        
+
         GridData gridData;
-        
+
         Group stateAttributeGroup = new Group(dialog, SWT.NONE);
         stateAttributeGroup.setText("State attribute");
         stateAttributeGroup.setLayout(new GridLayout(2, false));
@@ -173,7 +174,7 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
         gridData.horizontalAlignment = SWT.FILL;
         gridData.horizontalSpan = 2;
         stateAttributeGroup.setLayoutData(gridData);
-        
+
         final AttributeTreeComposite attributeTree = new AttributeTreeComposite(stateAttributeGroup, SWT.NONE);
         attributeTree.setTreeViewerInput(AttributeTreeUtils.getAttributeTreeFile(getDiagram().getName()));
         attributeTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
@@ -184,9 +185,9 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
 				AbstractAttributeNode selectedNode = (AbstractAttributeNode)selection.getFirstElement();
 				selectedPath = new AttributeTreePath(selectedNode);
 			}
-        	
+
         });
-		
+
 		// State value
         Group stateValueGroup = new Group(dialog, SWT.NONE);
         stateValueGroup.setText("State value");
@@ -195,26 +196,26 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
         gridData.horizontalAlignment = SWT.FILL;
         gridData.horizontalSpan = 2;
         stateValueGroup.setLayoutData(gridData);
-        
+
 		Label stateValueTypeLabel = new Label(stateValueGroup, SWT.NONE);
         stateValueTypeLabel.setText("Type");
-        
+
         final Combo stateValueTypeCombo = new Combo(stateValueGroup, SWT.READ_ONLY);
         stateValueTypeCombo.setItems(util.getStateValueTypeString());
         gridData = new GridData();
         gridData.horizontalAlignment = SWT.FILL;
         gridData.grabExcessHorizontalSpace = true;
         stateValueTypeCombo.setLayoutData(gridData);
-        
+
         Label stateValueLabel = new Label(stateValueGroup, SWT.NONE);
         stateValueLabel.setText("Value");
-        
+
         final Text stateValueText = new Text(stateValueGroup, SWT.SINGLE);
         gridData = new GridData();
         gridData.horizontalAlignment = SWT.FILL;
         gridData.grabExcessHorizontalSpace = true;
         stateValueText.setLayoutData(gridData);
-        
+
         stateValueTypeCombo.addSelectionListener(new SelectionAdapter() {
         	@Override
 			public void widgetSelected (SelectionEvent e) {
@@ -229,7 +230,7 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
         		}
         	}
 		});
-                
+
         Button okButton = new Button(dialog, SWT.PUSH);
         okButton.setText("Ok");
         okButton.addSelectionListener(new SelectionAdapter() {
@@ -252,15 +253,16 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
         		dialog.close();
         	}
 		});
-        
+
         dialog.pack();
         dialog.open();
 		while (!dialog.isDisposed()) {
-			if (!display.readAndDispatch())
-				display.sleep();
+			if (!display.readAndDispatch()) {
+                display.sleep();
+            }
 		}
 	}
-	
+
 	private void saveStateChange(final StateChange stateChange) {
 		TableItem stateChangeItem = new TableItem(stateChangeTable, 0);
 		stateChangeItem.setText(stateChange.toString());
@@ -281,7 +283,7 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
 		CustomContext context = new CustomContext();
 		execute(feature, context);
 	}
-	
+
 	private void removeStateChange(final int stateChangeTableIndex) {
 		stateChangeTable.remove(stateChangeTableIndex);
 		IFeature feature = new AbstractFeature(getDiagramTypeProvider().getFeatureProvider()) {
@@ -301,14 +303,14 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
 		CustomContext context = new CustomContext();
 		execute(feature, context);
 	}
-	
+
 	private AbstractTransition getTransition() {
 		PictogramElement pe = getSelectedPictogramElement();
 		if (pe != null) {
 			Object bo = Graphiti.getLinkService().getBusinessObjectForLinkedPictogramElement(pe);
 			if(bo instanceof AbstractTransition) {
 				return (AbstractTransition) bo;
-			}        					
+			}
 		}
 		return null;
 	}

@@ -111,9 +111,10 @@ public class ConditionalStateImpl extends AbstractStateImpl implements Condition
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public EList<AbstractCondition> getCondition() {
+	@Override
+    public EList<AbstractCondition> getCondition() {
 		if (condition == null) {
-			condition = new EObjectContainmentEList<AbstractCondition>(AbstractCondition.class, this, StatemachinePackage.CONDITIONAL_STATE__CONDITION);
+			condition = new EObjectContainmentEList<>(AbstractCondition.class, this, StatemachinePackage.CONDITIONAL_STATE__CONDITION);
 		}
 		return condition;
 	}
@@ -123,7 +124,8 @@ public class ConditionalStateImpl extends AbstractStateImpl implements Condition
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public boolean isAndExpression() {
+	@Override
+    public boolean isAndExpression() {
 		return andExpression;
 	}
 
@@ -132,7 +134,8 @@ public class ConditionalStateImpl extends AbstractStateImpl implements Condition
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setAndExpression(boolean newAndExpression) {
+	@Override
+    public void setAndExpression(boolean newAndExpression) {
 		boolean oldAndExpression = andExpression;
 		andExpression = newAndExpression;
 		if (eNotificationRequired())
@@ -144,7 +147,8 @@ public class ConditionalStateImpl extends AbstractStateImpl implements Condition
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getConditionsOrganization() {
+	@Override
+    public String getConditionsOrganization() {
 		return conditionsOrganization;
 	}
 
@@ -153,7 +157,8 @@ public class ConditionalStateImpl extends AbstractStateImpl implements Condition
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setConditionsOrganization(String newConditionsOrganization) {
+	@Override
+    public void setConditionsOrganization(String newConditionsOrganization) {
 		String oldConditionsOrganization = conditionsOrganization;
 		conditionsOrganization = newConditionsOrganization;
 		if (eNotificationRequired())

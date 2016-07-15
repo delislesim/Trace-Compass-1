@@ -66,7 +66,8 @@ public class StateImpl extends AbstractStateImpl implements State {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public String getStateColor() {
+	@Override
+    public String getStateColor() {
 		return stateColor;
 	}
 
@@ -75,7 +76,8 @@ public class StateImpl extends AbstractStateImpl implements State {
 	 * <!-- end-user-doc -->
 	 * @generated
 	 */
-	public void setStateColor(String newStateColor) {
+	@Override
+    public void setStateColor(String newStateColor) {
 		String oldStateColor = stateColor;
 		stateColor = newStateColor;
 		if (eNotificationRequired())
