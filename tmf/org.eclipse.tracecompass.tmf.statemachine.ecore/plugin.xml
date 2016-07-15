@@ -11,7 +11,7 @@
       <package
             uri="org.eclipse.tracecompass.tmf.statemachine"
             class="statemachine.StatemachinePackage"
-            genModel="model/state_machine.genmodel"/>
+            genModel="model/tracecompass_statemachine.genmodel"/>
    </extension>
 
 </plugin>

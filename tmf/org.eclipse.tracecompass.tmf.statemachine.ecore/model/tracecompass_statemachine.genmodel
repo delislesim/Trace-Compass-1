@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <genmodel:GenModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
     xmlns:genmodel="http://www.eclipse.org/emf/2002/GenModel" modelDirectory="/org.eclipse.tracecompass.tmf.statemachine.ecore/src"
-    modelPluginID="org.eclipse.tracecompass.tmf.statemachine.ecore" modelName="Tracecompass_statemachine"
-    rootExtendsClass="org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container" importerID="org.eclipse.emf.importer.ecore"
-    complianceLevel="7.0" copyrightFields="false" operationReflection="true" importOrganizing="true">
+    modelPluginID="org.eclipse.tracecompass.tmf.statemachine.ecore" templateDirectory=""
+    redirection="" modelName="Tracecompass_statemachine" updateClasspath="false" rootExtendsClass="org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container"
+    codeFormatting="true" importerID="org.eclipse.emf.importer.ecore" complianceLevel="8.0"
+    copyrightFields="false" providerRootExtendsClass="" operationReflection="true"
+    importOrganizing="true" cleanup="true">
   <foreignModel>state_machine.ecore</foreignModel>
   <genPackages prefix="Statemachine" disposableProviderFactory="true" ecorePackage="state_machine.ecore#/">
     <genEnums typeSafeEnumCompatible="false" ecoreEnum="state_machine.ecore#//StateValueType">
@@ -26,6 +28,8 @@
     </genEnums>
     <genClasses ecoreClass="state_machine.ecore#//Statemachine">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference state_machine.ecore#//Statemachine/states"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute state_machine.ecore#//Statemachine/associatedTree"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute state_machine.ecore#//Statemachine/associatedAttribute"/>
     </genClasses>
     <genClasses ecoreClass="state_machine.ecore#//Named">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute state_machine.ecore#//Named/name"/>
@@ -39,7 +43,9 @@
     </genClasses>
     <genClasses ecoreClass="state_machine.ecore#//InitialState"/>
     <genClasses ecoreClass="state_machine.ecore#//FinalState"/>
-    <genClasses ecoreClass="state_machine.ecore#//State"/>
+    <genClasses ecoreClass="state_machine.ecore#//State">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute state_machine.ecore#//State/stateColor"/>
+    </genClasses>
     <genClasses ecoreClass="state_machine.ecore#//Transition"/>
     <genClasses ecoreClass="state_machine.ecore#//ConditionalTransition"/>
     <genClasses ecoreClass="state_machine.ecore#//StateValue">
@@ -54,6 +60,7 @@
     <genClasses ecoreClass="state_machine.ecore#//ConditionalState">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference state_machine.ecore#//ConditionalState/condition"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute state_machine.ecore#//ConditionalState/andExpression"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute state_machine.ecore#//ConditionalState/conditionsOrganization"/>
     </genClasses>
     <genClasses ecoreClass="state_machine.ecore#//StateChange">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference state_machine.ecore#//StateChange/stateAttribute"/>

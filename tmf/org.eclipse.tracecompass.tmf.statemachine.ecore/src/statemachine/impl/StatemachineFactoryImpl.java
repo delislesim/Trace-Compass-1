@@ -6,12 +6,27 @@ import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EDataType;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-
 import org.eclipse.emf.ecore.impl.EFactoryImpl;
-
 import org.eclipse.emf.ecore.plugin.EcorePlugin;
 
-import statemachine.*;
+import statemachine.AbstractCondition;
+import statemachine.AttributeCondition;
+import statemachine.ConditionalState;
+import statemachine.ConditionalTransition;
+import statemachine.FieldCondition;
+import statemachine.FinalState;
+import statemachine.InitialState;
+import statemachine.Named;
+import statemachine.State;
+import statemachine.StateAttribute;
+import statemachine.StateAttributeType;
+import statemachine.StateChange;
+import statemachine.StateValue;
+import statemachine.StateValueType;
+import statemachine.Statemachine;
+import statemachine.StatemachineFactory;
+import statemachine.StatemachinePackage;
+import statemachine.Transition;
 
 /**
  * <!-- begin-user-doc -->
@@ -20,309 +35,326 @@ import statemachine.*;
  * @generated
  */
 public class StatemachineFactoryImpl extends EFactoryImpl implements StatemachineFactory {
-	/**
-	 * Creates the default factory implementation.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	public static StatemachineFactory init() {
-		try {
-			StatemachineFactory theStatemachineFactory = (StatemachineFactory)EPackage.Registry.INSTANCE.getEFactory(StatemachinePackage.eNS_URI);
-			if (theStatemachineFactory != null) {
-				return theStatemachineFactory;
-			}
-		}
-		catch (Exception exception) {
-			EcorePlugin.INSTANCE.log(exception);
-		}
-		return new StatemachineFactoryImpl();
-	}
+    /**
+     * Creates the default factory implementation.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    public static StatemachineFactory init() {
+        try {
+            StatemachineFactory theStatemachineFactory = (StatemachineFactory) EPackage.Registry.INSTANCE.getEFactory(StatemachinePackage.eNS_URI);
+            if (theStatemachineFactory != null) {
+                return theStatemachineFactory;
+            }
+        } catch (Exception exception) {
+            EcorePlugin.INSTANCE.log(exception);
+        }
+        return new StatemachineFactoryImpl();
+    }
 
-	/**
-	 * Creates an instance of the factory.
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	public StatemachineFactoryImpl() {
-		super();
-	}
+    /**
+     * Creates an instance of the factory.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    public StatemachineFactoryImpl() {
+        super();
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public EObject create(EClass eClass) {
-		switch (eClass.getClassifierID()) {
-			case StatemachinePackage.STATEMACHINE: return createStatemachine();
-			case StatemachinePackage.NAMED: return createNamed();
-			case StatemachinePackage.INITIAL_STATE: return createInitialState();
-			case StatemachinePackage.FINAL_STATE: return createFinalState();
-			case StatemachinePackage.STATE: return createState();
-			case StatemachinePackage.TRANSITION: return createTransition();
-			case StatemachinePackage.CONDITIONAL_TRANSITION: return createConditionalTransition();
-			case StatemachinePackage.STATE_VALUE: return createStateValue();
-			case StatemachinePackage.STATE_ATTRIBUTE: return createStateAttribute();
-			case StatemachinePackage.CONDITIONAL_STATE: return createConditionalState();
-			case StatemachinePackage.STATE_CHANGE: return createStateChange();
-			case StatemachinePackage.ABSTRACT_CONDITION: return createAbstractCondition();
-			case StatemachinePackage.FIELD_CONDITION: return createFieldCondition();
-			case StatemachinePackage.ATTRIBUTE_CONDITION: return createAttributeCondition();
-			default:
-				throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
-		}
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
+    public EObject create(EClass eClass) {
+        switch (eClass.getClassifierID()) {
+        case StatemachinePackage.STATEMACHINE:
+            return createStatemachine();
+        case StatemachinePackage.NAMED:
+            return createNamed();
+        case StatemachinePackage.INITIAL_STATE:
+            return createInitialState();
+        case StatemachinePackage.FINAL_STATE:
+            return createFinalState();
+        case StatemachinePackage.STATE:
+            return createState();
+        case StatemachinePackage.TRANSITION:
+            return createTransition();
+        case StatemachinePackage.CONDITIONAL_TRANSITION:
+            return createConditionalTransition();
+        case StatemachinePackage.STATE_VALUE:
+            return createStateValue();
+        case StatemachinePackage.STATE_ATTRIBUTE:
+            return createStateAttribute();
+        case StatemachinePackage.CONDITIONAL_STATE:
+            return createConditionalState();
+        case StatemachinePackage.STATE_CHANGE:
+            return createStateChange();
+        case StatemachinePackage.ABSTRACT_CONDITION:
+            return createAbstractCondition();
+        case StatemachinePackage.FIELD_CONDITION:
+            return createFieldCondition();
+        case StatemachinePackage.ATTRIBUTE_CONDITION:
+            return createAttributeCondition();
+        default:
+            throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
+        }
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public Object createFromString(EDataType eDataType, String initialValue) {
-		switch (eDataType.getClassifierID()) {
-			case StatemachinePackage.STATE_VALUE_TYPE:
-				return createStateValueTypeFromString(eDataType, initialValue);
-			case StatemachinePackage.STATE_ATTRIBUTE_TYPE:
-				return createStateAttributeTypeFromString(eDataType, initialValue);
-			default:
-				throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier");
-		}
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
+    public Object createFromString(EDataType eDataType, String initialValue) {
+        switch (eDataType.getClassifierID()) {
+        case StatemachinePackage.STATE_VALUE_TYPE:
+            return createStateValueTypeFromString(eDataType, initialValue);
+        case StatemachinePackage.STATE_ATTRIBUTE_TYPE:
+            return createStateAttributeTypeFromString(eDataType, initialValue);
+        default:
+            throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier");
+        }
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
-	public String convertToString(EDataType eDataType, Object instanceValue) {
-		switch (eDataType.getClassifierID()) {
-			case StatemachinePackage.STATE_VALUE_TYPE:
-				return convertStateValueTypeToString(eDataType, instanceValue);
-			case StatemachinePackage.STATE_ATTRIBUTE_TYPE:
-				return convertStateAttributeTypeToString(eDataType, instanceValue);
-			default:
-				throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier");
-		}
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
+    public String convertToString(EDataType eDataType, Object instanceValue) {
+        switch (eDataType.getClassifierID()) {
+        case StatemachinePackage.STATE_VALUE_TYPE:
+            return convertStateValueTypeToString(eDataType, instanceValue);
+        case StatemachinePackage.STATE_ATTRIBUTE_TYPE:
+            return convertStateAttributeTypeToString(eDataType, instanceValue);
+        default:
+            throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier");
+        }
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public Statemachine createStatemachine() {
-		StatemachineImpl statemachine = new StatemachineImpl();
-		return statemachine;
-	}
+        StatemachineImpl statemachine = new StatemachineImpl();
+        return statemachine;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public Named createNamed() {
-		NamedImpl named = new NamedImpl();
-		return named;
-	}
+        NamedImpl named = new NamedImpl();
+        return named;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public InitialState createInitialState() {
-		InitialStateImpl initialState = new InitialStateImpl();
-		return initialState;
-	}
+        InitialStateImpl initialState = new InitialStateImpl();
+        return initialState;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public FinalState createFinalState() {
-		FinalStateImpl finalState = new FinalStateImpl();
-		return finalState;
-	}
+        FinalStateImpl finalState = new FinalStateImpl();
+        return finalState;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public State createState() {
-		StateImpl state = new StateImpl();
-		return state;
-	}
+        StateImpl state = new StateImpl();
+        return state;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public Transition createTransition() {
-		TransitionImpl transition = new TransitionImpl();
-		return transition;
-	}
+        TransitionImpl transition = new TransitionImpl();
+        return transition;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public ConditionalTransition createConditionalTransition() {
-		ConditionalTransitionImpl conditionalTransition = new ConditionalTransitionImpl();
-		return conditionalTransition;
-	}
+        ConditionalTransitionImpl conditionalTransition = new ConditionalTransitionImpl();
+        return conditionalTransition;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public StateValue createStateValue() {
-		StateValueImpl stateValue = new StateValueImpl();
-		return stateValue;
-	}
+        StateValueImpl stateValue = new StateValueImpl();
+        return stateValue;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public StateAttribute createStateAttribute() {
-		StateAttributeImpl stateAttribute = new StateAttributeImpl();
-		return stateAttribute;
-	}
+        StateAttributeImpl stateAttribute = new StateAttributeImpl();
+        return stateAttribute;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public ConditionalState createConditionalState() {
-		ConditionalStateImpl conditionalState = new ConditionalStateImpl();
-		return conditionalState;
-	}
+        ConditionalStateImpl conditionalState = new ConditionalStateImpl();
+        return conditionalState;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public StateChange createStateChange() {
-		StateChangeImpl stateChange = new StateChangeImpl();
-		return stateChange;
-	}
+        StateChangeImpl stateChange = new StateChangeImpl();
+        return stateChange;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public AbstractCondition createAbstractCondition() {
-		AbstractConditionImpl abstractCondition = new AbstractConditionImpl();
-		return abstractCondition;
-	}
+        AbstractConditionImpl abstractCondition = new AbstractConditionImpl();
+        return abstractCondition;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public FieldCondition createFieldCondition() {
-		FieldConditionImpl fieldCondition = new FieldConditionImpl();
-		return fieldCondition;
-	}
+        FieldConditionImpl fieldCondition = new FieldConditionImpl();
+        return fieldCondition;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public AttributeCondition createAttributeCondition() {
-		AttributeConditionImpl attributeCondition = new AttributeConditionImpl();
-		return attributeCondition;
-	}
+        AttributeConditionImpl attributeCondition = new AttributeConditionImpl();
+        return attributeCondition;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	public StateValueType createStateValueTypeFromString(EDataType eDataType, String initialValue) {
-		StateValueType result = StateValueType.get(initialValue);
-		if (result == null) throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
-		return result;
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    public StateValueType createStateValueTypeFromString(EDataType eDataType, String initialValue) {
+        StateValueType result = StateValueType.get(initialValue);
+        if (result == null) {
+            throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
+        }
+        return result;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	public String convertStateValueTypeToString(EDataType eDataType, Object instanceValue) {
-		return instanceValue == null ? null : instanceValue.toString();
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    public String convertStateValueTypeToString(EDataType eDataType, Object instanceValue) {
+        return instanceValue == null ? null : instanceValue.toString();
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	public StateAttributeType createStateAttributeTypeFromString(EDataType eDataType, String initialValue) {
-		StateAttributeType result = StateAttributeType.get(initialValue);
-		if (result == null) throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
-		return result;
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    public StateAttributeType createStateAttributeTypeFromString(EDataType eDataType, String initialValue) {
+        StateAttributeType result = StateAttributeType.get(initialValue);
+        if (result == null) {
+            throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
+        }
+        return result;
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	public String convertStateAttributeTypeToString(EDataType eDataType, Object instanceValue) {
-		return instanceValue == null ? null : instanceValue.toString();
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    public String convertStateAttributeTypeToString(EDataType eDataType, Object instanceValue) {
+        return instanceValue == null ? null : instanceValue.toString();
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @generated
-	 */
-	@Override
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    @Override
     public StatemachinePackage getStatemachinePackage() {
-		return (StatemachinePackage)getEPackage();
-	}
+        return (StatemachinePackage) getEPackage();
+    }
 
-	/**
-	 * <!-- begin-user-doc -->
-	 * <!-- end-user-doc -->
-	 * @deprecated
-	 * @generated
-	 */
-	@Deprecated
-	public static StatemachinePackage getPackage() {
-		return StatemachinePackage.eINSTANCE;
-	}
+    /**
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @deprecated
+     * @generated
+     */
+    @Deprecated
+    public static StatemachinePackage getPackage() {
+        return StatemachinePackage.eINSTANCE;
+    }
 
 } //StatemachineFactoryImpl

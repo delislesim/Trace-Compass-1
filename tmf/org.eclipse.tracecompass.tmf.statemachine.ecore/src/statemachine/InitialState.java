@@ -2,7 +2,6 @@
  */
 package statemachine;
 
-
 /**
  * <!-- begin-user-doc -->
  * A representation of the model object '<em><b>Initial State</b></em>'.

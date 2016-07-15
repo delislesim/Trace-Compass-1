@@ -1,0 +1,5 @@
+To generate code:
+
+1. You need the "EMF - Eclipse Modeling Framework SDK" installed.
+2. Open tracecompass_statemachine.genmodel with the EMF Generator (editor)
+3. Right-click on the root node, Generate Model Code 
