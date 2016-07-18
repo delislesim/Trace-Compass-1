@@ -6,11 +6,17 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.tracecompass.tmf.ui.views.TmfView;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -68,21 +74,25 @@ public class AttributeTreeView extends TmfView {
 		addConstantAttributeButton.setImage(addConstantImage);
 		gridData = new GridData();
 		addConstantAttributeButton.setLayoutData(gridData);
+		addConstantAttributeButton.setToolTipText("Add Constant Attribute");
 
 		Button addVariableAttributeButton = new Button(composite, SWT.PUSH);
 		//addVariableAttributeButton.setText("Variable");
 		addVariableAttributeButton.setImage(addVariableImage);
 		gridData = new GridData();
-		addConstantAttributeButton.setLayoutData(gridData);
+		addVariableAttributeButton.setLayoutData(gridData);
+		addVariableAttributeButton.setToolTipText("Add Variable Attribute");
 
 		Button addAttributeValueButton = new Button(composite, SWT.PUSH);
 		//addAttributeValueButton.setText("Value");
 		addAttributeValueButton.setImage(addValueImage);
 		gridData = new GridData();
-		addConstantAttributeButton.setLayoutData(gridData);
+		addAttributeValueButton.setLayoutData(gridData);
+		addAttributeValueButton.setToolTipText("Add Possible Attribute Value");
 
 		Button removeAttributeButton = new Button(composite, SWT.PUSH);
 		//removeAttributeButton.setText("Remove");
+		removeAttributeButton.setToolTipText("Remove");
 		removeAttributeButton.setImage(removeImage);
 		gridData = new GridData();
 		removeAttributeButton.setLayoutData(gridData);
@@ -98,28 +108,30 @@ public class AttributeTreeView extends TmfView {
     			}
     		}
 		});
+        // Will be enabled when selection changes
+		removeAttributeButton.setEnabled(false);
 
 		Button editAttributeButton = new Button(composite, SWT.PUSH);
 		//editAttributeButton.setText("Edit");
 		editAttributeButton.setImage(editAttributeImage);
+		editAttributeButton.setToolTipText("Edit");
 		gridData = new GridData();
 		editAttributeButton.setLayoutData(gridData);
 
 		editAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
     		public void widgetSelected(SelectionEvent e) {
-    			IStructuredSelection selection = attributeTree.getSelection();
-    			if(!selection.isEmpty()) {
-    				if(selection.getFirstElement() instanceof AbstractAttributeNode) {
-    					editAttributeDialog(composite.getDisplay(), (AbstractAttributeNode)selection.getFirstElement());
-    				}
-    			}
+    			editSelection();
     		}
 		});
+
+	      // Will be enabled when selection changes
+		editAttributeButton.setEnabled(false);
 
 		// TODO : remove when right click will be implemented
 		Button changeQueryVariableAttributeButton = new Button(composite, SWT.PUSH);
 		changeQueryVariableAttributeButton.setText("Query");
+		changeQueryVariableAttributeButton.setToolTipText("Change Query");
 		gridData = new GridData();
 		changeQueryVariableAttributeButton.setLayoutData(gridData);
 
@@ -141,6 +153,8 @@ public class AttributeTreeView extends TmfView {
     			}
     		}
 		});
+		// Will be enabled when selection changes
+		changeQueryVariableAttributeButton.setEnabled(false);
 
 		addConstantAttributeButton.addSelectionListener(new SelectionAdapter() {
     		@Override
@@ -171,6 +185,21 @@ public class AttributeTreeView extends TmfView {
 				attributeTree.setTreeViewerInput(openedFile);
 			}
 		}
+		attributeTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
+            public void selectionChanged(SelectionChangedEvent event) {
+                IStructuredSelection selection = attributeTree.getSelection();
+                removeAttributeButton.setEnabled(!selection.isEmpty());
+                editAttributeButton.setEnabled(!selection.isEmpty());
+                changeQueryVariableAttributeButton.setEnabled(!selection.isEmpty() && selection.getFirstElement() instanceof VariableAttributeNode);
+            }
+        });
+        attributeTree.getTreeViewer().getTree().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseDoubleClick(MouseEvent e) {
+                editSelection();
+            }
+        });
 
 		setViewInformation(openedFile);
 
@@ -179,6 +208,15 @@ public class AttributeTreeView extends TmfView {
         bars.getToolBarManager().add(getOpenAction());
         bars.getToolBarManager().add(getSaveAction());
 	}
+	
+    private void editSelection() {
+        IStructuredSelection selection = attributeTree.getSelection();
+        if (!selection.isEmpty()) {
+            if (selection.getFirstElement() instanceof AbstractAttributeNode) {
+                editAttributeDialog(composite.getDisplay(), (AbstractAttributeNode) selection.getFirstElement());
+            }
+        }
+    }
 
 	private Action getSaveAction() {
 		Action saveAction = new Action("Save", IAction.AS_PUSH_BUTTON) {
@@ -326,10 +364,9 @@ public class AttributeTreeView extends TmfView {
         ok.addSelectionListener(new SelectionAdapter() {
         	@Override
 			public void widgetSelected (SelectionEvent e) {
-        		attributeNode.setName(attributeNameText.getText());
-        		attributeTree.refresh();
-        		dialog.close();
+        		performOkInEditDialog(attributeNode, dialog, attributeNameText);
         	}
+
 		});
 
         Button cancel = new Button(dialog, SWT.PUSH);
@@ -341,6 +378,18 @@ public class AttributeTreeView extends TmfView {
         	}
 		});
 
+        dialog.addTraverseListener(new TraverseListener() {
+
+            @Override
+            public void keyTraversed(TraverseEvent e) {
+                if (e.detail == SWT.TRAVERSE_RETURN) {
+                    performOkInEditDialog(attributeNode, dialog, attributeNameText);
+                } else if (e.detail == SWT.TRAVERSE_ESCAPE) {
+                    dialog.close();
+                }
+            }
+        });
+
         dialog.pack();
         dialog.open();
 		while (!dialog.isDisposed()) {
@@ -350,6 +399,12 @@ public class AttributeTreeView extends TmfView {
 		}
 	}
 
+    private void performOkInEditDialog(final AbstractAttributeNode attributeNode, final Shell dialog, final Text attributeNameText) {
+        attributeNode.setName(attributeNameText.getText());
+        attributeTree.refresh();
+        dialog.close();
+    }
+
 	private void queryDialog(Display display, final VariableAttributeNode queryNode) {
 		final Shell dialog = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         dialog.setLayout (new GridLayout(1, false));
@@ -358,16 +413,24 @@ public class AttributeTreeView extends TmfView {
         final AttributeTreeComposite queryAttributeTree = new AttributeTreeComposite(dialog, SWT.NONE);
         queryAttributeTree.setTreeViewerInput(openedFile);
 
+        dialog.addTraverseListener(new TraverseListener() {
+
+            @Override
+            public void keyTraversed(TraverseEvent e) {
+                if (e.detail == SWT.TRAVERSE_RETURN) {
+                    selectInQueryDialog(queryNode, dialog, queryAttributeTree);
+                } else if (e.detail == SWT.TRAVERSE_ESCAPE) {
+                    dialog.close();
+                }
+            }
+        });
+
         Button selectButton = new Button(dialog, SWT.PUSH);
         selectButton.setText("Select");
         selectButton.addSelectionListener(new SelectionAdapter() {
         	@Override
 			public void widgetSelected (SelectionEvent e) {
-				IStructuredSelection selection = queryAttributeTree.getSelection();
-				AbstractAttributeNode selectedNode = (AbstractAttributeNode)selection.getFirstElement();
-				queryNode.setIsQuery(true);
-				queryNode.setQueryPath(new AttributeTreePath(selectedNode));
-				dialog.close();
+				selectInQueryDialog(queryNode, dialog, queryAttributeTree);
         	}
         });
 //        queryAttributeTree.getTreeViewer().addSelectionChangedListener(new ISelectionChangedListener() {
@@ -391,4 +454,12 @@ public class AttributeTreeView extends TmfView {
             }
 		}
 	}
+
+    private static void selectInQueryDialog(final VariableAttributeNode queryNode, final Shell dialog, final AttributeTreeComposite queryAttributeTree) {
+        IStructuredSelection selection = queryAttributeTree.getSelection();
+        AbstractAttributeNode selectedNode = (AbstractAttributeNode)selection.getFirstElement();
+        queryNode.setIsQuery(true);
+        queryNode.setQueryPath(new AttributeTreePath(selectedNode));
+        dialog.close();
+    }
 }
