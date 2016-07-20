@@ -22,6 +22,9 @@ public class Messages extends NLS {
     /** Import XML file title */
     public static String ManageXMLAnalysisDialog_ImportXmlFile;
 
+    /** Diagram file description */
+    public static String ManageXMLAnalysisDialog_ImportDiagramFile;
+
     /**
      * Delete
      */

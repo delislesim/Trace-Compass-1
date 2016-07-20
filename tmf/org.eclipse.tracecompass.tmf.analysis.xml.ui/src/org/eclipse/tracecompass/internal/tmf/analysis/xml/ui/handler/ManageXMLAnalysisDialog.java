@@ -49,6 +49,7 @@ import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectModelElement;
 import org.eclipse.tracecompass.tmf.ui.project.model.TmfProjectRegistry;
 import org.eclipse.tracecompass.tmf.ui.project.model.TraceUtils;
+import org.eclipse.tracecompass.tmf.xmlconverter.core.TmfGraphitiXmlConverter;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IPropertyListener;
 import org.eclipse.ui.ISaveablePart;
@@ -66,6 +67,8 @@ import org.eclipse.ui.ide.IDE;
 public class ManageXMLAnalysisDialog extends Dialog {
 
     private final String XML_FILTER_EXTENSION = "*.xml"; //$NON-NLS-1$
+    private final String DIAGRAM_EXTENSION = ".diagram"; //$NON-NLS-1$
+    private final String DIAGRAM_FILTER_EXTENSION = "*" + DIAGRAM_EXTENSION; //$NON-NLS-1$
     private List fAnalysesList;
     private Button fDeleteButton;
     private Button fImportButton;
@@ -266,11 +269,16 @@ public class ManageXMLAnalysisDialog extends Dialog {
     private void importAnalysis() {
         FileDialog dialog = new FileDialog(Display.getCurrent().getActiveShell(), SWT.OPEN);
         dialog.setText(Messages.ManageXMLAnalysisDialog_SelectFileImport);
-        dialog.setFilterNames(new String[] { Messages.ManageXMLAnalysisDialog_ImportXmlFile + " (*.xml)" }); //$NON-NLS-1$
-        dialog.setFilterExtensions(new String[] { XML_FILTER_EXTENSION });
+        dialog.setFilterNames(new String[] {  Messages.ManageXMLAnalysisDialog_ImportXmlFile + " (" + XML_FILTER_EXTENSION + "), " + Messages.ManageXMLAnalysisDialog_ImportDiagramFile + " (" + DIAGRAM_FILTER_EXTENSION + ")" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        dialog.setFilterExtensions(new String[] { XML_FILTER_EXTENSION + ";" + DIAGRAM_FILTER_EXTENSION }); //$NON-NLS-1$
         String path = dialog.open();
         if (path != null) {
             File file = new File(path);
+            if (file.getName().endsWith(DIAGRAM_EXTENSION)) { //$NON-NLS-1$
+                TmfGraphitiXmlConverter converter = new TmfGraphitiXmlConverter();
+                file = converter.convertDiagram(file);
+            }
+
             if (loadXmlFile(file, true)) {
                 fillAnalysesList();
             }
