@@ -4,11 +4,16 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -51,7 +56,50 @@ import org.xml.sax.SAXException;
 
 public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 
-	private Document fGraphitiXml = null;
+    enum TokenType {
+        LPARENT("\\("),
+        RPARENT("\\)"),
+        OPERAND("(\\d+)"),
+        OPERATOR_OR("or"),
+        OPERATOR_AND("and"),
+        OPERATOR_NOT("!");
+
+        public String chr;
+        private Pattern pattern;
+
+        TokenType(String c) {
+            chr = c;
+            pattern = Pattern.compile(c, Pattern.CASE_INSENSITIVE);
+        }
+
+        boolean matches(String str) {
+            return pattern.matcher(str).matches();
+        }
+    }
+
+	private static class Token {
+	    final TokenType type;
+	    final int conditionNum;
+	    public Token(TokenType type, int conditionNum) {
+            this.type = type;
+            this.conditionNum = conditionNum;
+        }
+
+	    public Token(TokenType type) {
+	        this(type, -1);
+        }
+
+	    @Override
+	    public String toString() {
+	        String str = type.chr;
+	        if (conditionNum != -1) {
+	            str = Integer.toString(conditionNum);
+	        }
+	        return str;
+	    }
+    }
+
+    private Document fGraphitiXml = null;
 	public static final String FILE_NAME = "convert_xml.xml";
 
 	private String fStatemachineTag = "statemachine:Statemachine";
@@ -78,6 +126,7 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 	private int statePositionInStatemachine = 0;
 
 	private ObjectFactory factory = new ObjectFactory();
+    private Vector<Pair<Condition, Boolean>> fConditions;
 
 	@Override
 	public File convertDiagram(File diagramFile) {
@@ -289,6 +338,8 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			}
 		}
 
+		fConditions = ifCondition;
+
 		StateChange stateChange = factory.createStateChange();
 		ConditionSingle conditionSingle = new ConditionSingle();
 		ConditionSingle notConditionSingle = new ConditionSingle();
@@ -301,24 +352,31 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 			}
 			stateChange.setIf(conditionSingle);
 		} else {
-			Boolean isAndExpression = true;
-			if(condition.getAttributes().getNamedItem("andExpression") != null && condition.getAttributes().getNamedItem("andExpression").getNodeValue().equals("false")) {
-				isAndExpression = false;
-			} else {
-				isAndExpression = true;
-			}
-			ConditionMultiple conditionMultiple = new ConditionMultiple();
-			for(Pair<Condition, Boolean> multipleCondition : ifCondition) {
-				Condition AndOrCondition = multipleCondition.getFirst();
-				if(multipleCondition.getSecond()) {
-					notConditionSingle.setCondition(AndOrCondition);
-					JAXBElement<ConditionSingle> notConditionElement = factory.createConditionMultipleNot(notConditionSingle);
-					conditionMultiple.getConditionAndOrAndAnd().add(notConditionElement);
-				} else {
-					JAXBElement<Condition> conditionElement = factory.createConditionMultipleCondition(AndOrCondition);
-					conditionMultiple.getConditionAndOrAndAnd().add(conditionElement);
-				}
-			}
+//			Boolean isAndExpression = true;
+//			if(condition.getAttributes().getNamedItem("andExpression") != null && condition.getAttributes().getNamedItem("andExpression").getNodeValue().equals("false")) {
+//				isAndExpression = false;
+//			} else {
+//				isAndExpression = true;
+//			}
+            if (condition.getAttributes().getNamedItem("conditionsOrganization") != null) {
+                Deque<Token> tokens = tokenize(condition.getAttributes().getNamedItem("conditionsOrganization").getNodeValue());
+                ASTNode root = parseStart(tokens);
+                root.accept(new ASTVisitor(){});
+                conditionSingle = astToSingleCondition(root);
+            }
+
+//			ConditionMultiple conditionMultiple = new ConditionMultiple();
+//			for(Pair<Condition, Boolean> multipleCondition : ifCondition) {
+//				Condition andOrCondition = multipleCondition.getFirst();
+//				if(multipleCondition.getSecond()) {
+//					notConditionSingle.setCondition(andOrCondition);
+//					JAXBElement<ConditionSingle> notConditionElement = factory.createConditionMultipleNot(notConditionSingle);
+//					conditionMultiple.getConditionAndOrAndAnd().add(notConditionElement);
+//				} else {
+//					JAXBElement<Condition> conditionElement = factory.createConditionMultipleCondition(andOrCondition);
+//					conditionMultiple.getConditionAndOrAndAnd().add(conditionElement);
+//				}
+//			}
 
 //			// TODO Test only
 //			Condition condition1 = ifCondition.get(0).getFirst();
@@ -347,11 +405,11 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 //			conditionSingle.setOr(conditionAll);
 
 
-			if(isAndExpression) {
-				conditionSingle.setAnd(conditionMultiple);
-			} else {
-				conditionSingle.setOr(conditionMultiple);
-			}
+//			if(isAndExpression) {
+//				conditionSingle.setAnd(conditionMultiple);
+//			} else {
+//				conditionSingle.setOr(conditionMultiple);
+//			}
 			stateChange.setIf(conditionSingle);
 		}
 
@@ -361,7 +419,220 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		return stateChange;
 	}
 
-	private Node getTargetState(Node transition) {
+    private ConditionSingle astToSingleCondition(ASTNode root) {
+        ConditionSingle rootXML = factory.createConditionSingle();
+        switch (root.token.type) {
+        case OPERAND:
+            rootXML.setCondition(fConditions.get(root.token.conditionNum).getFirst());
+            break;
+        case OPERATOR_NOT:
+            rootXML.setNot(astToSingleCondition(root.children.get(0)));
+            break;
+        case OPERATOR_AND:
+            rootXML.setAnd(astToMultiCondition(root));
+            break;
+        case OPERATOR_OR:
+            rootXML.setOr(astToMultiCondition(root));
+            break;
+        // $CASES-OMITTED$
+        default:
+            throw new IllegalStateException("invalid node type");
+        }
+
+        return rootXML;
+    }
+
+    private ConditionMultiple astToMultiCondition(ASTNode parentMulti) {
+        ConditionMultiple multiple = factory.createConditionMultiple();
+        for (ASTNode node : parentMulti.children) {
+            switch (node.token.type) {
+            case OPERAND:
+                Condition condition = fConditions.get(node.token.conditionNum).getFirst();
+                multiple.getConditionAndOrAndAnd().add(factory.createConditionMultipleCondition(condition));
+                break;
+            case OPERATOR_NOT:
+                multiple.getConditionAndOrAndAnd().add(factory.createConditionMultipleNot(astToSingleCondition(node.children.get(0))));
+                break;
+            case OPERATOR_AND:
+                multiple.getConditionAndOrAndAnd().add(factory.createConditionMultipleAnd(astToMultiCondition(node)));
+                break;
+            case OPERATOR_OR:
+                multiple.getConditionAndOrAndAnd().add(factory.createConditionMultipleOr(astToMultiCondition(node)));
+                break;
+            // $CASES-OMITTED$
+            default:
+                throw new IllegalStateException("invalid node type");
+            }
+        }
+        return multiple;
+    }
+
+    private static class ASTNode {
+	    Token token;
+	    List<ASTNode> children = new ArrayList<>();
+        public ASTNode(Token token) {
+            super();
+            this.token = token;
+        }
+        public void addChild(ASTNode condition) {
+            children.add(condition);
+        }
+
+        public void accept(ASTVisitor visitor) {
+            visitor.visit(this);
+            for (ASTNode child : children) {
+                child.accept(visitor);
+            }
+            visitor.leave(this);
+        }
+
+        @Override
+        public String toString() {
+            return token.toString();
+        }
+
+	}
+
+	abstract class ASTVisitor {
+	    int indent = 0;
+	    public void visit(ASTNode node) {
+	        for (int i = 0; i < indent; i++) {
+	            System.out.print(" ");
+	        }
+	        System.out.println(node);
+	        indent+=2;
+	    }
+
+        public void leave(ASTNode astNode) {
+            if (astNode != null) {
+                indent-=2;
+            }
+        }
+	}
+
+	private static ASTNode parseStart(Deque<Token> tokens) {
+	    return parseCondition(tokens);
+	}
+
+	private static ASTNode parseCondition(Deque<Token> tokens) {
+	    List<Token> operators = new ArrayList<>();
+	    List<ASTNode> nodes = new ArrayList<>();
+	    ASTNode left = parseConditionSingle(tokens);
+        nodes.add(left);
+	    while(!tokens.isEmpty() && isOperator(tokens.peek().type)) {
+	        operators.add(tokens.pop()); // AND or OR
+	        nodes.add(parseConditionSingle(tokens));
+	    }
+
+	    if (nodes.size() > 1) {
+	        return doOperatorPrecedence(operators, nodes);
+	    }
+
+        return left;
+	}
+
+	// TODO: simplify this
+    private static ASTNode doOperatorPrecedence(List<Token> operators, List<ASTNode> nodes) {
+        List<ASTNode> newNodes = new ArrayList<>();
+        Token operator = null;
+
+        if (operators.size() > 1) {
+            ASTNode multiAndNode = new ASTNode(new Token(TokenType.OPERATOR_AND));
+            for (int i = 0; i < operators.size(); i++) {
+                Token token = operators.get(i);
+                if (token.type == TokenType.OPERATOR_AND) {
+                    multiAndNode.addChild(nodes.get(i));
+                } else {
+                    if (!multiAndNode.children.isEmpty()) {
+                        multiAndNode.addChild(nodes.get(i));
+                        newNodes.add(multiAndNode);
+                        multiAndNode = new ASTNode(new Token(TokenType.OPERATOR_AND));
+                    } else {
+                        newNodes.add(nodes.get(i));
+                    }
+                }
+
+                if (i == operators.size() - 1) {
+                    if (!multiAndNode.children.isEmpty()) {
+                        multiAndNode.addChild(nodes.get(i + 1));
+                        newNodes.add(multiAndNode);
+                    } else {
+                        newNodes.add(nodes.get(i + 1));
+                    }
+                }
+            }
+
+            if (newNodes.size() < nodes.size() && newNodes.size() > 1) {
+                operator = new Token(TokenType.OPERATOR_OR);
+            }
+        }
+
+        if (operator == null) {
+            newNodes = nodes;
+            operator = operators.get(0);
+        }
+
+        ASTNode multiNode = new ASTNode(operator);
+        for (ASTNode node : newNodes) {
+            multiNode.addChild(node);
+        }
+
+        return multiNode;
+    }
+
+    private static ASTNode parseConditionSingle(Deque<Token> tokens) {
+        Token token = tokens.pop();
+        switch (token.type) {
+        case LPARENT: {
+            ASTNode condition = parseCondition(tokens);
+            tokens.pop(); // )
+            return condition;
+        }
+        case OPERATOR_NOT: {
+            ASTNode condition = parseConditionSingle(tokens);
+            ASTNode notCondition = new ASTNode(token);
+            notCondition.addChild(condition);
+            return notCondition;
+        }
+        case OPERAND:
+            return new ASTNode(token);
+        // $CASES-OMITTED$
+        default:
+            throw new IllegalStateException("Unexpected token " + token.type.chr);
+        }
+    }
+
+    private static boolean isOperator(TokenType type) {
+        return type == TokenType.OPERATOR_AND || type == TokenType.OPERATOR_OR;
+    }
+
+    private static Deque<Token> tokenize(String nodeValue) {
+        Deque<Token> tokens = new LinkedList<>();
+	    StringTokenizer st = new StringTokenizer(nodeValue, "() !", true);
+	    while (st.hasMoreTokens()) {
+	        String token = st.nextToken();
+	        if (TokenType.LPARENT.matches(token)) {
+	            tokens.add(new Token(TokenType.LPARENT));
+	        } else if (TokenType.RPARENT.matches(token)) {
+                tokens.add(new Token(TokenType.RPARENT));
+            } else if (TokenType.OPERATOR_AND.matches(token)) {
+                tokens.add(new Token(TokenType.OPERATOR_AND));
+            } else if (TokenType.OPERATOR_OR.matches(token)) {
+                tokens.add(new Token(TokenType.OPERATOR_OR));
+            } else if (TokenType.OPERATOR_NOT.matches(token)) {
+                tokens.add(new Token(TokenType.OPERATOR_NOT));
+            } else if (TokenType.OPERAND.matches(token)) {
+                Matcher m = Pattern.compile(TokenType.OPERAND.chr).matcher(token);
+                m.matches();
+                String conditionNum = m.group(1);
+                tokens.add(new Token(TokenType.OPERAND, Integer.parseInt(conditionNum)));
+            }
+
+	    }
+        return tokens;
+    }
+
+    private Node getTargetState(Node transition) {
 		String targetState = transition.getAttributes().getNamedItem("state").getNodeValue().substring(1); // Remove "/" at the begining
 		String regex = "[/.][/@]*";
 		String[] splitedTargetState = targetState.split(regex);
@@ -536,15 +807,17 @@ public class TmfGraphitiXmlConverter implements ITmfXmlConverter {
 		return timeGraphViewList;
 	}
 
-//	public static void main(String[] args) {
+	public static void main(String[] args) {
 //		String xmlPath = "/home/esideli/Downloads/tracecompass_rcp_backup/Tracing/Statemachine/Diagrams/RequestAnalysis.diagram"; //"/home/simon/runtime-Tracecompass/Trace/Statemachine/Diagrams/kernel_statemachine.diagram";
-//		//String xmlPath = "C:\\Users\\Simon\\Downloads\\kernel_statemachine.diagram";
-//		File xmlFile = new File(xmlPath);
-//		TmfGraphitiXmlConverter converter = new TmfGraphitiXmlConverter();
-//		File convertedFile = converter.convertDiagram(xmlFile);
-//		if(convertedFile.exists()) {
-//			Boolean exist = true;
-//		}
-//	}
+		//String xmlPath = "C:\\Users\\Simon\\Downloads\\kernel_statemachine.diagram";
+	    String xmlPath = "/home/emalape/Documents/dev/eclipse/workspace/runtime-Lttng/general_project/Statemachine/Diagrams/testdiagram.diagram";
+		File xmlFile = new File(xmlPath);
+		TmfGraphitiXmlConverter converter = new TmfGraphitiXmlConverter();
+		File convertedFile = converter.convertDiagram(xmlFile);
+		if(convertedFile.exists()) {
+			Boolean exist = true;
+			System.out.println(exist);
+		}
+	}
 
 }
