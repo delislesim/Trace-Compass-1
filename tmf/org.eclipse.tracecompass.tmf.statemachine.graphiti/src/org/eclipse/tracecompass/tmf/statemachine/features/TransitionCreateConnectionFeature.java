@@ -22,9 +22,9 @@ import statemachine.StatemachineFactory;
 import statemachine.Transition;
 
 public class TransitionCreateConnectionFeature extends AbstractCreateConnectionFeature {
-	
-	private AbstractState targetState = null;
-	private AbstractState sourceState = null;
+
+	private AbstractState targetState;
+	private AbstractState sourceState;
 
 	public TransitionCreateConnectionFeature(IFeatureProvider fp) {
 		super(fp, "Transition", "Creates a new transition between two states");
@@ -32,8 +32,22 @@ public class TransitionCreateConnectionFeature extends AbstractCreateConnectionF
 
 	@Override
 	public boolean canCreate(ICreateConnectionContext context) {
+	    targetState = null;
+	    sourceState = null;
 		PictogramElement sourcePictogramElement = context.getSourcePictogramElement();
 		PictogramElement targetPictogramElement = context.getTargetPictogramElement();
+		if (sourcePictogramElement != null) {
+		    PictogramElement stateMachinePictogramElement = (PictogramElement) sourcePictogramElement.eContainer();
+		    Statemachine stateMachine = (Statemachine) getBusinessObjectForPictogramElement(stateMachinePictogramElement);
+		    if(stateMachine.getAssociatedAttribute() == null) {
+		        return false;
+		    }
+		}
+
+		if(getBusinessObjectForPictogramElement(targetPictogramElement) instanceof AbstractState) {
+		    AbstractState state = (AbstractState) getBusinessObjectForPictogramElement(sourcePictogramElement);
+		    state.getTransitions();
+		}
 
 		if (getBusinessObjectForPictogramElement(sourcePictogramElement) instanceof AbstractState && getBusinessObjectForPictogramElement(targetPictogramElement) instanceof AbstractState) {
 			targetState = (AbstractState) getBusinessObjectForPictogramElement(targetPictogramElement);
