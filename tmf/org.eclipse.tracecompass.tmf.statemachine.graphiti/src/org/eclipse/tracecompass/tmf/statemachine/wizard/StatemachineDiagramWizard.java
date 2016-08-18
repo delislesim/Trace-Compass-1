@@ -36,10 +36,28 @@ import org.eclipse.emf.transaction.Transaction;
 import org.eclipse.emf.transaction.TransactionalEditingDomain;
 import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 
+/**
+ * Wizard to create a statemachine and an attribute tree. Create resources in a
+ * tracing project under a folder called Statemachine
+ *
+ * @author esideli
+ *
+ */
 public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 
+	/**
+	 * Wizard page name for statemachine diagram creation
+	 */
 	public static final String PAGE_NAME_DIAGRAM = "New Diagram";
+
+	/**
+	 * Wizard page name for attribute tree editor
+	 */
 	public static final String PAGE_NAME_ATTRIBUTE_TREE = "Edit Attribute Tree";
+
+	/**
+	 * Wizard window title
+	 */
 	public static final String WIZARD_WINDOW_TITLE = "New Diagram";
 
 	private String diagramTypeId = "State Machine";
@@ -151,12 +169,22 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 
 	@Override
 	public boolean performCancel() {
+	    // Delete the attribute tree that was created previously if any
 	    if(attributeTreeFile.exists()) {
 	        attributeTreeFile.delete();
 	    }
 	    return super.performCancel();
 	}
 
+    /**
+     * Create an attribute tree file under Statemachine/Tree folder in your
+     * tracing project.
+     *
+     * @param diagramName
+     *            Name of the new diagram to associate the new tree to this
+     *            diagram.
+     * @return True if the file was correctly created, False if not.
+     */
 	public boolean createAttributeTreeFile(String diagramName) {
 		IFolder attributeTreeFolder = null;
 		IProject attributeTreeProject = null;
@@ -208,6 +236,16 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		return true;
 	}
 
+    /**
+     * Create the resources and the Graphiti editing domain, than call
+     * save(TransactionalEditingDomain) to create the diagram file
+     *
+     * @param uri
+     *            Diagram file location
+     * @param diagram
+     *            The diagram previously created with Graphiti services
+     * @return True if everything was correctly created, false if not
+     */
 	private static boolean createDiagramFile(URI uri, final Diagram diagram) {
 		TransactionalEditingDomain editingDomain = GraphitiUi.getEmfService().createResourceSetAndEditingDomain();
 		ResourceSet resourceSet = editingDomain.getResourceSet();
@@ -230,6 +268,12 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		return saveStatus;
 	}
 
+    /**
+     * Create the Graphiti diagram file with EMF transaction and editing domain
+     *
+     * @param editingDomain
+     * @return True if there is no error during the creation
+     */
 	private static boolean save(final TransactionalEditingDomain editingDomain) {
 		boolean saveStatus = true;
 		final Map<URI, String> failedSaves = new HashMap<>();
@@ -287,6 +331,9 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 		return saveStatus;
 	}
 
+	/**
+	 * @return The attribute tree file that will be used in the attribute tree editor.
+	 */
 	public File getAttributeTreeFile() {
 	    return attributeTreeFile;
 	}

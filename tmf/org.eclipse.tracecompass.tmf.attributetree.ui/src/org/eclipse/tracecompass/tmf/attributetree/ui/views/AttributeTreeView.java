@@ -17,6 +17,12 @@ import org.eclipse.tracecompass.tmf.attributetree.ui.Activator;
 import org.eclipse.tracecompass.tmf.attributetree.ui.widgets.AttributeTreeEditorComposite;
 import org.eclipse.ui.IActionBars;
 
+/**
+ * View to edit an attribute tree
+ *
+ * @author esideli
+ *
+ */
 public class AttributeTreeView extends TmfView {
 
 	private AttributeTreeEditorComposite treeEditorComposite;
@@ -26,6 +32,9 @@ public class AttributeTreeView extends TmfView {
 
 	private int GRID_NUM_COLUMNS = 3;
 
+	/**
+	 * Constructor
+	 */
 	public AttributeTreeView() {
 		super("org.eclipse.tracecompass.tmf.statemachine.ui.attributeTreeView");
 	}
@@ -49,6 +58,11 @@ public class AttributeTreeView extends TmfView {
         bars.getToolBarManager().add(getSaveAction());
 	}
 
+    /**
+     * Action to save the attribute tree
+     *
+     * @return Action
+     */
 	private Action getSaveAction() {
 		Action saveAction = new Action("Save", IAction.AS_PUSH_BUTTON) {
 			@Override
@@ -85,6 +99,11 @@ public class AttributeTreeView extends TmfView {
 		return saveAction;
 	}
 
+    /**
+     * Action to open an attribute tree
+     *
+     * @return Action
+     */
 	private Action getOpenAction() {
 		Action openAction = new Action("Open", IAction.AS_PUSH_BUTTON) {
 			@Override
@@ -128,6 +147,12 @@ public class AttributeTreeView extends TmfView {
 //		return newAction;
 //	}
 
+    /**
+     * Set view information. The name of the file is displayed in the view title
+     *
+     * @param file
+     *            File that is used in the view
+     */
 	private void setViewInformation(File file) {
 		if(file == null) {
 			setPartName("Attribute Tree View");

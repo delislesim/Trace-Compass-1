@@ -28,6 +28,13 @@ import org.eclipse.tracecompass.tmf.attributetree.core.model.ConstantAttributeNo
 import org.eclipse.tracecompass.tmf.attributetree.core.model.VariableAttributeNode;
 import org.eclipse.tracecompass.tmf.attributetree.ui.Activator;
 
+/**
+ * Attribute tree editor composite. Create everything you need to create or edit
+ * an attribute tree
+ *
+ * @author esideli
+ *
+ */
 public class AttributeTreeEditorComposite extends Composite {
 
     private int GRID_NUM_COLUMNS = 3;
@@ -38,6 +45,16 @@ public class AttributeTreeEditorComposite extends Composite {
         CONSTANT, VARIABLE, VALUE
     }
 
+    /**
+     * Constructor
+     *
+     * @param parent
+     *            Parent composite
+     * @param style
+     *            Compoiste style
+     * @param attributeTreeFile
+     *            Attribute tree file you want to open in your editor
+     */
     public AttributeTreeEditorComposite(Composite parent, int style, File attributeTreeFile) {
         super(parent, style);
         setLayout(new GridLayout(GRID_NUM_COLUMNS, false));
@@ -173,11 +190,23 @@ public class AttributeTreeEditorComposite extends Composite {
         });
     }
 
+    /**
+     * Remove a node in the tree
+     *
+     * @param node
+     *            Node to remove
+     */
     private void removeAttribute(AbstractAttributeNode node) {
         node.getParent().removeChild(node);
         attributeTree.refresh();
     }
 
+    /**
+     * Add a node in the tree
+     *
+     * @param type
+     *            Type of the node (CONSTANT, VARIABLE, VALUE)
+     */
     private void addAttribute(NodeType type) {
         IStructuredSelection selection = attributeTree.getSelection();
         AbstractAttributeNode parent;
@@ -203,6 +232,9 @@ public class AttributeTreeEditorComposite extends Composite {
         attributeTree.refresh();
     }
 
+    /**
+     * Edit the selected element in the tree
+     */
     private void editSelection() {
         IStructuredSelection selection = attributeTree.getSelection();
         if (!selection.isEmpty()) {
@@ -212,6 +244,14 @@ public class AttributeTreeEditorComposite extends Composite {
         }
     }
 
+    /**
+     * Dialog to edit an element in the tree
+     *
+     * @param display
+     *            Parent display
+     * @param attributeNode
+     *            Node to modify
+     */
     private void editAttributeDialog(Display display, final AbstractAttributeNode attributeNode) {
         final Shell dialog = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         dialog.setLayout (new GridLayout(2, false));
@@ -269,12 +309,30 @@ public class AttributeTreeEditorComposite extends Composite {
         }
     }
 
+    /**
+     * Perform OK in the edit dialog
+     *
+     * @param attributeNode
+     *            Node that was modify
+     * @param dialog
+     *            Dialog
+     * @param attributeNameText
+     *            New element name
+     */
     private void performOkInEditDialog(final AbstractAttributeNode attributeNode, final Shell dialog, final Text attributeNameText) {
         attributeNode.setName(attributeNameText.getText());
         attributeTree.refresh();
         dialog.close();
     }
 
+    /**
+     * Dialog to select an element to query
+     *
+     * @param display
+     *            Parent display
+     * @param queryNode
+     *            Node that you want to associate the query
+     */
     private void queryDialog(Display display, final VariableAttributeNode queryNode) {
         final Shell dialog = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL);
         dialog.setLayout (new GridLayout(1, false));
@@ -313,6 +371,17 @@ public class AttributeTreeEditorComposite extends Composite {
         }
     }
 
+    /**
+     * Assign the selected element in the dialog to the node you want to add
+     * query
+     *
+     * @param queryNode
+     *            Node you want to add query
+     * @param dialog
+     *            Dialog
+     * @param queryAttributeTree
+     *            Attribute tree composite
+     */
     private static void selectInQueryDialog(final VariableAttributeNode queryNode, final Shell dialog, final AttributeTreeComposite queryAttributeTree) {
         IStructuredSelection selection = queryAttributeTree.getSelection();
         AbstractAttributeNode selectedNode = (AbstractAttributeNode)selection.getFirstElement();
@@ -321,13 +390,14 @@ public class AttributeTreeEditorComposite extends Composite {
         dialog.close();
     }
 
+    /**
+     * Set the input for the tree viewer
+     *
+     * @param inputAttributeTreeFile
+     *            Attribute tree file you want to set in the composite
+     */
     public void setTreeViewerInput(File inputAttributeTreeFile) {
         attributeTree.setTreeViewerInput(inputAttributeTreeFile);
         currentAttributeTreeFile = inputAttributeTreeFile;
     }
-
-//    public AttributeTreeComposite getAttributeTreeComposite() {
-//        return attributeTree;
-//    }
-
 }

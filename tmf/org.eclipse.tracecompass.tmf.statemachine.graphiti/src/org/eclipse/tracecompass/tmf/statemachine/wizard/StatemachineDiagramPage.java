@@ -23,6 +23,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+/**
+ * Wizard page to create the statemachine diagram resources
+ *
+ * @author esideli
+ *
+ */
 public class StatemachineDiagramPage extends WizardPage {
 
 	private String diagramName;
@@ -37,6 +43,14 @@ public class StatemachineDiagramPage extends WizardPage {
 
 	private IStructuredSelection selectedElement;
 
+    /**
+     * Constructor
+     *
+     * @param pageName
+     *            Name of the wizard page
+     * @param selection
+     *            Selected element in the project explorer tree
+     */
 	protected StatemachineDiagramPage(String pageName, IStructuredSelection selection) {
 		super(pageName);
 		setTitle("Diagram");
@@ -142,6 +156,12 @@ public class StatemachineDiagramPage extends WizardPage {
 		setControl(composite);
 	}
 
+    /**
+     * Check if everything is correct in the page in order to go to the next
+     * page in the wizard
+     *
+     * @return True if the page was correctly filled, false if there is error
+     */
 	private boolean validatePage() {
 		setErrorMessage(null);
 		setMessage(null);
@@ -192,6 +212,13 @@ public class StatemachineDiagramPage extends WizardPage {
 		return true;
 	}
 
+    /**
+     * Validate if the name is already used in the workspace
+     *
+     * @param fileName
+     *            Name of the file you wnat to validate
+     * @return True if the name is unique
+     */
 	private boolean workspaceNameValidation(String fileName) {
 		Object element = selectedElement.getFirstElement();
 		IResource resource = null;
@@ -209,18 +236,30 @@ public class StatemachineDiagramPage extends WizardPage {
 		return true;
 	}
 
+    /**
+     * @return The new diagram name
+     */
 	public String getDiagramName() {
 		return diagramName;
 	}
 
+	/**
+	 * @return Attribute tree name associated with the new diagram
+	 */
 	public String getNewTreeName() {
 		return treeName;
 	}
 
+	/**
+	 * @return The existing attribute tree path, only if the new diagram use an existing attribute tree
+	 */
 	public String getExistingTreePath() {
 		return treePath;
 	}
 
+	/**
+	 * @return The status of the "Use existing file" checkbox
+	 */
 	public boolean getUseExistingFile() {
 		return existingFileButton.getSelection();
 	}

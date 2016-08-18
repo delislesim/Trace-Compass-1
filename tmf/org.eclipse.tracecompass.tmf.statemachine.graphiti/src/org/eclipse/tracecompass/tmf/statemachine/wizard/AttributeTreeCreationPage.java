@@ -11,6 +11,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.tracecompass.tmf.attributetree.ui.widgets.AttributeTreeEditorComposite;
 
+/**
+ * Wizard page to create or edit an attribute tree
+ *
+ * @author esideli
+ *
+ */
 public class AttributeTreeCreationPage extends WizardPage {
 
     private int NUM_COLUMNS = 2;
@@ -21,6 +27,12 @@ public class AttributeTreeCreationPage extends WizardPage {
 
     private AttributeTreeEditorComposite treeEditorComposite;
 
+    /**
+     * Constructor
+     *
+     * @param pageName
+     *            Name of the wizard page
+     */
     protected AttributeTreeCreationPage(String pageName) {
         super(pageName);
         setTitle("Attribute Tree Creation");
@@ -100,10 +112,24 @@ public class AttributeTreeCreationPage extends WizardPage {
         }
     }
 
+    /**
+     * Validate the page to proceed in the wizard. Currently it only return true
+     * since we don't check if the tree is valid
+     *
+     * @return True
+     */
     private static boolean validatePage() {
         return true;
     }
 
+    /**
+     * Create the attribute tree file in order to be able to create a tree
+     * directly in the wizard
+     *
+     * @param diagramName
+     *            Name of the newly created diagram
+     * @return Attribute tree file
+     */
     private File createAttributeTreeFile(String diagramName) {
         if(((StatemachineDiagramWizard) getWizard()).createAttributeTreeFile(diagramName)) {
             return ((StatemachineDiagramWizard) getWizard()).getAttributeTreeFile();
