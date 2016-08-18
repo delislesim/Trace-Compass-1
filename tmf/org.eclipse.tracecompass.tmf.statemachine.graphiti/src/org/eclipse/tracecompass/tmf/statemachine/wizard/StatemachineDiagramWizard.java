@@ -38,23 +38,32 @@ import org.eclipse.emf.transaction.impl.TransactionalEditingDomainImpl;
 
 public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 
-	private static final String PAGE_NAME_DIAGRAM = "New Diagram";
-	private static final String WIZARD_WINDOW_TITLE = "New Diagram";
+	public static final String PAGE_NAME_DIAGRAM = "New Diagram";
+	public static final String PAGE_NAME_ATTRIBUTE_TREE = "Edit Attribute Tree";
+	public static final String WIZARD_WINDOW_TITLE = "New Diagram";
 
 	private String diagramTypeId = "State Machine";
 
+	private AttributeTreeCreationPage attributeTreeEditorPage;
 	private StatemachineDiagramPage newDiagramPage;
 	private IStructuredSelection fSelection;
+
+	private File attributeTreeFile;
 
 	@Override
 	public void addPages() {
 		super.addPages();
 		newDiagramPage = new StatemachineDiagramPage(PAGE_NAME_DIAGRAM, fSelection);
+		attributeTreeEditorPage = new AttributeTreeCreationPage(PAGE_NAME_ATTRIBUTE_TREE);
 		addPage(newDiagramPage);
+		addPage(attributeTreeEditorPage);
 	}
 
 	@Override
 	public boolean canFinish() {
+	    if(!newDiagramPage.getUseExistingFile() && !attributeTreeEditorPage.isPageComplete()) {
+	        return false;
+	    }
 		return super.canFinish();
 	}
 
@@ -128,19 +137,27 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 			return false;
 		}
 
-		// Create or use the attribute tree
+		// Save or use the attribute tree
 		if(newDiagramPage.getUseExistingFile()) {
 			String treeFilePath = newDiagramPage.getExistingTreePath();
+			AttributeTree.getInstance().saveAttributeTree(new File(treeFilePath));
 			AttributeTreeUtils.addAttributeTreeFile(diagramName, treeFilePath);
 		} else {
-			createAttributeTreeFile(diagramName);
-			//TODO handle return value;
+		    AttributeTree.getInstance().saveAttributeTree(attributeTreeFile);
 		}
 		// TODO If attribute cannot be create the diagram will be create and it's wrong !
 		return true;
 	}
 
-	private boolean createAttributeTreeFile(String diagramName) {
+	@Override
+	public boolean performCancel() {
+	    if(attributeTreeFile.exists()) {
+	        attributeTreeFile.delete();
+	    }
+	    return super.performCancel();
+	}
+
+	public boolean createAttributeTreeFile(String diagramName) {
 		IFolder attributeTreeFolder = null;
 		IProject attributeTreeProject = null;
 
@@ -180,7 +197,7 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 			attributeTreeFolder = attributeTreeProject.getFolder("Statemachine/Tree");
 		}
 
-		File attributeTreeFile = attributeTreeFolder.getFile(newDiagramPage.getNewTreeName() + ".attributetree").getLocation().toFile();
+		attributeTreeFile = attributeTreeFolder.getFile(newDiagramPage.getNewTreeName() + ".attributetree").getLocation().toFile();
 		if (!attributeTreeFile.exists()) {
 			if(!AttributeTree.getInstance().createNewAttributeTree(attributeTreeFile)) {
 				return false;
@@ -269,4 +286,9 @@ public class StatemachineDiagramWizard extends BasicNewResourceWizard {
 
 		return saveStatus;
 	}
+
+	public File getAttributeTreeFile() {
+	    return attributeTreeFile;
+	}
+
 }

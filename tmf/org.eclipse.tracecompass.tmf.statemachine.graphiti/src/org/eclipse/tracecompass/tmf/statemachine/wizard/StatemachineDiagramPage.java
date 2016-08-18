@@ -106,6 +106,7 @@ public class StatemachineDiagramPage extends WizardPage {
 					treePathText.setEnabled(false);
 					browseButton.setEnabled(false);
 				}
+				setPageComplete(validatePage());
 			}
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
@@ -223,4 +224,5 @@ public class StatemachineDiagramPage extends WizardPage {
 	public boolean getUseExistingFile() {
 		return existingFileButton.getSelection();
 	}
+
 }

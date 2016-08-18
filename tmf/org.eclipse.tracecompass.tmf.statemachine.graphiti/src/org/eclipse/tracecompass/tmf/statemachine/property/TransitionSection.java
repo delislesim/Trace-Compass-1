@@ -153,6 +153,8 @@ public class TransitionSection extends GFPropertySection implements ITabbedPrope
     		String TransitionName = getTransition().getName();
     		if(TransitionName == "then" || TransitionName == "else") {
     		    transitionNameText.setEnabled(false);
+    		} else {
+    		    transitionNameText.setEnabled(true);
     		}
     		transitionNameText.setText((TransitionName != null) ? TransitionName : "");
     		stateChangeTable.removeAll();
